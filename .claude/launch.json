@@ -4,7 +4,7 @@
     {
       "name": "cooky-dev",
       "runtimeExecutable": "bash",
-      "runtimeArgs": ["-c", "if [ -s \"$HOME/.nvm/nvm.sh\" ]; then . \"$HOME/.nvm/nvm.sh\" && nvm use >/dev/null; fi; node -v; npm run dev"],
+      "runtimeArgs": ["-c", "N=$(ls -d \"$HOME\"/.nvm/versions/node/v22*/bin 2>/dev/null | tail -1); [ -n \"$N\" ] && export PATH=\"$N:$PATH\"; node -v; npm run dev"],
       "port": 3000
     }
   ]
