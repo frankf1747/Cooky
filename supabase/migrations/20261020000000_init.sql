@@ -410,6 +410,15 @@ begin
   end if;
 end $$;
 
+-- Give one use back when the work it paid for failed (an AI call that errored or hit a cap).
+-- Never goes below zero, so a double release is harmless.
+create function public.release_quota(p_user uuid, p_feature text, p_period text)
+returns void
+language sql security definer set search_path = public as $$
+  update usage_counters set count = count - 1
+  where user_id = p_user and feature = p_feature and period = p_period and count > 0;
+$$;
+
 -- Apply one confirmed batch of fridge changes in one transaction (SPEC FRG2).
 -- p_events: [{ "itemId": "itm_..." | null, "delta": number, "reason": "...", "newItem": {...} }]
 -- A repeat with the same batch key returns the first result and writes nothing.
@@ -474,8 +483,10 @@ end $$;
 
 revoke execute on function public.consume_quota(uuid, text, text, integer) from public, anon, authenticated;
 revoke execute on function public.apply_inventory_batch(uuid, text, jsonb) from public, anon, authenticated;
+revoke execute on function public.release_quota(uuid, text, text) from public, anon, authenticated;
 grant execute on function public.consume_quota(uuid, text, text, integer) to service_role;
 grant execute on function public.apply_inventory_batch(uuid, text, jsonb) to service_role;
+grant execute on function public.release_quota(uuid, text, text) to service_role;
 
 -- ============================================================ storage
 

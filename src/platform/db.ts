@@ -1,7 +1,9 @@
 // Database clients (SPEC §9 access rule).
 //   reader()        — the signed-in user's own session: RLS applies, SELECT only. Use for reads.
-//   writer(userId)  — server-only, secret key, bypasses RLS. Use for every write, and always set
+//   writer(userId)  — server-only, secret key, BYPASSES RLS. Use it for writes only, and always set
 //                     user_id from the userId argument (the session), never from request input.
+//                     Never read user data through it: a read here sees every user's rows.
+//                     (Exception: server-only tables with no client policy, e.g. runs, read by Platform.)
 import { createServerClient } from "@supabase/ssr";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";

@@ -8,8 +8,11 @@ import { __resetAiDeps, __setAiDeps, runAi, type ModelReply } from "./ai";
 const Out = z.object({ pick: z.string() });
 const records: RunRecord[] = [];
 
+const released: string[] = [];
+
 function setup(replies: (ModelReply | Error)[], extra: Parameters<typeof __setAiDeps>[0] = {}) {
   records.length = 0;
+  released.length = 0;
   let i = 0;
   __setAiDeps({
     transport: async () => {
@@ -19,7 +22,7 @@ function setup(replies: (ModelReply | Error)[], extra: Parameters<typeof __setAi
     },
     recordRun: async (rec) => void records.push(rec),
     spentTodayUsd: async () => 0,
-    consumeQuota: async () => undefined,
+    consumeQuota: async (_u, feature) => ({ release: async () => void released.push(feature) }),
     model: () => "claude-haiku-5-5",
     ...extra,
   });
@@ -95,10 +98,38 @@ describe("runAi", () => {
     expect(called).toBe(false);
   });
 
+  it("gives the quota back when the run fails", async () => {
+    setup([new Error("connection reset")]);
+    await expect(call()).rejects.toMatchObject({ status: 502 });
+    expect(released).toEqual(["plans"]);
+  });
+
+  it("keeps the quota spent when the run succeeds", async () => {
+    setup([reply({ pick: "set_1" })]);
+    await call();
+    expect(released).toEqual([]);
+  });
+
+  it("checks the team spend cap before spending the user's quota", async () => {
+    let consumed = false;
+    setup([reply({ pick: "set_1" })], {
+      spentTodayUsd: async () => targets.limits.globalDailySpendCapUsd,
+      consumeQuota: async () => {
+        consumed = true;
+        return { release: async () => {} };
+      },
+    });
+    await expect(call()).rejects.toMatchObject({ status: 503, code: "ai_paused" });
+    expect(consumed).toBe(false);
+  });
+
   it("consumes the unit's quota before calling the model", async () => {
     const order: string[] = [];
     setup([reply({ pick: "set_1" })], {
-      consumeQuota: async (_u, feature) => void order.push(`quota:${feature}`),
+      consumeQuota: async (_u, feature) => {
+        order.push(`quota:${feature}`);
+        return { release: async () => {} };
+      },
       transport: async () => {
         order.push("model");
         return reply({ pick: "set_1" });

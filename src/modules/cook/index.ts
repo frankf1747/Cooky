@@ -18,6 +18,10 @@ export async function done(userId: string, recipeId: string, input: z.infer<type
   throw notImplemented("cook.done");
 }
 
+/**
+ * Apply the confirmed deductions and leftovers through fridge.applyBatch (cook event id = batch key).
+ * Pro users' feedback goes to preferences.propose; Free users get proposals: [] and run: null (SPEC CK3).
+ */
 export async function confirm(userId: string, cookEventId: string, input: z.infer<typeof CookConfirm>, requestId: string): Promise<z.infer<typeof CookConfirmResponse>> {
   void userId;
   void cookEventId;

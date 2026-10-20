@@ -3,7 +3,7 @@
 // any model call so two simultaneous requests cannot both slip under the limit.
 import targets from "@spec/targets.json";
 import { forbidden, tooMany, upstream } from "./errors";
-import { writer } from "./db";
+import { reader, writer } from "./db";
 
 export type QuotaFeature = "plans" | "swaps" | "receipts" | "imports" | "cook_answers" | "preference_proposals";
 export type Tier = "free" | "pro";
@@ -19,17 +19,37 @@ function localDate(tz: string, at: Date): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
 }
 
+/** Milliseconds the zone is ahead of UTC at a given instant (negative west of Greenwich). */
+function zoneOffsetMs(tz: string, at: Date): number {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })
+      .formatToParts(at)
+      .map((p) => [p.type, p.value]),
+  );
+  const asUtc = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
+  return asUtc - Math.floor(at.getTime() / 1000) * 1000;
+}
+
+/** The UTC instant of 00:00 local time on a local date (YYYY-MM-DD), DST-aware. */
+function localMidnightUtc(date: string, tz: string): Date {
+  const [y, m, d] = date.split("-").map(Number);
+  const guess = Date.UTC(y, m - 1, d);
+  let t = guess - zoneOffsetMs(tz, new Date(guess));
+  t = guess - zoneOffsetMs(tz, new Date(t)); // re-check with the offset in force at that instant
+  return new Date(t);
+}
+
 export function quotaPeriod(plan: Tier, tz: string, now = new Date()): { period: string; resetAt: string | null } {
   if (plan === "free") return { period: "lifetime", resetAt: null };
   const today = localDate(tz, now);
   const [y, m, d] = today.split("-").map(Number);
-  const next = new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
-  return { period: today, resetAt: `${next}T00:00:00[${tz}]` };
+  const tomorrow = new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+  return { period: today, resetAt: localMidnightUtc(tomorrow, tz).toISOString() };
 }
 
-/** The user's tier and timezone, read with the server writer (entitlements are not client-writable). */
+/** The user's tier and timezone, read through their own session (RLS applies). */
 export async function tierAndTimezone(userId: string): Promise<{ plan: Tier; tz: string }> {
-  const { db } = writer(userId);
+  const db = await reader();
   const [ent, prof] = await Promise.all([
     db.from("entitlements").select("plan").eq("user_id", userId).maybeSingle(),
     db.from("profiles").select("timezone").eq("user_id", userId).maybeSingle(),
@@ -39,8 +59,13 @@ export async function tierAndTimezone(userId: string): Promise<{ plan: Tier; tz:
   return { plan: ent.data?.plan === "pro" ? "pro" : "free", tz: prof.data?.timezone || DEFAULT_TZ };
 }
 
-/** Atomically count one use. Throws 403 not_pro (Free limit reached) or 429 (Pro daily limit). */
-export async function consumeQuota(userId: string, feature: QuotaFeature): Promise<{ used: number; limit: number; resetAt: string | null }> {
+export type QuotaUse = { used: number; limit: number; resetAt: string | null; release: () => Promise<void> };
+
+/**
+ * Atomically count one use. Throws 403 not_pro (Free limit reached) or 429 (Pro daily limit).
+ * Call `release()` if the work then fails, so a failed attempt does not cost the user a use.
+ */
+export async function consumeQuota(userId: string, feature: QuotaFeature): Promise<QuotaUse> {
   const { plan, tz } = await tierAndTimezone(userId);
   const limit = quotaLimit(feature, plan);
   if (limit <= 0) throw forbidden("not_pro", "Cooky Pro required");
@@ -53,5 +78,9 @@ export async function consumeQuota(userId: string, feature: QuotaFeature): Promi
     if (plan === "free") throw forbidden("not_pro", "Free limit reached: unlock Cooky Pro for more");
     throw tooMany(resetAt ?? "");
   }
-  return { used: row.used, limit, resetAt };
+  const release = async () => {
+    const { error: e } = await db.rpc("release_quota", { p_user: userId, p_feature: feature, p_period: period });
+    if (e) throw upstream("db_error", `quota release failed: ${e.message}`);
+  };
+  return { used: row.used, limit, resetAt, release };
 }

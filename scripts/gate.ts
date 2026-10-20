@@ -16,6 +16,7 @@ const steps: Step[] = [
   { n: 0, name: "static (lint, types, secrets, import rules)", cmd: ["npm", "run", "check"] },
   { n: 1, name: "contract (routes, targets, seed headers)", cmd: ["npm", "run", "check:contract"] },
   { n: 1, name: "unit tests", cmd: ["npm", "test"] },
+  { n: 1, name: "database tests (access rule, quota, ledger; needs `npx supabase start`)", cmd: ["npx", "supabase", "test", "db"] },
   { n: 2, name: "smoke against the running app", cmd: base ? ["npm", "run", "smoke", "--", "--base-url", base] : undefined },
   { n: 3, name: "run hygiene", todo: "check:runs is not built yet (Data & Proof + Platform)" },
   { n: 4, name: "targets (evals, billing and authz scenarios, journey)", todo: "evals are not built yet (each owner adds theirs)" },

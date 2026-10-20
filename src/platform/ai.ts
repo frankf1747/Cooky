@@ -56,7 +56,7 @@ type Deps = {
   transport: (req: TransportRequest) => Promise<ModelReply>;
   recordRun: (rec: RunRecord & { userId: string }) => Promise<void>;
   spentTodayUsd: () => Promise<number>;
-  consumeQuota: (userId: string, feature: QuotaFeature) => Promise<unknown>;
+  consumeQuota: (userId: string, feature: QuotaFeature) => Promise<{ release: () => Promise<void> }>;
   model: (unit: AiUnitName) => string;
 };
 
@@ -124,6 +124,7 @@ const defaultDeps: Deps = {
     });
     if (error) throw new Error(error.message);
   },
+  // System read: `runs` has no client policy (server only), so this uses the secret-key client.
   spentTodayUsd: async () => {
     const { db } = writer("system");
     const since = new Date();
@@ -162,9 +163,9 @@ export async function runAi<T>(call: AiCall<T>): Promise<{ output: T; run: RunIn
   if (model !== "fake" && !(model in targets.costModel.usdPerMillionTokens))
     log("ai_unpriced_model", { unit: call.unit, model, requestId: call.requestId });
 
-  await deps.consumeQuota(call.userId, call.quotaFeature ?? UNIT_QUOTA[call.unit]);
   if ((await deps.spentTodayUsd()) >= targets.limits.globalDailySpendCapUsd)
     throw unavailable("ai_paused", "AI features are paused for today: the team spend cap was reached");
+  const quota = await deps.consumeQuota(call.userId, call.quotaFeature ?? UNIT_QUOTA[call.unit]);
 
   const rec: RunRecord & { userId: string } = {
     runId: newId("run"),
@@ -258,6 +259,15 @@ export async function runAi<T>(call: AiCall<T>): Promise<{ output: T; run: RunIn
     await deps.recordRun(rec);
   } catch (err) {
     log("run_record_failed", { runId: rec.runId, requestId: rec.requestId, error: err instanceof Error ? err.message : String(err) });
+  }
+
+  if (rec.terminated !== "done") {
+    // A failed attempt should not cost the user one of their uses.
+    try {
+      await quota.release();
+    } catch (err) {
+      log("quota_release_failed", { runId: rec.runId, requestId: rec.requestId, error: err instanceof Error ? err.message : String(err) });
+    }
   }
 
   const run: RunInfo = { runId: rec.runId, terminated: rec.terminated, latencyMs: rec.wallMs, costUsd: Math.round(rec.costUsd * 1e6) / 1e6 };

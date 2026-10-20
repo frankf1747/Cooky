@@ -2,7 +2,7 @@
 -- Proves the SPEC §9 access rule, the atomic quota, and the idempotent fridge ledger.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(16);
+select plan(21);
 
 insert into auth.users (id, email) values
   ('11111111-1111-1111-1111-111111111111', 'a@test.local'),
@@ -17,6 +17,14 @@ select results_eq($$ select used, allowed from public.consume_quota('11111111-11
                   $$ values (1, true) $$, 'first use within the limit is allowed');
 select results_eq($$ select used, allowed from public.consume_quota('11111111-1111-1111-1111-111111111111', 'plans', 'lifetime', 1) $$,
                   $$ values (1, false) $$, 'a use past the limit is refused and not counted');
+select lives_ok($$ select public.release_quota('11111111-1111-1111-1111-111111111111', 'plans', 'lifetime') $$,
+                'a failed attempt gives its use back');
+select results_eq($$ select used, allowed from public.consume_quota('11111111-1111-1111-1111-111111111111', 'plans', 'lifetime', 1) $$,
+                  $$ values (1, true) $$, 'the released use can be spent again');
+select lives_ok($$ select public.release_quota('11111111-1111-1111-1111-111111111111', 'plans', 'lifetime');
+                   select public.release_quota('11111111-1111-1111-1111-111111111111', 'plans', 'lifetime') $$,
+                'releasing more than was used does not fail');
+select is((select count from public.usage_counters where feature = 'plans'), 0, 'a counter never goes below zero');
 
 -- ---- ledger (server role)
 select is(
@@ -52,6 +60,8 @@ select throws_ok($$ insert into public.entitlements (user_id, plan) values ('111
 select throws_ok($$ update public.fridge_items set qty = 999 $$, '42501', null, 'a user cannot write the fridge directly');
 select throws_ok($$ select public.consume_quota('11111111-1111-1111-1111-111111111111', 'plans', 'lifetime', 99) $$,
   '42501', null, 'a user cannot call the quota function');
+select is((select count(*)::int from public.runs) + (select count(*)::int from public.inventory_batches) + (select count(*)::int from public.payment_events),
+  0, 'server-only tables are invisible to users');
 
 set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
 select is((select count(*)::int from public.fridge_items), 0, 'another user sees none of it');

@@ -207,7 +207,7 @@ Proof names an instrument from §13.1. A Must without a proof is a bug in this d
 |---|---|---|---|
 | CK1 | Must | Cook mode shows ingredients scaled to the chosen servings, then one step at a time. Available to Free users (steps only). | `journey` |
 | CK2 | Must | *Done* calls `POST /api/cook/{recipeId}/done` → proposed deductions per ingredient (from fridge items, oldest `expiresOn` first) and a proposed leftovers dish with expiry from the dish shelf-life default. Nothing is written. | `unit` |
-| CK3 | Must | `POST /api/cook/events/{id}/confirm` with edited deductions, optional leftovers servings, optional rating (1–5) and optional feedback text applies all events in one transaction. The cook event id is the idempotency key: a repeat returns the first result with `200`. Feedback goes to `preference_proposer`. | `unit`, `journey` |
+| CK3 | Must | `POST /api/cook/events/{id}/confirm` with edited deductions, optional leftovers servings, optional rating (1–5) and optional feedback text applies all events in one transaction. The cook event id is the idempotency key: a repeat returns the first result with `200`. For Pro users, feedback goes to `preference_proposer`; Free users' feedback is stored and the response has `proposals: []` and `run: null` (preference proposals are a Pro feature, `quotas.free` has none). | `unit`, `journey` |
 
 ### 5.7 Cooking assistant (ASK)
 
