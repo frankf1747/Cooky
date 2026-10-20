@@ -143,3 +143,51 @@
 - [ ] `npm run build` succeeds.
 - [ ] Full local run as in Task 7–9 verifications; screenshots of login and one feature page.
 - [ ] Commit on `main` (first commit). Deploy (S7) is Frank's: create the Supabase project and Vercel project, set env vars per `docs/TECHNICAL.md`, register the Stripe webhook.
+
+---
+
+## Execution record (2026-10-20)
+
+Built inline with superpowers:executing-plans; reviewed once by a fresh reviewer. Rulings made during the build, each with what it costs if wrong:
+
+- Setup: Ruling: build on `main` directly — repo has no commits yet, so the skeleton is main's first commit and a worktree cannot branch from nothing; Frank asked to "build the skeleton" now — cost if wrong: history starts on main instead of a feature branch (cosmetic).
+- Task 1: Ruling: cacheComponents/partialPrefetching off (scaffold had them on) — every page is per-user; with it on, cookies() outside <Suspense> is a build error, a trap for five new contributors in two days — cost if wrong: lose static-shell prefetching, easy to turn on in v2.
+- Task 1: Ruling: typecheck = `next typegen && tsc --noEmit` — Next 16 global types (LayoutProps, RouteContext) are generated — cost if wrong: none.
+- Task 1: Ruling: vitest pinned to 4.x — vitest 5 needs Node 22, local is 20.19 — cost if wrong: none.
+- Task 1: Ruling: appended Next's generated agent-rules block to our AGENTS.md — `next dev` re-adds it anyway — cost if wrong: none.
+- Task 2: Ruling: registry↔route-file check lives in check-contract and is asserted in Task 7 (route files do not exist until then) — cost if wrong: none, ordering only.
+- Task 2: Ruling: added GET /api/receipts/[id] (SPEC §8.2 updated) — the review screen must survive a reload — cost if wrong: one extra stub.
+- Task 2: Ruling: ExpirySource gains "category" (generic items take the category default) — cost if wrong: one enum value.
+- Task 2: Ruling: AI output schemas carry no regex/numeric bounds; code validates ids/ranges after parse — structured outputs cannot always enforce them — cost if wrong: none.
+- Task 3: Ruling: also convert gal/floz/pcs; units with a leading quantity ("1.32 lb") return null — the reader must split qty and unit — cost if wrong: more flagged lines.
+- Task 5: Ruling: runAi consumes the quota itself (unit→feature map, overridable) — one place to count uses; a module cannot forget — cost if wrong: modules needing quota without a model call call consumeQuota directly.
+- Task 5: Ruling: over-budget runs end with 502 budget_exceeded (terminated "cap") even when the output was valid — B1 forbids "done" over budget — cost if wrong: a rare valid-but-expensive answer is dropped.
+- Task 5: Ruling: run-record write failures are logged, not thrown — losing a log row must not fail the user's request — cost if wrong: a missing run record (visible in logs).
+- Task 5: Ruling: fake mode uses model name "fake" with zero cost and fixtures that read candidate ids from the prompt — teammates build UIs without spending — cost if wrong: none.
+- Task 6: Ruling: local Supabase on ports 563xx — 543xx and 553xx are taken by Frank's other local projects (progress-mcp, brain) — cost if wrong: teammates must use the same config.toml (they will; it is committed).
+- Task 6: Ruling: Node >=22.12 required (installed Node 22 via nvm; default left at 20) — supabase-js needs native WebSocket (Node 22), Vercel runs 22 — cost if wrong: teammates on Node 20 must `nvm use`.
+- Task 6: Ruling: pgTAP tests written after the migration SQL; verified they discriminate by mutation (granting users INSERT on entitlements made the suite FAIL) and they caught a real bug (ambiguous `result` variable) — cost if wrong: none.
+- Task 6: Ruling: added inventory_batches table (stores each batch's result) so a replayed batch returns the original result — FRG2/§8.1 repeat semantics — cost if wrong: one extra table.
+- Task 6: Ruling: seed rows are clearly labelled PLACEHOLDER (prices, shelf life, recipe sources) — I must not present invented numbers as real data — cost if wrong: none; Data & Proof replaces them.
+- Task 7: Ruling: route files are already wired to module functions (not bare 501s) — owners implement module functions and never touch route files; stubs throw notImplemented so routes still answer 501 — cost if wrong: an owner wanting a different signature asks Platform.
+- Task 7: Ruling: added an `account` module (Platform) for /api/me and /api/profile — SPEC module list had no home for them — cost if wrong: none.
+- Task 7: Ruling: ctx.userId added to the handler context ("" on public routes) — avoids non-null assertions in every route — cost if wrong: a public route misusing userId gets "".
+- Task 7: Ruling: .claude/launch.json runs `nvm use` (reads .nvmrc=22) before `npm run dev` — local Node 20 breaks supabase-js — cost if wrong: none.
+- Task 8: Ruling: sign-up lands on /onboarding, log-in on /fridge — onboarding (ACC3) is the natural first stop — cost if wrong: one redirect.
+- Task 8: Ruling: launch.json puts ~/.nvm/versions/node/v22*/bin on PATH instead of `nvm use` — the preview sandbox cannot source nvm (getcwd denied) and fell back to Node 20 — cost if wrong: machines without nvm use whatever node is on PATH.
+- Task 8: Ruling: local e2e test account credentials live only in gitignored .env.local; .env.example has empty E2E_TEST_EMAIL/PASSWORD — cost if wrong: none.
+- Task 9: Ruling: smoke accepts 400 or 501 for the unsigned Stripe webhook (501 until billing lands, 400 after) — cost if wrong: none.
+- Task 9: Ruling: gate checks 3–4 print WARN (exit 1) until built — honest about what is not measured yet — cost if wrong: none.
+- Task 9: Ruling: added an eval-runner agent beside contract-reviewer (two subagent roles) — useful to owners and documents the course's subagent concept — cost if wrong: one unused file.
+- Final: Ruling: Free users get no preference proposals on cook confirm (proposals [], run null; SPEC CK3 updated) — quotas.free has none and ACC4 makes AI features Pro — cost if wrong: Free users miss a learning moment.
+
+Deferred minor findings from the final review (Platform follow-ups):
+
+- ACC9 boot-time refusal — the live-key check runs on first config() call, not at server start (add instrumentation.ts register()).
+- handler sets x-request-id on a handler-returned Response.redirect() whose headers are immutable → HTML 500 (rewrap the Response).
+- 500 log line has no stack trace.
+- BatchEvent allows itemId null without newItem; FridgeItemCreate allows ingredientId null without name (add .refine).
+- inventory_batches keys share one namespace across features (prefix keys per feature).
+- public /api/health echoes raw DB/storage error messages.
+- check-static Resend pattern lacks a word boundary (\bre_).
+- dead line in ai.ts; cache-creation tokens priced at the input rate (actual 1.25x).
