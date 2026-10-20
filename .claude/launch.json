@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cooky-dev",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "if [ -s \"$HOME/.nvm/nvm.sh\" ]; then . \"$HOME/.nvm/nvm.sh\" && nvm use >/dev/null; fi; node -v; npm run dev"],
+      "port": 3000
+    }
+  ]
+}

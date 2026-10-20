@@ -12,6 +12,8 @@ export type Ctx<B, Q> = {
   req: Request;
   requestId: string;
   user: SessionUser | null;
+  /** The signed-in user's id on "user" and "pro" routes (route() rejects them without one); "" otherwise. */
+  userId: string;
   params: Record<string, string>;
   body: B;
   query: Q;
@@ -97,7 +99,7 @@ export function route<B = undefined, Q = undefined>(opts: RouteOptions<B, Q>) {
         body = parsed.data;
       }
 
-      const out = await opts.handler({ req, requestId, user, params, body, query });
+      const out = await opts.handler({ req, requestId, user, userId: user?.id ?? "", params, body, query });
       res = out instanceof Response ? out : Response.json(out ?? null, { status: 200 });
     } catch (err) {
       const body = toErrorBody(err, requestId);
