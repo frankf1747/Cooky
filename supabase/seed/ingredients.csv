@@ -1,0 +1,15 @@
+id,name,aliases,category,base_unit,allergen_tags,fridge_days,freezer_days,pantry_days,shelf_life_source,plausible_max_qty
+ing_chicken_breast,Chicken breast,ORG BNLS CHKN BRST|BNLS SKNLS CHICKEN BREAST|CHKN BRST,meat,g,,2,270,,PLACEHOLDER,3000
+ing_spinach,Baby spinach,BABY SPINACH|SPINACH,produce,g,,5,,,PLACEHOLDER,1000
+ing_garlic,Garlic,GARLIC|GARLIC BULB,produce,count,,,,60,PLACEHOLDER,30
+ing_lemon,Lemon,LEMON|LEMONS,produce,count,,21,,7,PLACEHOLDER,20
+ing_egg,Eggs,EGGS|LARGE EGGS|DOZ EGGS,eggs,count,egg,21,,,PLACEHOLDER,36
+ing_onion,Yellow onion,YELLOW ONION|ONION,produce,count,,30,,30,PLACEHOLDER,10
+ing_rice,Jasmine rice,JASMINE RICE|RICE,pantry,g,,,,365,PLACEHOLDER,5000
+ing_soy_sauce,Soy sauce,SOY SAUCE,pantry,ml,soy|wheat,,,365,PLACEHOLDER,2000
+ing_olive_oil,Olive oil,OLIVE OIL|EVOO,pantry,ml,,,,365,PLACEHOLDER,2000
+ing_butter,Butter,BUTTER|UNSALTED BUTTER,dairy,g,milk,30,180,,PLACEHOLDER,2000
+ing_parmesan,Parmesan,PARMESAN|PARM REGGIANO,dairy,g,milk,30,,,PLACEHOLDER,1000
+ing_scallion,Scallions,GREEN ONION|SCALLIONS,produce,count,,7,,,PLACEHOLDER,20
+ing_frozen_peas,Frozen peas,FROZEN PEAS|PEAS,frozen,g,,,240,,PLACEHOLDER,3000
+ing_pasta,Spaghetti,SPAGHETTI|PASTA,pantry,g,wheat,,,365,PLACEHOLDER,5000

@@ -1,0 +1,13 @@
+category,fridge_days,freezer_days,pantry_days,source
+produce,5,240,,PLACEHOLDER: replace from USDA FoodKeeper
+meat,2,270,,PLACEHOLDER: replace from USDA FoodKeeper
+seafood,2,180,,PLACEHOLDER: replace from USDA FoodKeeper
+dairy,7,90,,PLACEHOLDER: replace from USDA FoodKeeper
+eggs,21,,,PLACEHOLDER: replace from USDA FoodKeeper
+bakery,7,90,4,PLACEHOLDER: replace from USDA FoodKeeper
+frozen,,180,,PLACEHOLDER: replace from USDA FoodKeeper
+pantry,,,365,PLACEHOLDER: replace from USDA FoodKeeper
+snacks,,,60,PLACEHOLDER: replace from USDA FoodKeeper
+beverages,7,,180,PLACEHOLDER: replace from USDA FoodKeeper
+prepared,4,90,,PLACEHOLDER: replace from USDA FoodKeeper
+other,7,,,PLACEHOLDER: replace from USDA FoodKeeper

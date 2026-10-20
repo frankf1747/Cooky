@@ -1,0 +1,16 @@
+id,recipe_id,kind,step_no,label,text
+chk_lemon_garlic_chicken_s1,rcp_lemon_garlic_chicken,step,1,Step 1,Pat the chicken dry and season both sides with salt and pepper.
+chk_lemon_garlic_chicken_s2,rcp_lemon_garlic_chicken,step,2,Step 2,Heat the olive oil in a skillet over medium-high heat and cook the chicken until browned on both sides and cooked through. Move it to a plate.
+chk_lemon_garlic_chicken_s3,rcp_lemon_garlic_chicken,step,3,Step 3,Lower the heat. Add the sliced garlic and cook for one minute without letting it brown.
+chk_lemon_garlic_chicken_s4,rcp_lemon_garlic_chicken,step,4,Step 4,Add the spinach and the juice of the lemon. Stir until the spinach wilts. Return the chicken and spoon the pan sauce over it.
+chk_lemon_garlic_chicken_f1,rcp_lemon_garlic_chicken,faq,,FAQ: chicken too dry,Slice the breast in half horizontally so it cooks faster and stays juicy. Thighs also work and are harder to overcook.
+chk_lemon_garlic_chicken_f2,rcp_lemon_garlic_chicken,faq,,FAQ: no lemon,A splash of white wine vinegar gives the sauce acidity. Bottled lemon juice works but tastes flatter.
+chk_spinach_frittata_s1,rcp_spinach_frittata,step,1,Step 1,Heat the oven to 200 C (400 F). Whisk the eggs with a pinch of salt and the grated parmesan.
+chk_spinach_frittata_s2,rcp_spinach_frittata,step,2,Step 2,Melt the butter in an oven-safe skillet and soften the sliced onion for five minutes. Add the spinach and stir until it wilts.
+chk_spinach_frittata_s3,rcp_spinach_frittata,step,3,Step 3,Pour in the eggs and cook without stirring until the edges set. Move the skillet to the oven and bake until the center is set.
+chk_spinach_frittata_f1,rcp_spinach_frittata,faq,,FAQ: no oven-safe skillet,Cook it covered on the stove over low heat until the top sets. The top will not brown.
+chk_egg_fried_rice_s1,rcp_egg_fried_rice,step,1,Step 1,Scramble the eggs in a hot oiled skillet until just set and move them to a plate.
+chk_egg_fried_rice_s2,rcp_egg_fried_rice,step,2,Step 2,Add the cold cooked rice and the peas. Spread the rice out and let it fry without stirring for a minute before tossing.
+chk_egg_fried_rice_s3,rcp_egg_fried_rice,step,3,Step 3,Add the soy sauce and the eggs back in. Toss and finish with sliced scallions.
+chk_egg_fried_rice_f1,rcp_egg_fried_rice,faq,,FAQ: freshly cooked rice,Fresh rice turns mushy. Spread it on a plate and chill it for 20 minutes first.
+chk_egg_fried_rice_f2,rcp_egg_fried_rice,faq,,FAQ: no wok,A wide skillet works. Cook in two batches so the rice fries instead of steaming.

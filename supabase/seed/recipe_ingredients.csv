@@ -1,0 +1,16 @@
+recipe_id,ingredient_id,qty,unit,optional,note
+rcp_lemon_garlic_chicken,ing_chicken_breast,400,g,false,
+rcp_lemon_garlic_chicken,ing_spinach,150,g,false,
+rcp_lemon_garlic_chicken,ing_garlic,3,count,false,cloves from one bulb count as one
+rcp_lemon_garlic_chicken,ing_lemon,1,count,false,
+rcp_lemon_garlic_chicken,ing_olive_oil,30,ml,false,
+rcp_spinach_frittata,ing_egg,6,count,false,
+rcp_spinach_frittata,ing_spinach,100,g,false,
+rcp_spinach_frittata,ing_onion,1,count,false,
+rcp_spinach_frittata,ing_parmesan,40,g,true,
+rcp_spinach_frittata,ing_butter,15,g,false,
+rcp_egg_fried_rice,ing_rice,300,g,false,day-old cooked rice works best
+rcp_egg_fried_rice,ing_egg,3,count,false,
+rcp_egg_fried_rice,ing_scallion,3,count,false,
+rcp_egg_fried_rice,ing_frozen_peas,100,g,true,
+rcp_egg_fried_rice,ing_soy_sauce,30,ml,false,

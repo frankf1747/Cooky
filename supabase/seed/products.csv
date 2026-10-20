@@ -1,0 +1,15 @@
+id,ingredient_id,package_size,unit,price_cents,store_label,region,price_date
+prd_chicken_breast_600g,ing_chicken_breast,600,g,799,PLACEHOLDER store,Los Angeles,2026-10-20
+prd_spinach_170g,ing_spinach,170,g,229,PLACEHOLDER store,Los Angeles,2026-10-20
+prd_garlic_3ct,ing_garlic,3,count,149,PLACEHOLDER store,Los Angeles,2026-10-20
+prd_lemon_1ct,ing_lemon,1,count,69,PLACEHOLDER store,Los Angeles,2026-10-20
+prd_egg_12ct,ing_egg,12,count,349,PLACEHOLDER store,Los Angeles,2026-10-20
+prd_onion_1ct,ing_onion,1,count,99,PLACEHOLDER store,Los Angeles,2026-10-20
+prd_rice_900g,ing_rice,900,g,299,PLACEHOLDER store,Los Angeles,2026-10-20
+prd_soy_sauce_296ml,ing_soy_sauce,296,ml,249,PLACEHOLDER store,Los Angeles,2026-10-20
+prd_olive_oil_500ml,ing_olive_oil,500,ml,699,PLACEHOLDER store,Los Angeles,2026-10-20
+prd_butter_454g,ing_butter,454,g,449,PLACEHOLDER store,Los Angeles,2026-10-20
+prd_parmesan_170g,ing_parmesan,170,g,499,PLACEHOLDER store,Los Angeles,2026-10-20
+prd_scallion_6ct,ing_scallion,6,count,129,PLACEHOLDER store,Los Angeles,2026-10-20
+prd_frozen_peas_454g,ing_frozen_peas,454,g,199,PLACEHOLDER store,Los Angeles,2026-10-20
+prd_pasta_454g,ing_pasta,454,g,149,PLACEHOLDER store,Los Angeles,2026-10-20
