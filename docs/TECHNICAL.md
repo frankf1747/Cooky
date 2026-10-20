@@ -85,6 +85,7 @@ npx supabase status -o env    # API_URL, PUBLISHABLE_KEY, SECRET_KEY → .env.lo
 npm run seed                  # idempotent; validates every CSV row before loading
 npm run dev
 npx supabase test db          # database tests: access rules, quota, fridge ledger
+npm run dev:grant-pro -- you@example.com   # local only: make a local account Pro (refuses hosted URLs)
 npx supabase db reset         # wipe local data and re-apply migrations (then npm run seed)
 ```
 

@@ -19,6 +19,7 @@ cp .env.example .env.local            # then paste API_URL, PUBLISHABLE_KEY, SEC
 npx supabase status -o env
 npm run seed                          # loads supabase/seed/*.csv
 npm run dev                           # http://localhost:3000 → sign up → click around
+npm run dev:grant-pro -- you@example.com   # local only: unlock Pro features before billing exists
 ```
 
 Every panel that says "Not implemented" is the progress bar. AI runs in fake mode until
@@ -29,6 +30,7 @@ Building a feature with Claude Code? It loads `AGENTS.md`; ask it to use the `co
 
 | # | Read | Why | Minutes |
 |---|---|---|---|
+| 0 | [`docs/PROPOSAL.md`](docs/PROPOSAL.md) | **Start here:** the plan, who does what, and your first hour | 10 |
 | 1 | [`docs/PRD.md`](docs/PRD.md) | What we are building, the journey without and with Cooky, the core tension | 10 |
 | 2 | [`docs/DESIGN.md`](docs/DESIGN.md) | The five design questions and our trade-offs | 8 |
 | 3 | [`docs/TECHNICAL.md`](docs/TECHNICAL.md) | Architecture by owner, env vars, commands, troubleshooting | 12 |
