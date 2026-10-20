@@ -1,0 +1,253 @@
+{
+  "_comment": "Declared BEFORE the first run. Do not loosen a target to make a run pass; change it only with a written reason and a date in notes. Every number in the Cooky docs lives here; prose points at these keys.",
+  "project": "Cooky",
+  "tier": "L",
+  "declaredAt": "2026-10-20",
+  "targets": {
+    "min_receipt_auto_accept_precision": 0.95,
+    "max_receipt_flag_rate": 0.3,
+    "min_receipt_food_line_recall": 0.9,
+    "max_receipt_log_time_p50_s": 90,
+    "min_recipe_import_ingredient_accuracy": 0.9,
+    "min_shopping_calc_exact_rate": 1.0,
+    "min_plan_constraint_pass_rate": 1.0,
+    "min_plan_success_rate": 0.95,
+    "min_infeasible_honesty_rate": 1.0,
+    "min_cook_retrieval_recall_at_k": 0.9,
+    "min_cook_citation_valid_rate": 1.0,
+    "min_cook_answer_faithfulness": 0.9,
+    "min_evidence_gap_honesty_rate": 0.9,
+    "min_fridge_consistency_rate": 1.0,
+    "min_expiry_alert_recall": 1.0,
+    "min_guardrail_block_rate": 1.0,
+    "max_guardrail_false_block_rate": 0.05,
+    "min_billing_scenario_pass_rate": 1.0,
+    "max_plan_p95_ms": 25000,
+    "max_receipt_parse_p95_ms": 30000,
+    "max_recipe_import_p95_ms": 30000,
+    "max_cook_answer_p95_ms": 8000,
+    "max_api_read_p95_ms": 800,
+    "max_error_rate_pct": 2,
+    "max_cost_per_plan_usd": 0.01,
+    "max_cost_per_receipt_usd": 0.05,
+    "max_cost_per_import_usd": 0.01,
+    "max_cost_per_cook_answer_usd": 0.005,
+    "min_overbuy_reduction_pct": 30,
+    "min_planning_time_reduction_pct": 50
+  },
+  "notes": {
+    "min_receipt_auto_accept_precision": "Share of receipt lines Cooky auto-accepts (not flagged) whose ingredient, quantity and unit are all correct. This is the CORE TENSION, side one: a wrong item that slips in silently corrupts every plan and alert built on the fridge. One silent error per twenty lines is the most a user forgives before they stop trusting the fridge.",
+    "max_receipt_flag_rate": "Share of food lines flagged for the user to check. CORE TENSION, side two: if more than about one line in three needs attention, logging feels like typing it in by hand, which is the chore that killed earlier fridge apps. Measured together with min_receipt_auto_accept_precision on the same receipts; neither may be bought by trading the other.",
+    "min_receipt_food_line_recall": "Share of food lines on the receipt that appear in the draft at all (auto or flagged). A dropped line is an item the fridge will never know about.",
+    "max_receipt_log_time_p50_s": "Median seconds from tapping 'scan receipt' to a confirmed fridge update, measured by stopwatch in the pilot. About the time it takes to put groceries away; typing a typical trip by hand takes several minutes. v1: measured in the classmate test.",
+    "min_recipe_import_ingredient_accuracy": "Share of ingredient rows in an imported draft with the right catalog ingredient, quantity and unit. Below this, users must fix most imports by hand and stop importing.",
+    "min_shopping_calc_exact_rate": "Shopping math is deterministic code. Package counts, cents and leftovers must match the hand-computed answers exactly; any miss is a bug, not a tolerance.",
+    "min_plan_constraint_pass_rate": "Share of shown plans with zero violations: no excluded or allergen ingredient, no duplicate meal, no unknown id, total within budget. Enforced in code, so anything below 1.0 means the guardrail is broken.",
+    "min_plan_success_rate": "Share of plan requests that have at least one feasible set and end in a valid plan within the repair cap. The rest must fail honestly with an error, never a fake plan.",
+    "min_infeasible_honesty_rate": "When no feasible set exists, the share of runs that say so (with the cheapest feasible estimate or hints) instead of showing a plan.",
+    "min_cook_retrieval_recall_at_k": "Retrieval stage of the cooking assistant: share of reference questions whose expected step or FAQ id is in the retrieved set. Measured separately from generation so a bad answer can be traced to its stage.",
+    "min_cook_citation_valid_rate": "Every citation id in an answer must be one retrieved in that same run. Enforced in code, so anything below 1.0 is a guardrail bug.",
+    "min_cook_answer_faithfulness": "Generation stage: share of answers whose claims all follow from the cited chunks, labelled by a person. A cooking assistant that invents steps ruins dinners.",
+    "min_evidence_gap_honesty_rate": "Share of out-of-recipe or unsupported questions answered with 'not covered by this recipe' or a clarifying question, instead of a confident guess.",
+    "min_fridge_consistency_rate": "After the scripted journey (receipt confirm, cook confirm, toss, fridge check, retries and double-clicks), the share of fridge items whose quantity equals the ledger's expected value. The fridge is the product; it must not drift.",
+    "min_expiry_alert_recall": "Every active item whose expiry falls inside the alert lead window gets an alert from the next daily run. Pure code, so it must be complete.",
+    "min_guardrail_block_rate": "Share of bad cases stopped: prompt injection in receipts and imported pages, another user's ids, unpaid calls to Pro routes, SSRF import URLs, over-quota calls.",
+    "max_guardrail_false_block_rate": "Share of normal requests in the guardrail set that are wrongly blocked. A guardrail that blocks good users is as broken as one that lets bad requests through.",
+    "min_billing_scenario_pass_rate": "The eight billing scenarios (success, cancel, failed card, duplicate webhook, bad signature, delayed webhook, unpaid Pro call, already-Pro checkout) must all pass. Money is never approximately right.",
+    "max_plan_p95_ms": "A plan is a deliberate action with a progress screen; past this, users assume it is stuck. Includes the agent's tool calls and repairs.",
+    "max_receipt_parse_p95_ms": "The user is standing in the kitchen holding the receipt; past this they put the phone down. Parsing is synchronous in v1, so this also guards the serverless function timeout.",
+    "max_recipe_import_p95_ms": "Same tolerance as receipt parsing: one deliberate wait with a progress indicator.",
+    "max_cook_answer_p95_ms": "Asked mid-cooking with hands busy; an answer slower than this arrives after the pan burns.",
+    "max_api_read_p95_ms": "Non-AI reads (fridge, recipes, plans) are the cheap path and must feel instant.",
+    "max_error_rate_pct": "Share of requests ending in an unexpected 5xx across the benchmark. Honest, expected errors (422 infeasible, 429 quota) do not count.",
+    "max_cost_per_plan_usd": "One planner call plus at most the allowed repairs, priced at costModel rates. Changed 2026-10-20, before any run: default model moved to claude-haiku-5-5 for the team's small budget; value set from Haiku prices with headroom.",
+    "max_cost_per_receipt_usd": "One vision call plus at most one repair, catalog in a cached prefix. Leaves room to step this unit up to claude-sonnet-5-5 if Haiku misses its smoke targets. Changed 2026-10-20, before any run: default model moved to claude-haiku-5-5 for the team's small budget; value set from Haiku prices with headroom.",
+    "max_cost_per_import_usd": "One extraction call plus at most one repair over a page snapshot capped by limits.importTextMaxChars (v2 feature). Changed 2026-10-20, before any run: default model moved to claude-haiku-5-5 for the team's small budget; value set from Haiku prices with headroom.",
+    "max_cost_per_cook_answer_usd": "The highest-volume AI feature; a cooking session can ask many questions. Changed 2026-10-20, before any run: default model moved to claude-haiku-5-5 for the team's small budget; value set from Haiku prices with headroom.",
+    "min_overbuy_reduction_pct": "Pilot comparison, exploratory: the same week of meals planned by hand vs. with Cooky, counting units bought beyond what the recipes need after subtracting what was already at home. Small sample; reported honestly even if missed. Measured in v2 only (week-long pilot); v1 runs a short classmate test and reports it qualitatively.",
+    "min_planning_time_reduction_pct": "Pilot comparison, exploratory: minutes from 'what should I cook this week' to a finished shopping list, by hand vs. with Cooky. Measured in v2 only (week-long pilot); v1 runs a short classmate test and reports it qualitatively."
+  },
+  "budgets": {
+    "planner": {
+      "maxSteps": 3,
+      "maxRepairs": 2,
+      "maxWallClockSec": 30,
+      "maxCostUsd": 0.02
+    },
+    "receipt_reader": {
+      "maxSteps": 2,
+      "maxRepairs": 1,
+      "maxWallClockSec": 45,
+      "maxCostUsd": 0.08
+    },
+    "recipe_importer": {
+      "maxSteps": 2,
+      "maxRepairs": 1,
+      "maxWallClockSec": 45,
+      "maxCostUsd": 0.03
+    },
+    "cook_assistant": {
+      "maxSteps": 2,
+      "maxRepairs": 1,
+      "maxWallClockSec": 12,
+      "maxCostUsd": 0.01
+    },
+    "preference_proposer": {
+      "maxSteps": 2,
+      "maxRepairs": 1,
+      "maxWallClockSec": 10,
+      "maxCostUsd": 0.005
+    }
+  },
+  "quotas": {
+    "_comment": "Per user. Enforced atomically in src/platform/quotas.ts before any model call. Free = lifetime counts; pro = per calendar day in the user's timezone.",
+    "free": {
+      "plans_lifetime": 1,
+      "receipts_lifetime": 0,
+      "imports_lifetime": 0,
+      "cook_answers_lifetime": 0
+    },
+    "pro": {
+      "plans_per_day": 10,
+      "swaps_per_day": 30,
+      "receipts_per_day": 5,
+      "imports_per_day": 10,
+      "cook_answers_per_day": 60,
+      "preference_proposals_per_day": 30
+    }
+  },
+  "limits": {
+    "receiptImageMaxMb": 8,
+    "receiptImageMaxPx": 2400,
+    "importTextMaxChars": 30000,
+    "importFetchTimeoutMs": 8000,
+    "importFetchMaxBytes": 2000000,
+    "cookQuestionMaxChars": 500,
+    "wishesMaxChars": 500,
+    "feedbackMaxChars": 500,
+    "cookHistoryTurns": 3,
+    "retrievalTopK": 5,
+    "servingsMin": 1,
+    "servingsMax": 4,
+    "mealsPerPlanMin": 2,
+    "mealsPerPlanMax": 5,
+    "plannerFeasibleSetsShown": 8,
+    "alertLeadDays": 2,
+    "alertCronUtc": "0 15 * * *",
+    "entitlementPollIntervalMs": 2000,
+    "entitlementPollMaxMs": 30000,
+    "receiptImageRetentionDays": 0,
+    "receiptDraftImageRetentionDays": 7,
+    "globalDailySpendCapUsd": 5
+  },
+  "costModel": {
+    "pricesCheckedAt": "2026-10-20",
+    "source": "Anthropic first-party API rates, claude-api skill model table (cached 2026-10-06). Re-check on the pricing page before the write-up.",
+    "defaultModel": "claude-haiku-5-5",
+    "usdPerMillionTokens": {
+      "claude-opus-5-5": {
+        "input": 4.0,
+        "output": 20.0,
+        "cacheRead": 0.2
+      },
+      "claude-sonnet-5-5": {
+        "input": 2.0,
+        "output": 10.0,
+        "cacheRead": 0.2
+      },
+      "claude-haiku-5-5": {
+        "input": 0.1,
+        "output": 0.5
+      }
+    },
+    "proPriceUsd": 4.99,
+    "expectedActiveUserWeek": {
+      "plans": 2,
+      "swaps": 3,
+      "receipts": 1,
+      "imports": 1,
+      "cookAnswers": 15
+    },
+    "stepUpModel": "claude-sonnet-5-5",
+    "teamBudgetUsd": 20,
+    "note": "Default changed from claude-opus-5-5 to claude-haiku-5-5 on 2026-10-20 at the team's request (small budget; a simple model is enough). Haiku prices apply to prompts up to 100K tokens."
+  },
+  "workload": {
+    "referenceSets": {
+      "receipts": {
+        "minReceipts": 20,
+        "minFoodLines": 200,
+        "note": "Real receipts from team members, card digits and loyalty numbers blurred before commit."
+      },
+      "imports": {
+        "minRecipes": 30,
+        "note": "Saved page snapshots, not live URLs, so anchors do not move."
+      },
+      "calc": {
+        "minCases": 30
+      },
+      "plans": {
+        "minCases": 30,
+        "infeasibleCases": 6
+      },
+      "cook": {
+        "minQuestions": 40,
+        "outOfScopeQuestions": 10
+      },
+      "guardrails": {
+        "minBadCases": 30,
+        "minGoodCases": 30
+      }
+    },
+    "benchmark": {
+      "concurrency": 1,
+      "runsPerCase": 1,
+      "target": "deployed preview URL"
+    },
+    "pilot": {
+      "minUsers": 3,
+      "maxUsers": 5,
+      "days": 7
+    },
+    "smokeSets": {
+      "_comment": "v1 (demo day). Enough to catch breakage and show good and failed examples; not a statistical claim.",
+      "seedRecipes": 12,
+      "seedIngredients": 40,
+      "receipts": 6,
+      "calc": 10,
+      "plans": 8,
+      "plansInfeasible": 2,
+      "cook": 12,
+      "cookOutOfScope": 4,
+      "guardBad": 10,
+      "guardGood": 10,
+      "billingScenarios": 8,
+      "classmateTestUsers": 4,
+      "classmateTestMinutes": 10
+    }
+  },
+  "measuredIn": {
+    "_comment": "Which targets the v1 gate checks. Everything else is reported if measured, and becomes blocking in v2.",
+    "v1": [
+      "min_receipt_auto_accept_precision",
+      "max_receipt_flag_rate",
+      "min_receipt_food_line_recall",
+      "min_shopping_calc_exact_rate",
+      "min_plan_constraint_pass_rate",
+      "min_plan_success_rate",
+      "min_infeasible_honesty_rate",
+      "min_cook_citation_valid_rate",
+      "min_evidence_gap_honesty_rate",
+      "min_fridge_consistency_rate",
+      "min_guardrail_block_rate",
+      "max_guardrail_false_block_rate",
+      "min_billing_scenario_pass_rate",
+      "max_plan_p95_ms",
+      "max_receipt_parse_p95_ms",
+      "max_cook_answer_p95_ms",
+      "max_cost_per_plan_usd",
+      "max_cost_per_receipt_usd",
+      "max_cost_per_cook_answer_usd"
+    ]
+  }
+}

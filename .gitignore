@@ -1,0 +1,45 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js / build
+/.next/
+/out/
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# testing
+/coverage
+/test-results/
+/playwright-report/
+
+# env and secrets: only .env.example is committed
+.env
+.env*.local
+.env.*
+!.env.example
+
+# vercel
+.vercel
+
+# supabase local state
+/supabase/.temp/
+/supabase/.branches/
+
+# eval outputs (results are quoted in the write-up, not committed)
+/eval/runs/
+
+# agent scratch
+/.superpowers/
+
+# course materials never belong in the repo
+*.pdf
+*.docx
+*.pptx
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*

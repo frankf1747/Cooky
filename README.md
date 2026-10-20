@@ -1,0 +1,81 @@
+# Cooky
+
+> A meal-planning web app with a virtual fridge: plan meals from what you already have, buy
+> exactly what the recipes need, snap the receipt to stock the fridge, and cook the right dish
+> before food goes off. MGMT 298E capstone; Next.js, Supabase, Claude and Stripe test mode.
+
+## Start here
+
+**Status: blueprint only.** Demo day is about two days out, so only the v1 scope in
+[SPEC §0](docs/SPEC.md#0-demo-day-scope-v1) gets built; the rest is the roadmap. The skeleton
+(SPEC §14.1) is the next step. Once it lands:
+
+```bash
+npm install
+cp .env.example .env.local   # fill in test keys; see docs/TECHNICAL.md
+npm run dev                  # http://localhost:3000
+```
+
+On day one every route except `/api/health` answers `501 not implemented`, and every page
+shows "not implemented" panels. That is correct: it is the progress bar.
+
+## Read, in this order
+
+| # | Read | Why | Minutes |
+|---|---|---|---|
+| 1 | [`docs/PRD.md`](docs/PRD.md) | What we are building, the journey without and with Cooky, the core tension | 10 |
+| 2 | [`docs/DESIGN.md`](docs/DESIGN.md) | The five design questions and our trade-offs | 8 |
+| 3 | [`docs/TECHNICAL.md`](docs/TECHNICAL.md) | Architecture by owner, env vars, commands, troubleshooting | 12 |
+| 4 | `spec/targets.json` | What "working" means, in numbers | 5 |
+| 5 | [`docs/SPEC.md`](docs/SPEC.md) | Every requirement, route, table and check (reference, not cover to cover) | as needed |
+
+Coding agents load [`AGENTS.md`](AGENTS.md) (via `CLAUDE.md`) and work from `docs/SPEC.md`.
+
+## What is yours
+
+Split by ownership of files; each owner builds *and* verifies their folders. Names are
+placeholders until the team assigns them.
+
+| Owner | Folders | Others may edit? |
+|---|---|---|
+| Platform (Frank) | `src/platform/`, `src/ui/`, `spec/contract.ts`, `supabase/migrations/`, `src/modules/{billing,alerts}/`, landing, auth, onboarding, settings, billing and alerts pages, `.claude/`, CI, deploy | No: propose changes |
+| Recipes & Cook (third coder, or Frank after Day 1) | `src/modules/{recipes,cook}/`, recipes and cook pages | No |
+| Plan & Shop | `src/modules/{planning,preferences}/`, plan, shop and preferences pages | No |
+| Receipts & Fridge | `src/modules/{receipts,fridge}/`, receipts and fridge pages | No |
+| Data & Proof (non-coders) | seed data CSVs in `supabase/seed/`, `eval/` cases, `docs/PRD.md`, write-up, slides | No |
+| Everyone, with review | `spec/targets.json` (Data & Proof owner approves), `package.json` (Platform owner approves) | Only through the owner |
+
+## Build order (two days)
+
+1. **Day 0 → Day 1 morning:** Frank lands the walking skeleton (every route `501`, deployed);
+   Data & Proof fill the seed CSVs and photograph receipts (SPEC §14.1).
+2. **Day 1:** accounts and Stripe; fridge ledger and page; shopping math; then the planner and
+   receipt scan, in parallel by owner (SPEC §14.2).
+3. **Day 1 gate:** a new account on the public URL signs up, pays in test mode, gets a plan,
+   saves it, and stocks the fridge from a receipt. Shown live, not described.
+4. **Day 2 morning:** cook deductions, *Cook now*, cooking assistant; swap and preferences only
+   if the gate passed.
+5. **Day 2 afternoon:** feature freeze, smoke evals, billing and authorization scenarios,
+   classmate test, write-up, slides, two rehearsals.
+
+If behind, cut in the order in SPEC §14.4. Never cut login, Stripe, the planner, shopping math,
+receipt → fridge, or the live URL.
+
+## How to prove it
+
+```bash
+npm run check                                  # static: lint, types, secrets, live-key guard
+npm run check:contract                         # schemas, seed and reference sets validate
+npm run test                                   # unit tests
+npm run gate -- --upto 2 --base-url "$PREVIEW_URL"   # before merging: checks 0-2
+npm run gate -- --base-url "$PREVIEW_URL"            # milestones: checks 0-4, every target
+```
+
+Exit codes: `0` pass, `1` warnings, `2` fail. What each check measures, and against which
+target: SPEC §13.
+
+## Stuck?
+
+- Troubleshooting table (webhooks, RLS, email limits, timeouts, model errors): [`docs/TECHNICAL.md`](docs/TECHNICAL.md#troubleshooting).
+- Need a change in a folder you do not own: ask its owner; do not edit it.
+- A target looks wrong: raise it with the Data & Proof owner; never loosen it to pass.
