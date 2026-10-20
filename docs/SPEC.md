@@ -442,6 +442,7 @@ PATCH  /api/plans/{id}/checklist         // { ingredientId, checked }           
 POST   /api/receipts         [pro]       // multipart: image, planId?
                                          -> 200 { receipt: ReceiptDraft, run } | 400 | 403 | 413 | 422 not_a_receipt | 429 | 502 (receipt saved as failed)
 POST   /api/receipts/{id}/retry [pro]    -> same as above
+GET    /api/receipts/{id}                -> 200 ReceiptDraft | 404                     // reload the review screen
 POST   /api/receipts/{id}/confirm        // { lines: [{ lineId, include, ingredientId, qty, unit, location, expiresOn }], idempotencyKey }
                                          -> 200 { addedItemIds[], fridge: FridgeView }   // same key again: 200, original result
                                          | 409 already_confirmed (different key; body = original result)
