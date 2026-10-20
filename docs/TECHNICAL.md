@@ -74,30 +74,45 @@ See SPEC §8.3. The three that break teammates most often: AI endpoints never wr
 every id in AI output is validated against the run's candidates; money is integer cents with
 `null` for unknown.
 
+## Local development
+
+Node 22 (`nvm use` reads `.nvmrc`; supabase-js needs Node 22's native WebSocket) and Docker.
+
+```bash
+nvm use && npm install
+npx supabase start            # ports 563xx (see supabase/config.toml), so it can run beside other local Supabase projects
+npx supabase status -o env    # API_URL, PUBLISHABLE_KEY, SECRET_KEY → .env.local
+npm run seed                  # idempotent; validates every CSV row before loading
+npm run dev
+npx supabase test db          # database tests: access rules, quota, fridge ledger
+npx supabase db reset         # wipe local data and re-apply migrations (then npm run seed)
+```
+
+Local email confirmation is off (`supabase/config.toml`), so sign-up logs you straight in.
+Local auth emails, if turned on, land in Mailpit at http://127.0.0.1:56324.
+
 ## Build order, with commands
 
-Skeleton first (SPEC §14.1), then the critical path (SPEC §14.2).
+The skeleton (SPEC §14.1) is in place; the critical path is SPEC §14.2.
 
-1. **Scaffold and install everything once.** `npm install`, then `npm run dev` serves the
-   landing page and `npm run check` passes.
-2. **Supabase.** Create the project; `npx supabase link`; `npx supabase db push` applies
-   migrations; `npm run seed` loads `supabase/seed/`.
-3. **Env.** Copy `.env.example` to `.env.local` and fill it (table below). `npm run check`
-   refuses a live Stripe key.
-4. **Stubs.** `npm run dev`, then `curl localhost:3000/api/health` returns `200` and any other
-   route returns `501` with `x-request-id`.
-5. **Deploy.** Import the repo in Vercel, set env vars for Preview and Production, deploy.
-   Add the Stripe webhook endpoint `https://<url>/api/stripe/webhook` for the events in SPEC
-   ACC6; add the cron in `vercel.json` with `limits.alertCronUtc`.
-6. **Checks against the fake.** `AI_MODE=fake npm run gate -- --base-url http://localhost:3000`
-   passes; break the fake on purpose (wrong id, over budget) and confirm the gate fails.
-7. **Feature work** in each owner's folders, merging small and often to an always-runnable `main`.
+1. **Deploy (Platform, once).** Create a Supabase project and run `npx supabase link` then
+   `npx supabase db push`; set `.env` values from the project's API settings and run `npm run seed`
+   against it. Import the GitHub repo in Vercel, set the env vars below for Preview and
+   Production, deploy. In Stripe (test mode), create the Pro price, then a webhook endpoint
+   `https://<url>/api/stripe/webhook` for `checkout.session.completed` and
+   `checkout.session.async_payment_succeeded`; put its signing secret in Vercel.
+2. **Feature work** in each owner's folders: replace `notImplemented(...)` in
+   `src/modules/<m>/index.ts`, test first, then the page. Merge small and often to an
+   always-runnable `main`.
+3. **Before each merge:** `npm run gate -- --upto 2 --base-url <preview URL>`.
+4. **Add signed-in smoke cases** to `scripts/smoke.ts` as features land; add each eval runner to
+   `scripts/eval.ts`.
 
 ## Environment variables
 
 | Name | Where read | Secret | Notes |
 |---|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | client + server | no | |
+| `NEXT_PUBLIC_SUPABASE_URL` | client + server | no | local: `http://127.0.0.1:56321` |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | client + server | no | publishable (anon) key; RLS protects data |
 | `SUPABASE_SECRET_KEY` | `db.ts` writer client only | yes | bypasses RLS. Clients can only read (SPEC §9), so every write goes through `db.writer(userId)` after the handler resolved the session; webhook, cron and seed use it with their own authorization checks |
 | `ANTHROPIC_API_KEY` | `ai.ts` only | yes | |
@@ -157,3 +172,7 @@ Results go to `eval/runs/<date>-<set>.json` (gitignored); the write-up quotes th
 | AI routes return `503 ai_paused` | Team-wide daily spend cap reached | Expected; switch to `AI_MODE=fake` for UI work, or raise `limits.globalDailySpendCapUsd` with a note |
 | iPhone photo rejected | HEIC upload | Convert to JPEG in the browser before upload (canvas re-encode) |
 | Two teammates' migrations conflict | New migration created outside the skeleton | Ask the Platform owner; migrations are owned in one place |
+| `Node.js detected but native WebSocket not found` | Running a script on Node 20 | `nvm use` (Node 22) |
+| `supabase start`: port is already allocated | Another local Supabase project uses the same ports | Cooky uses 563xx; stop the other project or change ports in `supabase/config.toml` |
+| A write returns `permission denied` | Writing with `reader()`; clients may only read (SPEC §9) | Use `writer(userId).db` from server code |
+| Planner/cook works locally but returns odd answers | `AI_MODE=fake` returns fixtures | Set `ANTHROPIC_API_KEY` and remove `AI_MODE=fake` to use the real model |

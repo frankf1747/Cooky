@@ -697,7 +697,7 @@ non-receipt image).
 
 ## 14. Build plan
 
-The checks have not been run against a fake. Scope is §0 (v1). Day 0 is 2026-10-20;
+The merge gate (checks 0–2) runs against the skeleton in fake AI mode and passes; check-static and the database tests were broken on purpose and caught it. Checks 3–4 are not built yet. Scope is §0 (v1). Day 0 is 2026-10-20;
 `ASSUMED:` the presentation is at the end of Day 2. Hours are working hours (H0 = start).
 
 ### 14.1 Walking skeleton (Frank, Day 0 → Day 1 H2)
@@ -706,15 +706,15 @@ Only what teammates need to start in parallel. Everything else waits.
 
 | # | Piece | Done when | Status |
 |---|---|---|---|
-| S1 | Scaffold: Next.js + TypeScript, Tailwind, lint, typecheck, vitest, `.env.example`, `.gitignore`; **every v1 dependency installed once** (Supabase SSR client, Anthropic SDK, Stripe, zod, Playwright) | `npm run dev` and `npm run check` pass | ⬜ to build |
-| S2 | `spec/contract.ts`: schemas for v1 routes, records and AI outputs | compiles; stubs import it | ⬜ to build |
-| S3 | Migrations for v1 tables (§9) with SELECT-only RLS; `consume_quota()` and `apply_inventory_batch()`; seed loader that reads the CSVs in `supabase/seed/` | a fresh Supabase project migrates and loads sample rows | ⬜ to build |
-| S4 | Platform: `handler.ts`, auth, `db.ts` (reader + writer), `ai.ts` with `AI_MODE=fake` fixtures, quotas, units, money, ids, errors | a stub route answers through the wrapper with a request id | ⬜ to build |
-| S5 | Every v1 route file returns `501`; every module's `index.ts` exports typed stubs for the joins in §14.3 | `curl` shows `501` everywhere except `/api/health` | ⬜ to build |
-| S6 | App shell: auth pages, nav, one page per v1 feature with "not implemented" panels | a signed-in user can click through every page | ⬜ to build |
-| S7 | Deployed on Vercel with Supabase and Stripe test keys; Stripe webhook endpoint registered | the public URL serves `/api/health` | ⬜ to build |
-| S8 | Team harness: `.claude/skills/cooky-module/SKILL.md`, `.claude/agents/contract-reviewer.md`, seed CSV templates with a `README.md` | a teammate's Claude Code follows the skill on a stub | ⬜ to build |
-| S9 | CI running checks 0–1 on push | a PR shows a green check | ⬜ to build (drop if short on time) |
+| S1 | Scaffold: Next.js + TypeScript, Tailwind, lint, typecheck, vitest, `.env.example`, `.gitignore`; **every v1 dependency installed once** (Supabase SSR client, Anthropic SDK, Stripe, zod, Playwright) | `npm run dev` and `npm run check` pass | ✅ done |
+| S2 | `spec/contract.ts`: schemas for v1 routes, records and AI outputs | compiles; stubs import it | ✅ done |
+| S3 | Migrations for v1 tables (§9) with SELECT-only RLS; `consume_quota()` and `apply_inventory_batch()`; seed loader that reads the CSVs in `supabase/seed/` | a fresh Supabase project migrates and loads sample rows | ✅ done |
+| S4 | Platform: `handler.ts`, auth, `db.ts` (reader + writer), `ai.ts` with `AI_MODE=fake` fixtures, quotas, units, money, ids, errors | a stub route answers through the wrapper with a request id | ✅ done |
+| S5 | Every v1 route file returns `501`; every module's `index.ts` exports typed stubs for the joins in §14.3 | `curl` shows `501` everywhere except `/api/health` | ✅ done |
+| S6 | App shell: auth pages, nav, one page per v1 feature with "not implemented" panels | a signed-in user can click through every page | ✅ done |
+| S7 | Deployed on Vercel with Supabase and Stripe test keys; Stripe webhook endpoint registered | the public URL serves `/api/health` | ⬜ Frank: needs the Supabase, Vercel and Stripe accounts (TECHNICAL, Build order step 1) |
+| S8 | Team harness: `.claude/skills/cooky-module/SKILL.md`, `.claude/agents/contract-reviewer.md`, seed CSV templates with a `README.md` | a teammate's Claude Code follows the skill on a stub | ✅ done |
+| S9 | CI running checks 0–1 on push | a PR shows a green check | ✅ written; runs once the repo is on GitHub |
 
 **In parallel, no code needed (Data & Proof, Day 0 → Day 1 H3):** fill the seed CSVs from
 `supabase/seed/README.md`: recipes with steps and FAQs, ingredients with aliases, products and

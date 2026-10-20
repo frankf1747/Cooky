@@ -6,18 +6,24 @@
 
 ## Start here
 
-**Status: blueprint only.** Demo day is about two days out, so only the v1 scope in
-[SPEC §0](docs/SPEC.md#0-demo-day-scope-v1) gets built; the rest is the roadmap. The skeleton
-(SPEC §14.1) is the next step. Once it lands:
+**Status: walking skeleton.** Every route answers `501 not implemented` and every page shows a
+"Not implemented" panel; sign-up, log-in, the database and the checks work. Only the v1 scope in
+[SPEC §0](docs/SPEC.md#0-demo-day-scope-v1) gets built before demo day.
+
+Needs Node 22 (`.nvmrc`) and Docker (for the local database).
 
 ```bash
-npm install
-cp .env.example .env.local   # fill in test keys; see docs/TECHNICAL.md
-npm run dev                  # http://localhost:3000
+nvm use && npm install
+npx supabase start                    # local Postgres, Auth, Storage on ports 563xx
+cp .env.example .env.local            # then paste API_URL, PUBLISHABLE_KEY, SECRET_KEY from:
+npx supabase status -o env
+npm run seed                          # loads supabase/seed/*.csv
+npm run dev                           # http://localhost:3000 → sign up → click around
 ```
 
-On day one every route except `/api/health` answers `501 not implemented`, and every page
-shows "not implemented" panels. That is correct: it is the progress bar.
+Every panel that says "Not implemented" is the progress bar. AI runs in fake mode until
+`ANTHROPIC_API_KEY` is set, so you can build pages without spending the team budget.
+Building a feature with Claude Code? It loads `AGENTS.md`; ask it to use the `cooky-module` skill.
 
 ## Read, in this order
 
