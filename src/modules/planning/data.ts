@@ -12,6 +12,10 @@ export type PlanningData = {
   fridge: FridgeStock[];
   profile: FeasibleInput["profile"];
   hardPreferences: HardPreference[];
+  /** Confirmed soft preferences: context for the planner, never filters. */
+  softPreferences: HardPreference[];
+  /** The user's timezone, for "today" when deciding what expires soon. */
+  timezone: string;
   /** Latest price date among the products loaded, or null when none. */
   priceAsOf: string | null;
 };
@@ -27,8 +31,8 @@ type RecipeIngredientRow = { recipe_id: string; ingredient_id: string; qty: numb
 type IngredientRow = { id: string; name: string; allergen_tags: string[] };
 type ProductRow = { id: string; ingredient_id: string; package_size: number | string; unit: Unit; price_cents: number; price_date: string };
 type FridgeRow = { id: string; ingredient_id: string; qty: number | string; unit: Unit; expires_on: string | null };
-type ProfileRow = { excluded_ingredient_ids: string[]; allergen_tags: string[]; equipment: string[]; staple_ingredient_ids: string[] };
-type PreferenceRow = { id: string; category: string; value: string; scope_recipe_id: string | null };
+type ProfileRow = { excluded_ingredient_ids: string[]; allergen_tags: string[]; equipment: string[]; staple_ingredient_ids: string[]; timezone: string };
+type PreferenceRow = { id: string; kind: "hard" | "soft"; category: string; value: string; scope_recipe_id: string | null };
 
 /**
  * Recipes visible to the user (curated or their own); only `recipeIds` when given.
@@ -45,10 +49,10 @@ export async function loadPlanningData(db: SupabaseClient, userId: string, recip
     recipeQuery,
     db.from("fridge_items").select("id, ingredient_id, qty, unit, expires_on")
       .eq("user_id", userId).eq("status", "active").eq("kind", "ingredient"),
-    db.from("profiles").select("excluded_ingredient_ids, allergen_tags, equipment, staple_ingredient_ids")
+    db.from("profiles").select("excluded_ingredient_ids, allergen_tags, equipment, staple_ingredient_ids, timezone")
       .eq("user_id", userId).maybeSingle(),
-    db.from("preferences").select("id, category, value, scope_recipe_id")
-      .eq("user_id", userId).eq("active", true).eq("kind", "hard"),
+    db.from("preferences").select("id, kind, category, value, scope_recipe_id")
+      .eq("user_id", userId).eq("active", true),
   ]);
   const recipeRows = rows<RecipeRow>(recipeRes, "recipes");
   const fridgeRows = rows<FridgeRow>(fridgeRes, "fridge items");
@@ -94,7 +98,11 @@ export async function loadPlanningData(db: SupabaseClient, userId: string, recip
       equipment: profile?.equipment ?? [],
       stapleIngredientIds: profile?.staple_ingredient_ids ?? [],
     },
-    hardPreferences: prefRows.map((p) => ({ id: p.id, category: p.category, value: p.value, scopeRecipeId: p.scope_recipe_id })),
+    hardPreferences: prefRows.filter((p) => p.kind === "hard").map((p) => ({ id: p.id, category: p.category, value: p.value, scopeRecipeId: p.scope_recipe_id })),
+    softPreferences: prefRows
+      .filter((p) => p.kind === "soft")
+      .map((p) => ({ id: p.id, category: p.category, value: p.value, scopeRecipeId: p.scope_recipe_id })),
+    timezone: profile?.timezone ?? "America/Los_Angeles",
     priceAsOf: prodRows.map((p) => p.price_date).sort().at(-1) ?? null,
   };
 }

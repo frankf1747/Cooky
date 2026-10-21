@@ -2,27 +2,118 @@
 // Shopping math lives in shopping.ts (create it) and is pure code: the model never does arithmetic.
 import type { z } from "zod";
 import type { ChecklistPatch, PlanCreate, PlanDraft, PlanSave, PlanSummary, PlanSwap, PreferenceProposal, RunInfo, ShoppingList } from "@spec/contract";
-import { badRequest, notFound, notImplemented } from "@/platform/errors";
-import { reader } from "@/platform/db";
+import { PlannerChoice } from "@spec/contract";
+import targets from "@spec/targets.json";
+import { runAi } from "@/platform/ai";
+import { reader, writer } from "@/platform/db";
+import { ApiError, badRequest, notFound, notImplemented, unprocessable } from "@/platform/errors";
 import { loadPlanningData } from "./data";
+import { findFeasibleSets } from "./feasible";
+import { PLANNER_SYSTEM, expiringSoon, plannerContent, validateChoice } from "./planner";
 import { buildShoppingList } from "./shopping";
+import { findByKey, insertDraft, listSummaries, markSaved, readPlan } from "./store";
 
+/** PLN1–PLN6: code finds and prices feasible sets, the planner picks one, the draft is stored. */
 export async function createPlan(userId: string, input: z.infer<typeof PlanCreate>, requestId: string): Promise<{ plan: PlanDraft; run: RunInfo }> {
-  void userId;
-  void input;
-  void requestId;
-  throw notImplemented("planning.createPlan");
+  const db = await reader();
+
+  // PLN1: a repeat with the same key returns the original plan and costs nothing.
+  const earlier = await findByKey(db, userId, input.idempotencyKey);
+  if (earlier) return { plan: earlier.plan, run: { runId: earlier.runId ?? "none", terminated: "done", latencyMs: 0, costUsd: 0 } };
+
+  const data = await loadPlanningData(db, userId);
+  const mustUse = input.mustUseItemIds ?? [];
+  if (mustUse.some((id) => !data.fridge.some((f) => f.id === id))) throw notFound();
+
+  const result = findFeasibleSets({ ...data, servings: input.servings, budgetCents: input.budgetCents, maxMinutes: input.maxMinutes, meals: input.meals, mustUseItemIds: mustUse });
+  if (!result.ok) {
+    throw unprocessable("infeasible", "No set of recipes fits these constraints", { cheapestFeasibleCents: result.cheapestFeasibleCents, relax: result.relax });
+  }
+  if (!data.priceAsOf) throw new Error("planning: feasible sets exist but no product has a price date");
+
+  const sets = result.sets.slice(0, targets.limits.plannerFeasibleSetsShown);
+  const ingredientName = new Map(data.ingredients.map((i) => [i.id, i.name]));
+  const ctx = {
+    servings: input.servings,
+    budgetCents: input.budgetCents,
+    maxMinutes: input.maxMinutes,
+    sets,
+    recipes: data.recipes,
+    expiring: expiringSoon(data.fridge, data.timezone, targets.limits.alertLeadDays).map((f) => ({ ...f, name: ingredientName.get(f.ingredientId) ?? f.ingredientId })),
+    preferences: [...data.hardPreferences.map((p) => ({ ...p, kind: "hard" as const })), ...data.softPreferences.map((p) => ({ ...p, kind: "soft" as const }))],
+    wishes: input.wishes,
+  };
+
+  let lastViolations: string[] = [];
+  let choice: PlannerChoice;
+  let run: RunInfo;
+  try {
+    ({ output: choice, run } = await runAi({
+      unit: "planner",
+      userId,
+      requestId,
+      schema: PlannerChoice,
+      system: PLANNER_SYSTEM,
+      content: plannerContent(ctx),
+      validate: (out) => (lastViolations = validateChoice(out, ctx)),
+    }));
+  } catch (err) {
+    // Repairs used up on rule violations is plan_invalid (PLN5); provider errors stay as they are.
+    if (err instanceof ApiError && err.status === 502 && lastViolations.length > 0) {
+      throw new ApiError(502, "plan_invalid", "The planner did not return a valid plan", undefined, err.extra);
+    }
+    throw err;
+  }
+
+  const set = sets.find((s) => s.setId === choice.setId)!;
+  const fridgeById = new Map(data.fridge.map((f) => [f.id, f]));
+  const prefById = new Map(ctx.preferences.map((p) => [p.id, p]));
+  const meals = set.recipeIds.map((recipeId) => {
+    const recipe = data.recipes.find((r) => r.id === recipeId)!;
+    const uses = new Set(recipe.ingredients.filter((i) => !i.optional).map((i) => `${i.ingredientId}|${i.unit}`));
+    return {
+      recipeId,
+      title: recipe.title,
+      reasons: choice.meals.find((m) => m.recipeId === recipeId)!.reasons.filter((r) => r.trim()),
+      // Code decides which fridge items and preferences belong to which meal.
+      usesFridgeItemIds: set.usesFridgeItemIds.filter((id) => {
+        const f = fridgeById.get(id)!;
+        return uses.has(`${f.ingredientId}|${f.unit}`);
+      }),
+      usesPreferenceIds: choice.usedPreferenceIds.filter((id) => {
+        const scope = prefById.get(id)?.scopeRecipeId;
+        return !scope || scope === recipeId;
+      }),
+    };
+  });
+
+  const draft = {
+    servings: input.servings,
+    budgetCents: input.budgetCents,
+    meals,
+    shopping: set.shopping,
+    totalCents: set.totalCents,
+    priceAsOf: data.priceAsOf,
+    assumptions: [
+      `Prices are typical package prices checked on ${data.priceAsOf}; taxes are not included.`,
+      "Fridge stock is what you confirmed in Cooky; staples you listed are assumed on hand.",
+      ...choice.assumptions.filter((a) => a.trim()),
+    ],
+  };
+  const stored = await insertDraft(writer(userId), input, draft, run);
+  if (stored) return { plan: stored, run };
+  // Lost a race with a concurrent request using the same key: return that request's plan.
+  const winner = await findByKey(db, userId, input.idempotencyKey);
+  if (!winner) throw new Error("planning: idempotency conflict but no plan found for the key");
+  return { plan: winner.plan, run };
 }
 
 export async function listPlans(userId: string): Promise<{ items: z.infer<typeof PlanSummary>[] }> {
-  void userId;
-  throw notImplemented("planning.listPlans");
+  return { items: await listSummaries(await reader(), userId) };
 }
 
 export async function getPlan(userId: string, planId: string): Promise<PlanDraft> {
-  void userId;
-  void planId;
-  throw notImplemented("planning.getPlan");
+  return readPlan(await reader(), userId, planId);
 }
 
 export async function swapMeal(userId: string, planId: string, input: z.infer<typeof PlanSwap>, requestId: string): Promise<{ plan: PlanDraft; proposals: PreferenceProposal[]; run: RunInfo }> {
@@ -34,10 +125,7 @@ export async function swapMeal(userId: string, planId: string, input: z.infer<ty
 }
 
 export async function savePlan(userId: string, planId: string, input: z.infer<typeof PlanSave>): Promise<{ planId: string; version: number; status: "saved" }> {
-  void userId;
-  void planId;
-  void input;
-  throw notImplemented("planning.savePlan");
+  return markSaved(await reader(), writer(userId), planId, input.version);
 }
 
 /** Join: price recipes for a user's fridge and servings (also used by Cook now and rescue ranking). */
