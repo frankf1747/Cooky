@@ -140,7 +140,11 @@ export function PlanForm({ data, limits, preselected = [] }: { data: PlanFormDat
                   onChange={(e) => changed(setMustUse)(e.target.checked ? [...mustUse, f.id] : mustUse.filter((x) => x !== f.id))}
                 />
                 {f.name} · {formatQty(f.qty, f.unit)}
-                {f.expiresOn && <span className="opacity-70">· use by {f.expiresOn}</span>}
+                {f.expiresOn && (
+                  <span className={f.pastUseBy ? "text-amber-600 dark:text-amber-400" : "opacity-70"}>
+                    · {f.pastUseBy ? "past typical use-by" : "use by"} {f.expiresOn}
+                  </span>
+                )}
               </label>
             ))}
           </div>
