@@ -1,34 +1,11 @@
 // Owner: Recipes & Cook. Library, catalog, retrieval for the cooking assistant (SPEC §5.2, ASK2).
 // Implement in files next to this one and re-export here. Other modules call only what is exported.
-import type { Chunk, Ingredient, Recipe, RecipeDraft, RecipeSummary, RunInfo } from "@spec/contract";
+import type { RecipeDraft, RunInfo } from "@spec/contract";
 import type { z } from "zod";
-import type { ImportRequest, IngredientCreate, RecipesQuery } from "@spec/contract";
+import type { ImportRequest, IngredientCreate } from "@spec/contract";
 import { notImplemented } from "@/platform/errors";
 
-export async function list(userId: string, query: z.infer<typeof RecipesQuery>): Promise<{ items: RecipeSummary[] }> {
-  void userId;
-  void query;
-  throw notImplemented("recipes.list");
-}
-
-export async function get(userId: string, recipeId: string): Promise<Recipe> {
-  void userId;
-  void recipeId;
-  throw notImplemented("recipes.get");
-}
-
-export async function listIngredients(userId: string, q: string | undefined): Promise<{ items: Ingredient[] }> {
-  void userId;
-  void q;
-  throw notImplemented("recipes.listIngredients");
-}
-
-/** Join used by cook.ask (SPEC ASK2): the top chunks of one recipe for a question. */
-export async function retrieveChunks(recipeId: string, question: string): Promise<Chunk[]> {
-  void recipeId;
-  void question;
-  throw notImplemented("recipes.retrieveChunks");
-}
+export { get, list, listIngredients, retrieveChunks } from "./library";
 
 // ---- v2
 export async function createIngredient(userId: string, input: z.infer<typeof IngredientCreate>): Promise<{ ingredientId: string }> {

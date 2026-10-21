@@ -13,6 +13,10 @@ if (set === "receipts") {
   import("../src/modules/receipts/eval-run")
     .then((m) => m.runReceiptsEval())
     .then((code) => process.exit(code), (err) => (console.error(err), process.exit(1)));
+} else if (set === "cook") {
+  import("../src/modules/cook/eval-run")
+    .then((m) => m.runCookEval())
+    .then((code) => process.exit(code), (err) => (console.error(err), process.exit(1)));
 } else {
   console.log(`eval: no runner for "${set}" yet. Its owner adds one here (see eval/README.md).`);
   process.exit(1);
