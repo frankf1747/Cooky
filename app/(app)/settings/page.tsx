@@ -1,13 +1,19 @@
-import { NotImplemented } from "@/ui/NotImplemented";
+// Owner: Platform. Change the onboarding answers later (SPEC ACC3).
+import targets from "@spec/targets.json";
+import { redirect } from "next/navigation";
+import { getSessionUser } from "@/platform/auth";
+import { profileFormData } from "@/modules/account";
+import { ProfileForm } from "@/ui/ProfileForm";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const user = await getSessionUser();
+  if (!user) redirect("/login");
+  const data = await profileFormData(user.id);
   return (
-    <NotImplemented
-      title="Settings"
-      owner="Platform"
-      spec="ACC3"
-      v={1}
-      purpose="Change your household, budget, exclusions, staples and timezone."
-    />
+    <section className="mx-auto w-full max-w-3xl p-6">
+      <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Your household, budget, foods you never eat, staples and timezone.</p>
+      <ProfileForm data={data} limits={{ servingsMin: targets.limits.servingsMin, servingsMax: targets.limits.servingsMax }} mode="settings" />
+    </section>
   );
 }
