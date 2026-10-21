@@ -62,3 +62,19 @@ The cooking assistant answers only from these. `kind` is `step` (with `step_no`,
 `Step N`, and `timer_seconds` when the step is timed), `tip` (what to prep while step `step_no`
 runs, label `Tip`) or `faq` (no `step_no`, label like `FAQ: no wok`). Write FAQs for the substitutions
 and questions a beginner asks; say what does *not* work, too.
+
+## Where the v1 numbers come from (2026-10-21)
+
+- **Prices:** Trader Joe's list prices on traderjoes.com, read on 2026-10-21 (`store_label`
+  says so). Prices can differ slightly by store. Two items have no price online and keep a
+  `PLACEHOLDER` label until someone checks them in a Los Angeles store: `prd_spinach_170g` and
+  `prd_garlic_bulb_10ct`.
+- **Package counts that are estimates:** meat, fish and peppers are sold by weight; the row uses
+  the 1 lb list price for a 454 g pack. `prd_lemon_bag_6ct` is a 2 lb bag counted as about 6
+  lemons, `prd_scallion_6ct` a 6 oz bunch counted as about 6 scallions, and
+  `prd_garlic_bulb_10ct` one bulb counted as about 10 cloves (`ing_garlic` is counted in cloves).
+- **Shelf life:** the USDA FSIS FoodKeeper data set (`foodkeeper.json`), item number in each
+  `source`, using the shorter end of each range. Milk and sour cream say "package use-by date"
+  there; milk uses 7 days as a typical guide and says so.
+- **Recipes:** written by the team for this project, so `source_url` is empty and
+  `source_label` says so. Quantities are for `base_servings`; rice is uncooked weight.
