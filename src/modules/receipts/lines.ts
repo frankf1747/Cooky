@@ -47,11 +47,21 @@ function addDays(date: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * The typical date for one location: the item's own shelf life (`table`), else its category's
+ * (`category`), counted from the purchase date, or today when the date was not legible.
+ */
+export function typicalExpiry(location: Location, shelf: ShelfLife, fallback: ShelfLife | undefined, dates: LineDates): { expiresOn: string | null; source: "table" | "category" } {
+  const base = dates.purchasedOn ?? dates.today;
+  if (shelf[location]) return { expiresOn: addDays(base, shelf[location]), source: "table" };
+  const days = fallback?.[location];
+  return { expiresOn: days ? addDays(base, days) : null, source: "category" };
+}
+
 function placement(category: Category, shelf: ShelfLife, fallback: ShelfLife | undefined, dates: LineDates) {
   const location = defaultLocation(category, shelf) ?? (fallback ? defaultLocation(category, fallback) : null);
   if (!location) return { location: null, expiresOn: null };
-  const days = shelf[location] ?? fallback?.[location];
-  return { location, expiresOn: days ? addDays(dates.purchasedOn ?? dates.today, days) : null };
+  return { location, expiresOn: typicalExpiry(location, shelf, fallback, dates).expiresOn };
 }
 
 /** Printed quantity × package count in a base unit; "bunch" goes through the product's package size. */
