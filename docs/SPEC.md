@@ -712,9 +712,9 @@ Only what teammates need to start in parallel. Everything else waits.
 | S4 | Platform: `handler.ts`, auth, `db.ts` (reader + writer), `ai.ts` with `AI_MODE=fake` fixtures, quotas, units, money, ids, errors | a stub route answers through the wrapper with a request id | ✅ done |
 | S5 | Every v1 route file returns `501`; every module's `index.ts` exports typed stubs for the joins in §14.3 | `curl` shows `501` everywhere except `/api/health` | ✅ done |
 | S6 | App shell: auth pages, nav, one page per v1 feature with "not implemented" panels | a signed-in user can click through every page | ✅ done |
-| S7 | Deployed on Vercel with Supabase and Stripe test keys; Stripe webhook endpoint registered | the public URL serves `/api/health` | ◐ Supabase hosted project live, schema pushed and seeded (2026-10-20); Vercel and Stripe still to do |
+| S7 | Deployed on Vercel with Supabase and Stripe test keys; Stripe webhook endpoint registered | the public URL serves `/api/health` | ◐ Supabase hosted project live, every migration pushed, seeded (2026-10-21); Stripe code merged but no test keys yet; Vercel still to do |
 | S8 | Team harness: `.claude/skills/cooky-module/SKILL.md`, `.claude/agents/contract-reviewer.md`, seed CSV templates with a `README.md` | a teammate's Claude Code follows the skill on a stub | ✅ done |
-| S9 | CI running checks 0–1 on push | a PR shows a green check | ✅ written; runs once the repo is on GitHub |
+| S9 | CI running checks 0–1 on push | a PR shows a green check | ✅ runs `checks` and `db` on every PR |
 
 **In parallel, no code needed (Data & Proof with Recipes & Cook, Day 0 → Day 1 H3):** fill the seed CSVs from
 `supabase/seed/README.md`: recipes with steps and FAQs, ingredients with aliases, products and
@@ -774,6 +774,28 @@ checkout, the planner, exact shopping math, receipt → fridge with review, the 
 expiry, guardrails, honest errors, the live URL, the write-up.
 
 Everything marked v2 in §0 is the post-demo roadmap and goes in the write-up's next steps.
+
+### 14.5 Status on `main` (2026-10-21)
+
+What a user can do today, by journey step. "Merged" means on `main` with green CI, the merge gate
+passing and a reviewer's click-through; real Claude and real Stripe calls are not run yet (no
+`ANTHROPIC_API_KEY`, no Stripe test keys), so AI steps were checked in `AI_MODE=fake`.
+v1 API routes answering for real: 17½ of 29.
+
+| Step | Owner | On `main` | Still to do for v1 |
+|---|---|---|---|
+| 1 Set up | Platform | Onboarding and settings (household, budget, minutes, never-eat, staples, timezone); `/api/me`, `/api/profile`; login goes to onboarding until saved (ACC1–ACC4) | — |
+| 2 Unlock Pro | Platform | Checkout, signed webhook with `grant_pro()`, confirming page that polls (ACC5–ACC8); the eight billing scenarios as tests | Stripe test keys and price; `scn:billing` against real Stripe; Vercel deploy |
+| 3 Choose & plan | Recipes & Cook, Plan & Shop | Plans within budget from fridge, picked recipes, must-use items, save, honest infeasible hints, combination cap, past use-by warnings, optional extras (PLN1–PLN6, PLN8) | Recipe library pages and routes (RCP1–RCP3); swap (PLN7); a library past the 3 seed recipes |
+| 4 Shop | Plan & Shop | Shopping list on the plan page (need, have, buy, packages, cost, leftover) | `/shop` page |
+| 5 Scan | Receipts | Scan page with plan picker, upload, read, retry (RCT1–RCT2, RCT7); eval runner | Receipt photos and answers in `eval/smoke/receipts/` (Data & Proof); a live run |
+| 6 Review | Receipts | Review page, confirm into the fridge as one batch, photo deleted, plan diff (RCT3–RCT6, RCT9–RCT10) | UI: lock the unit on catalog lines; show the recomputed date instead of rewriting it |
+| 7 Fridge | Fridge | View, manual add, mark used or tossed, expiring soon, Cook now (FRG1, FRG3, FRG5) | Item edits through `edit_fridge_item` (FRG4); dark-mode contrast; the fridge-door design |
+| 8 Cook | Recipes & Cook | Recipe steps, timers and tips in the seed data only | Cook page, `cook.ask` with citations (CK1, ASK1–ASK5) |
+| 9 Confirm & learn | Recipes & Cook, Plan & Shop | `fridge.proposeDeductions` | `cook.done` / `cook.confirm` (CK2–CK3); preferences (LRN1–LRN3) |
+
+Proof (§13) has not started: no smoke cases yet, no `e2e/` journey, seed shelf-life sources are
+placeholders. Owners still unassigned: Recipes & Cook, Data & Proof.
 
 ## 15. Risks
 

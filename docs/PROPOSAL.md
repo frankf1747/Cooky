@@ -70,7 +70,7 @@ Fill in names at the first stand-up. Each person owns folders and both builds *a
 | **Plan & Shop** | Richard | `src/modules/planning`, `src/modules/preferences`, plan and preferences pages | A real AI plan with a correct shopping list on the live URL | Swap a meal; confirmed preferences change the next plan |
 | **Recipes & Cook** | ____ | `src/modules/recipes`, `src/modules/cook`, recipe library and cook pages, the catalog CSVs | A large, clean library (well past the placeholders) with search and filters | Cook mode and the cooking coach with citations |
 | **Receipts** | Hanson | `src/modules/receipts`, camera and receipt review pages | A real receipt is read, reviewed and stocks the fridge on the live URL | Plan diff, retries, accuracy on the receipt test set |
-| **Fridge** | ____ | `src/modules/fridge`, the fridge page | The fridge ledger and fridge page with use-by dates | Cook now, cooking deductions and leftovers, use-soon |
+| **Fridge** | Una | `src/modules/fridge`, the fridge page | The fridge ledger and fridge page with use-by dates | Cook now, cooking deductions and leftovers, use-soon |
 | **Data & Proof** | ____ | test cases, write-up, slides, classmate test; seed rows by PR | Real prices, shelf life and receipt photos with hand-checked answers | Test results, write-up, slides, demo rehearsal |
 
 How the data moves between these roles, the rules that keep it aligned, and what each role can

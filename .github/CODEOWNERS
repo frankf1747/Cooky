@@ -1,10 +1,18 @@
-# Review requests go to the owner of the files a PR touches (AGENTS.md ownership table).
-# Fill in the remaining GitHub usernames as roles are assigned.
+# Review requests go to the owner of the files a PR touches (AGENTS.md ownership table,
+# docs/ROLES.md). Later lines win. Roles still without an owner fall back to Frank (Platform).
+
+# Platform (Frank): everything not listed below, plus the shared files every side imports.
 *                              @frankf1747
 /spec/                         @frankf1747
 /supabase/migrations/          @frankf1747
+/supabase/tests/               @frankf1747
 /src/platform/                 @frankf1747
+/src/ui/                       @frankf1747
 /package.json                  @frankf1747
+/package-lock.json             @frankf1747
+/.github/                      @frankf1747
+
+# Plan & Shop (Richard)
 /src/modules/planning/         @richardwen0916
 /src/modules/preferences/      @richardwen0916
 /app/(app)/plan/               @richardwen0916
@@ -13,12 +21,29 @@
 /app/api/plans/                @richardwen0916
 /app/api/preferences/          @richardwen0916
 
-# Recipes & Cook, Receipts, Fridge: replace @frankf1747 with each owner's GitHub username
-# once assigned (docs/ROLES.md). Until then, Frank reviews.
+# Receipts (Hanson)
+/src/modules/receipts/         @hansonyjy
+/app/(app)/receipts/           @hansonyjy
+/app/api/receipts/             @hansonyjy
+
+# Fridge (Una)
+/src/modules/fridge/           @auruna11
+/app/(app)/fridge/             @auruna11
+/app/api/fridge/               @auruna11
+/app/api/stats/                @auruna11
+
+# Recipes & Cook (owner not assigned yet: Frank reviews)
 /src/modules/recipes/          @frankf1747
 /src/modules/cook/             @frankf1747
+/app/(app)/recipes/            @frankf1747
+/app/(app)/cook/               @frankf1747
+/app/api/recipes/              @frankf1747
+/app/api/ingredients/          @frankf1747
+/app/api/cook/                 @frankf1747
 /supabase/seed/                @frankf1747
-/src/modules/receipts/         @frankf1747
-/app/api/receipts/             @frankf1747
-/src/modules/fridge/           @frankf1747
-/app/api/fridge/               @frankf1747
+
+# Data & Proof (owner not assigned yet: Frank reviews). spec/targets.json changes need their sign-off.
+/eval/                         @frankf1747
+/e2e/                          @frankf1747
+/docs/PRD.md                   @frankf1747
+/spec/targets.json             @frankf1747
