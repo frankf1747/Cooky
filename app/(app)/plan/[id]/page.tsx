@@ -5,7 +5,7 @@ import type { PlanDraft } from "@spec/contract";
 import { getSessionUser } from "@/platform/auth";
 import { ApiError } from "@/platform/errors";
 import { formatUsd } from "@/platform/money";
-import { getPlan } from "@/modules/planning";
+import { getPlan, planNotes } from "@/modules/planning";
 import { formatQty } from "../ui";
 import { SaveButton } from "./SaveButton";
 
@@ -22,6 +22,7 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
     throw err;
   }
 
+  const notes = await planNotes(user.id, plan);
   const over = plan.totalCents > plan.budgetCents;
   const unpriced = plan.shopping.unpricedIngredientIds.length;
   const toBuy = plan.shopping.items.filter((i) => i.packages > 0 || i.costCents === null);
@@ -64,6 +65,11 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
             <ul className="mt-2 list-disc pl-5 text-sm text-zinc-600 dark:text-zinc-400">
               {m.reasons.map((r, j) => <li key={j}>{r}</li>)}
             </ul>
+            {notes.pastUseBy.filter((p) => p.recipeIds.includes(m.recipeId)).map((p) => (
+              <p key={p.itemId} role="note" className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+                Uses your {p.name}, which is past its typical use-by date ({p.expiresOn}). Check it before cooking; dates are a typical guide, not safety advice.
+              </p>
+            ))}
           </article>
         ))}
       </div>
@@ -116,6 +122,30 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
         <p className="mt-3 text-sm text-zinc-500">
           Already covered by your fridge or staples: {covered.map((i) => `${i.name} (${formatQty(i.needQty, i.unit)})`).join(", ")}.
         </p>
+      )}
+
+      {notes.extras.items.length > 0 && (
+        <div className="mt-8">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 className="shrink-0 text-lg font-semibold">Optional extras</h2>
+            <p className="text-sm text-zinc-500">
+              Not in the total{notes.extras.totalCents > 0 && ` · +${formatUsd(notes.extras.totalCents)} if you add them all`}
+              {notes.extras.unpricedIngredientIds.length > 0 && " (some prices unknown)"}
+            </p>
+          </div>
+          <ul className="mt-3 divide-y divide-zinc-200 rounded-lg border border-zinc-200 text-sm dark:divide-zinc-800 dark:border-zinc-800">
+            {notes.extras.items.map((i) => (
+              <li key={`${i.ingredientId}|${i.unit}`} className="flex items-center justify-between gap-4 px-3 py-2">
+                <span>
+                  {i.name} <span className="text-zinc-500">· {formatQty(i.needQty, i.unit)} for {i.forRecipeIds.map((r) => titles.get(r) ?? r).join(", ")}</span>
+                </span>
+                <span className="shrink-0 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
+                  {i.buyQty === 0 ? "already covered" : i.packageSize !== null ? `${i.packages} × ${formatQty(i.packageSize, i.unit)} · ${formatUsd(i.costCents)}` : formatUsd(i.costCents)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {plan.assumptions.length > 0 && (

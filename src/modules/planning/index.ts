@@ -5,10 +5,12 @@ import type { ChecklistPatch, PlanCreate, PlanDraft, PlanSave, PlanSummary, Plan
 import { PlannerChoice } from "@spec/contract";
 import targets from "@spec/targets.json";
 import { runAi } from "@/platform/ai";
+import { DEFAULT_TIMEZONE, localDate } from "@/platform/dates";
 import { reader, writer } from "@/platform/db";
 import { ApiError, badRequest, notFound, notImplemented, unprocessable } from "@/platform/errors";
 import { loadPlanningData } from "./data";
 import { findFeasibleSets, type RelaxHint } from "./feasible";
+import { optionalExtras, pastUseBy, type PastUseBy } from "./notes";
 import { PLANNER_SYSTEM, expiringSoon, plannerContent, validateChoice } from "./planner";
 import { buildShoppingList } from "./shopping";
 import { findByKey, insertDraft, listSummaries, markSaved, readPlan } from "./store";
@@ -128,7 +130,7 @@ export async function createPlan(userId: string, input: z.infer<typeof PlanCreat
 
 export type PlanFormData = {
   defaults: { servings: number; budgetCents: number; maxMinutes: number; meals: number };
-  fridgeItems: { id: string; name: string; qty: number; unit: string; expiresOn: string | null }[];
+  fridgeItems: { id: string; name: string; qty: number; unit: string; expiresOn: string | null; pastUseBy: boolean }[];
   /** Recipes the user can pick to always include (curated and their own). */
   recipes: { id: string; title: string; minutes: number }[];
   recentPlans: z.infer<typeof PlanSummary>[];
@@ -141,7 +143,7 @@ export async function planFormData(userId: string): Promise<PlanFormData> {
   const db = await reader();
   const L = targets.limits;
   const [profileRes, fridgeRes, recipeRes, recentPlans] = await Promise.all([
-    db.from("profiles").select("household_size, budget_cents_default, max_minutes_default").eq("user_id", userId).maybeSingle(),
+    db.from("profiles").select("household_size, budget_cents_default, max_minutes_default, timezone").eq("user_id", userId).maybeSingle(),
     db.from("fridge_items").select("id, name, qty, unit, expires_on")
       .eq("user_id", userId).eq("status", "active").eq("kind", "ingredient").order("expires_on", { ascending: true }),
     db.from("recipes").select("id, title, minutes").or(`owner_id.is.null,owner_id.eq.${userId}`).order("title", { ascending: true }),
@@ -150,7 +152,8 @@ export async function planFormData(userId: string): Promise<PlanFormData> {
   if (profileRes.error) throw new Error(`planning: loading profile failed: ${profileRes.error.message}`);
   if (fridgeRes.error) throw new Error(`planning: loading fridge failed: ${fridgeRes.error.message}`);
   if (recipeRes.error) throw new Error(`planning: loading recipes failed: ${recipeRes.error.message}`);
-  const p = profileRes.data as { household_size: number; budget_cents_default: number; max_minutes_default: number } | null;
+  const p = profileRes.data as { household_size: number; budget_cents_default: number; max_minutes_default: number; timezone: string } | null;
+  const today = localDate(p?.timezone || DEFAULT_TIMEZONE);
   return {
     // No profile yet: the database defaults (2 people, $40, 30 minutes).
     defaults: {
@@ -160,9 +163,21 @@ export async function planFormData(userId: string): Promise<PlanFormData> {
       meals: clamp(3, L.mealsPerPlanMin, L.mealsPerPlanMax),
     },
     fridgeItems: ((fridgeRes.data ?? []) as { id: string; name: string; qty: number | string; unit: string; expires_on: string | null }[])
-      .map((f) => ({ id: f.id, name: f.name, qty: Number(f.qty), unit: f.unit, expiresOn: f.expires_on })),
+      .map((f) => ({ id: f.id, name: f.name, qty: Number(f.qty), unit: f.unit, expiresOn: f.expires_on, pastUseBy: f.expires_on !== null && f.expires_on < today })),
     recipes: ((recipeRes.data ?? []) as { id: string; title: string; minutes: number }[]).map((r) => ({ id: r.id, title: r.title, minutes: Number(r.minutes) })),
     recentPlans: recentPlans.slice(0, 5),
+  };
+}
+
+/** What the plan page shows next to a plan, computed now: items past their typical use-by, optional extras. */
+export async function planNotes(userId: string, plan: PlanDraft): Promise<{ today: string; pastUseBy: PastUseBy[]; extras: ShoppingList }> {
+  const data = await loadPlanningData(await reader(), userId, plan.meals.map((m) => m.recipeId));
+  const today = localDate(data.timezone);
+  const names = new Map(data.ingredients.map((i) => [i.id, i.name]));
+  return {
+    today,
+    pastUseBy: pastUseBy(plan, data.fridge, names, today),
+    extras: optionalExtras(plan, data.recipes, data.ingredients, data.products, data.fridge, data.profile.stapleIngredientIds),
   };
 }
 
