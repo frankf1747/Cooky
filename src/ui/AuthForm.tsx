@@ -26,7 +26,13 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     setBusy(false);
     if (result.error) return setError(result.error.message);
     if (mode === "signup" && !result.data.session) return setNotice("Check your email to confirm your account, then log in.");
-    router.push(mode === "signup" ? "/onboarding" : "/fridge");
+    // Until the profile is saved, send the user to onboarding (journey step 1).
+    let next = "/onboarding";
+    if (mode === "login") {
+      const me = await fetch("/api/me").then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      next = me?.onboarded === false ? "/onboarding" : "/fridge";
+    }
+    router.push(next);
     router.refresh();
   }
 

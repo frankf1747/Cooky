@@ -6,7 +6,8 @@ import { forbidden, tooMany, upstream } from "./errors";
 import { reader, writer } from "./db";
 import { DEFAULT_TIMEZONE, localDate } from "./dates";
 
-export type QuotaFeature = "plans" | "swaps" | "receipts" | "imports" | "cook_answers" | "preference_proposals";
+export const QUOTA_FEATURES = ["plans", "swaps", "receipts", "imports", "cook_answers", "preference_proposals"] as const;
+export type QuotaFeature = (typeof QUOTA_FEATURES)[number];
 export type Tier = "free" | "pro";
 
 export function quotaLimit(feature: QuotaFeature, plan: Tier): number {
