@@ -155,3 +155,107 @@ chk_chickpea_coconut_curry_f5,rcp_chickpea_coconut_curry,faq,,FAQ: sticking,Stir
 chk_chickpea_coconut_curry_f6,rcp_chickpea_coconut_curry,faq,,FAQ: short on time,Use a microwave rice pouch and simmer for just 5 minutes; the canned chickpeas only need to heat through.,
 chk_chickpea_coconut_curry_f7,rcp_chickpea_coconut_curry,faq,,FAQ: keep it juicy and creamy,"If it gets too thick, stir in a little more coconut milk or water.",
 chk_chickpea_coconut_curry_f8,rcp_chickpea_coconut_curry,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_oyakodon_s1,rcp_oyakodon,step,1,Step 1,Start the rice. Slice the onion thinly and cut the chicken into bite-size pieces.,
+chk_oyakodon_s2,rcp_oyakodon,step,2,Step 2,"Simmer the onion with the soy sauce, sugar and 120 ml (1/2 cup) of water in a small skillet until soft.",240
+chk_oyakodon_s3,rcp_oyakodon,step,3,Step 3,"Add the chicken in one layer, cover and simmer until cooked through, turning once.",420
+chk_oyakodon_s4,rcp_oyakodon,step,4,Step 4,"Beat the eggs lightly and pour them over in a circle. Cover and cook until the eggs are just set, then slide everything over bowls of rice and top with scallions.",90
+chk_oyakodon_t2,rcp_oyakodon,tip,2,Tip,"While the onion simmers, beat the eggs in a bowl so step 4 is ready to pour.",
+chk_oyakodon_f1,rcp_oyakodon,faq,,FAQ: no dashi,"This version uses water with soy sauce and sugar. If you have dashi, use it instead of water for a deeper flavor.",
+chk_oyakodon_f2,rcp_oyakodon,faq,,FAQ: runny eggs,"Traditional oyakodon keeps the eggs soft. For fully set eggs, keep the lid on a minute longer.",
+chk_oyakodon_f3,rcp_oyakodon,faq,,FAQ: chicken breast instead,Breast works; slice it thin and take it off the heat as soon as it is cooked through so it stays tender.,
+chk_oyakodon_f4,rcp_oyakodon,faq,,FAQ: is it done,The chicken is done at 165 F (74 C) with no pink inside; the eggs are done when they are set to your liking.,
+chk_oyakodon_f5,rcp_oyakodon,faq,,FAQ: sticking,Keep enough simmering liquid in the pan; add a splash of water if it gets low.,
+chk_oyakodon_f6,rcp_oyakodon,faq,,FAQ: short on time,Use a microwave rice pouch and cut the chicken small so it cooks in about 5 minutes.,
+chk_oyakodon_f7,rcp_oyakodon,faq,,FAQ: keep it juicy,Thighs stay juicy; simmer gently with the lid on rather than boiling hard.,
+chk_oyakodon_f8,rcp_oyakodon,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_tamagoyaki_plate_s1,rcp_tamagoyaki_plate,step,1,Step 1,Start the rice. Beat the eggs with the sugar and half the soy sauce until smooth.,
+chk_tamagoyaki_plate_s2,rcp_tamagoyaki_plate,step,2,Step 2,"Wilt the spinach in a dry pan, squeeze out the water, and toss it with the sesame oil and the rest of the soy sauce.",120
+chk_tamagoyaki_plate_s3,rcp_tamagoyaki_plate,step,3,Step 3,"Oil the skillet lightly over medium-low heat. Pour in a thin layer of egg; when it is almost set, roll it to one side. Repeat with the rest of the egg, rolling each layer around the last.",360
+chk_tamagoyaki_plate_s4,rcp_tamagoyaki_plate,step,4,Step 4,"Rest the omelette for a minute, slice it, and serve with the spinach and rice.",60
+chk_tamagoyaki_plate_t1,rcp_tamagoyaki_plate,tip,1,Tip,"While the rice cooks, wash the spinach so step 2 is quick.",
+chk_tamagoyaki_plate_f1,rcp_tamagoyaki_plate,faq,,FAQ: no square pan,A small round skillet works. Fold the edges in to keep a log shape; the ends will just be rounder.,
+chk_tamagoyaki_plate_f2,rcp_tamagoyaki_plate,faq,,FAQ: omelette tearing,Lower the heat and wait until the top is almost set before rolling; a little more oil helps too.,
+chk_tamagoyaki_plate_f3,rcp_tamagoyaki_plate,faq,,FAQ: less sweet,"Halve the sugar or leave it out for a savory version, then add a pinch of salt.",
+chk_tamagoyaki_plate_f4,rcp_tamagoyaki_plate,faq,,FAQ: is it done,Each layer should be set but still soft; the rolled omelette is done when no liquid egg runs out when you slice it (eggs cooked to 160 F / 71 C).,
+chk_tamagoyaki_plate_f5,rcp_tamagoyaki_plate,faq,,FAQ: sticking,Wipe the pan with a little oil before every layer and keep the heat medium-low.,
+chk_tamagoyaki_plate_f6,rcp_tamagoyaki_plate,faq,,FAQ: short on time,Skip the rolling: cook it as a soft scramble with the same seasoning. Use a microwave rice pouch.,
+chk_tamagoyaki_plate_f7,rcp_tamagoyaki_plate,faq,,FAQ: keep it juicy,Low heat keeps the layers tender and moist; high heat makes them tough and dry.,
+chk_tamagoyaki_plate_f8,rcp_tamagoyaki_plate,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_japanese_curry_rice_s1,rcp_japanese_curry_rice,step,1,Step 1,"Start the rice. Cut the chicken, potato, carrot and onion into bite-size pieces.",
+chk_japanese_curry_rice_s2,rcp_japanese_curry_rice,step,2,Step 2,Heat the oil in a pot and brown the chicken and onion.,300
+chk_japanese_curry_rice_s3,rcp_japanese_curry_rice,step,3,Step 3,"Add the potato, carrot, curry sauce, coconut milk and 120 ml (1/2 cup) of water. Cover and simmer until the potato is tender.",900
+chk_japanese_curry_rice_s4,rcp_japanese_curry_rice,step,4,Step 4,Taste for salt and serve over the rice.,
+chk_japanese_curry_rice_t3,rcp_japanese_curry_rice,tip,3,Tip,"While the curry simmers, set the table; it needs only an occasional stir.",
+chk_japanese_curry_rice_f1,rcp_japanese_curry_rice,faq,,FAQ: curry roux blocks,"If you have Japanese curry roux, use 2 blocks instead of the curry sauce and coconut milk, and add water as the box says.",
+chk_japanese_curry_rice_f2,rcp_japanese_curry_rice,faq,,FAQ: too spicy,Add more coconut milk or a little honey to soften the heat.,
+chk_japanese_curry_rice_f3,rcp_japanese_curry_rice,faq,,FAQ: vegetarian,Leave out the chicken and add a can of drained chickpeas with the potatoes.,
+chk_japanese_curry_rice_f4,rcp_japanese_curry_rice,faq,,FAQ: is it done,It is done when the potato is fork-tender and the chicken reaches 165 F (74 C).,
+chk_japanese_curry_rice_f5,rcp_japanese_curry_rice,faq,,FAQ: sticking,Stir from the bottom every few minutes and keep it at a gentle simmer; add a splash of water if it thickens too much.,
+chk_japanese_curry_rice_f6,rcp_japanese_curry_rice,faq,,FAQ: short on time,"Cut the potato and carrot small so they cook in about 10 minutes, and use a microwave rice pouch.",
+chk_japanese_curry_rice_f7,rcp_japanese_curry_rice,faq,,FAQ: keep it juicy and saucy,Simmer with the lid on so the sauce does not reduce too far; add water if it gets thick.,
+chk_japanese_curry_rice_f8,rcp_japanese_curry_rice,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out. Curry often tastes even better the next day.",
+chk_black_bean_quesadillas_s1,rcp_black_bean_quesadillas,step,1,Step 1,Drain the beans and mash them lightly with a fork. Dice the pepper.,
+chk_black_bean_quesadillas_s2,rcp_black_bean_quesadillas,step,2,Step 2,"Spread beans on half of each tortilla, add pepper and cheese, and fold.",
+chk_black_bean_quesadillas_s3,rcp_black_bean_quesadillas,step,3,Step 3,Cook in a dry skillet over medium heat until golden on both sides and the cheese melts.,240
+chk_black_bean_quesadillas_s4,rcp_black_bean_quesadillas,step,4,Step 4,Cut into wedges and serve with pico de gallo and avocado.,
+chk_black_bean_quesadillas_t3,rcp_black_bean_quesadillas,tip,3,Tip,"While the first batch cooks, slice the avocado.",
+chk_black_bean_quesadillas_f1,rcp_black_bean_quesadillas,faq,,FAQ: no cheddar,"Any melting cheese works, such as mozzarella or pepper jack.",
+chk_black_bean_quesadillas_f2,rcp_black_bean_quesadillas,faq,,FAQ: falling apart,"Mash the beans so they hold together, and do not overfill; press the quesadilla gently with the spatula.",
+chk_black_bean_quesadillas_f3,rcp_black_bean_quesadillas,faq,,FAQ: add meat,Leftover chicken from another recipe is a good add; warm it first.,
+chk_black_bean_quesadillas_f4,rcp_black_bean_quesadillas,faq,,FAQ: is it done,It is done when both sides are golden and crisp and the cheese has melted.,
+chk_black_bean_quesadillas_f5,rcp_black_bean_quesadillas,faq,,FAQ: sticking,Use a dry or very lightly oiled skillet over medium heat and flip once the bottom is golden.,
+chk_black_bean_quesadillas_f6,rcp_black_bean_quesadillas,faq,,FAQ: short on time,"Cook two at once in a big skillet, or melt them in the microwave for a softer version.",
+chk_black_bean_quesadillas_f7,rcp_black_bean_quesadillas,faq,,FAQ: keep it juicy,Add a spoon of pico de gallo inside so the filling stays moist.,
+chk_black_bean_quesadillas_f8,rcp_black_bean_quesadillas,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_mushroom_chicken_pasta_s1,rcp_mushroom_chicken_pasta,step,1,Step 1,Boil salted water and cook the spaghetti until al dente. Save half a cup of pasta water.,600
+chk_mushroom_chicken_pasta_s2,rcp_mushroom_chicken_pasta,step,2,Step 2,Melt the butter in a skillet and brown the chicken pieces until cooked through. Move them to a plate.,360
+chk_mushroom_chicken_pasta_s3,rcp_mushroom_chicken_pasta,step,3,Step 3,"Brown the mushrooms in the same pan, add the garlic for 30 seconds, then the milk. Simmer until slightly thickened.",240
+chk_mushroom_chicken_pasta_s4,rcp_mushroom_chicken_pasta,step,4,Step 4,"Stir in the parmesan, then the pasta and chicken, adding pasta water until creamy.",
+chk_mushroom_chicken_pasta_t2,rcp_mushroom_chicken_pasta,tip,2,Tip,"While the chicken browns, slice the mushrooms and mince the garlic.",
+chk_mushroom_chicken_pasta_f1,rcp_mushroom_chicken_pasta,faq,,FAQ: sauce too thin,"Simmer a minute longer, or add a little more parmesan; it thickens as it cools.",
+chk_mushroom_chicken_pasta_f2,rcp_mushroom_chicken_pasta,faq,,FAQ: sauce split,Keep the heat low after adding milk and do not let it boil hard.,
+chk_mushroom_chicken_pasta_f3,rcp_mushroom_chicken_pasta,faq,,FAQ: no chicken,Leave it out and add more mushrooms or a can of chickpeas.,
+chk_mushroom_chicken_pasta_f4,rcp_mushroom_chicken_pasta,faq,,FAQ: is it done,The chicken is done at 165 F (74 C); the pasta is tender with a slight bite.,
+chk_mushroom_chicken_pasta_f5,rcp_mushroom_chicken_pasta,faq,,FAQ: sticking,"Stir the pasta in its first minute, and do not move the chicken until it browns and releases.",
+chk_mushroom_chicken_pasta_f6,rcp_mushroom_chicken_pasta,faq,,FAQ: short on time,Use pre-sliced mushrooms and cook the chicken while the water boils.,
+chk_mushroom_chicken_pasta_f7,rcp_mushroom_chicken_pasta,faq,,FAQ: keep it juicy and creamy,Take the chicken off as soon as it is done and add pasta water at the end for a silky sauce.,
+chk_mushroom_chicken_pasta_f8,rcp_mushroom_chicken_pasta,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_sesame_soy_noodles_s1,rcp_sesame_soy_noodles,step,1,Step 1,"Cook the spaghetti until just tender, then drain.",540
+chk_sesame_soy_noodles_s2,rcp_sesame_soy_noodles,step,2,Step 2,"Stir the soy sauce, sesame oil and honey together in a bowl.",
+chk_sesame_soy_noodles_s3,rcp_sesame_soy_noodles,step,3,Step 3,Stir-fry the carrot and zucchini in a hot pan for 2 minutes so they stay crisp.,120
+chk_sesame_soy_noodles_s4,rcp_sesame_soy_noodles,step,4,Step 4,"Toss in the noodles and sauce, and top with scallions and a fried egg if you like.",
+chk_sesame_soy_noodles_t1,rcp_sesame_soy_noodles,tip,1,Tip,"While the noodles boil, cut the vegetables into thin sticks.",
+chk_sesame_soy_noodles_f1,rcp_sesame_soy_noodles,faq,,FAQ: real noodles,Ramen or udon noodles work in place of spaghetti; cook them as the package says.,
+chk_sesame_soy_noodles_f2,rcp_sesame_soy_noodles,faq,,FAQ: too salty,Add a squeeze of lemon or a little more honey and a splash of water.,
+chk_sesame_soy_noodles_f3,rcp_sesame_soy_noodles,faq,,FAQ: eat cold,It is good cold too; toss with the sauce and chill for 20 minutes.,
+chk_sesame_soy_noodles_f4,rcp_sesame_soy_noodles,faq,,FAQ: is it done,It is ready when the noodles are tender and the vegetables are hot but still a little crisp.,
+chk_sesame_soy_noodles_f5,rcp_sesame_soy_noodles,faq,,FAQ: sticking,Rinse the cooked noodles briefly or toss them with a drop of sesame oil so they do not clump.,
+chk_sesame_soy_noodles_f6,rcp_sesame_soy_noodles,faq,,FAQ: short on time,Use a bag of pre-cut vegetables and boil the water with a lid on.,
+chk_sesame_soy_noodles_f7,rcp_sesame_soy_noodles,faq,,FAQ: keep it juicy and saucy,Save a spoon of noodle water and toss it in with the sauce.,
+chk_sesame_soy_noodles_f8,rcp_sesame_soy_noodles,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_shakshuka_s1,rcp_shakshuka,step,1,Step 1,Soften the onion and pepper in the olive oil.,360
+chk_shakshuka_s2,rcp_shakshuka,step,2,Step 2,"Stir in the paprika for 30 seconds, then the marinara. Simmer until slightly thick.",300
+chk_shakshuka_s3,rcp_shakshuka,step,3,Step 3,Make four wells and crack an egg into each. Cover and cook until the whites are set.,360
+chk_shakshuka_s4,rcp_shakshuka,step,4,Step 4,Top with parmesan if you like and serve straight from the pan.,
+chk_shakshuka_t1,rcp_shakshuka,tip,1,Tip,"While the vegetables soften, crack the eggs into a cup so step 3 is quick.",
+chk_shakshuka_f1,rcp_shakshuka,faq,,FAQ: no bread,Serve it over rice or with tortillas warmed in a dry pan.,
+chk_shakshuka_f2,rcp_shakshuka,faq,,FAQ: too spicy,Smoked paprika is mild; for less smoky flavor use half.,
+chk_shakshuka_f3,rcp_shakshuka,faq,,FAQ: firm yolks,Keep the lid on 2 to 3 minutes longer.,
+chk_shakshuka_f4,rcp_shakshuka,faq,,FAQ: is it done,It is done when the egg whites are fully set; cook longer for firm yolks (160 F / 71 C).,
+chk_shakshuka_f5,rcp_shakshuka,faq,,FAQ: sticking,Keep the sauce at a gentle simmer and stir before adding the eggs.,
+chk_shakshuka_f6,rcp_shakshuka,faq,,FAQ: short on time,Skip the pepper and simmer the sauce for just 2 minutes before adding the eggs.,
+chk_shakshuka_f7,rcp_shakshuka,faq,,FAQ: keep it juicy,Add a splash of water if the sauce thickens too much before the eggs are done.,
+chk_shakshuka_f8,rcp_shakshuka,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_beef_green_bean_bowl_s1,rcp_beef_green_bean_bowl,step,1,Step 1,"Start the rice. Trim and cut the green beans, grate the ginger and mince the garlic.",
+chk_beef_green_bean_bowl_s2,rcp_beef_green_bean_bowl,step,2,Step 2,Cook the green beans in the oil until blistered in spots. Move them to a plate.,300
+chk_beef_green_bean_bowl_s3,rcp_beef_green_bean_bowl,step,3,Step 3,"Brown the beef, breaking it up, until no pink remains. Add the ginger and garlic for 30 seconds.",420
+chk_beef_green_bean_bowl_s4,rcp_beef_green_bean_bowl,step,4,Step 4,"Stir in the soy sauce and honey, return the beans, and serve over the rice.",60
+chk_beef_green_bean_bowl_t2,rcp_beef_green_bean_bowl,tip,2,Tip,"While the beans cook, mix the soy sauce and honey in a cup.",
+chk_beef_green_bean_bowl_f1,rcp_beef_green_bean_bowl,faq,,FAQ: no beef,Ground chicken or turkey works the same way; add a little more oil.,
+chk_beef_green_bean_bowl_f2,rcp_beef_green_bean_bowl,faq,,FAQ: too greasy,"Spoon off extra fat after browning the beef, before adding the sauce.",
+chk_beef_green_bean_bowl_f3,rcp_beef_green_bean_bowl,faq,,FAQ: frozen green beans,They work; cook them a little longer and pat them dry first.,
+chk_beef_green_bean_bowl_f4,rcp_beef_green_bean_bowl,faq,,FAQ: is it done,Ground beef is done at 160 F (71 C) with no pink left.,
+chk_beef_green_bean_bowl_f5,rcp_beef_green_bean_bowl,faq,,FAQ: sticking,Let the beef brown before breaking it up; a splash of water lifts the browned bits.,
+chk_beef_green_bean_bowl_f6,rcp_beef_green_bean_bowl,faq,,FAQ: short on time,Use frozen cut green beans and a microwave rice pouch.,
+chk_beef_green_bean_bowl_f7,rcp_beef_green_bean_bowl,faq,,FAQ: keep it juicy,Do not cook the beef dry; add the sauce as soon as the pink is gone.,
+chk_beef_green_bean_bowl_f8,rcp_beef_green_bean_bowl,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",

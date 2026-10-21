@@ -5,8 +5,8 @@
 export function dishEmoji(title: string): string {
   const t = title.toLowerCase();
   const rules: [RegExp, string][] = [
-    [/taco/, "🌮"], [/salmon|fish/, "🐟"], [/curry/, "🍛"], [/fried rice/, "🍚"], [/frittata|omelet/, "🍳"],
-    [/spaghetti|pasta/, "🍝"], [/fajita|bowl/, "🥙"], [/hash|potato/, "🥔"], [/tomato/, "🍅"], [/chicken/, "🍗"],
+    [/oyakodon|donburi/, "🍱"], [/noodle|ramen|udon/, "🍜"], [/quesadilla/, "🫓"], [/shakshuka/, "🥘"], [/taco/, "🌮"], [/salmon|fish/, "🐟"], [/curry/, "🍛"], [/fried rice/, "🍚"], [/frittata|omelet/, "🍳"],
+    [/spaghetti|pasta/, "🍝"], [/beef.*bowl/, "🍚"], [/fajita|bowl/, "🥙"], [/hash|potato/, "🥔"], [/tomato/, "🍅"], [/chicken/, "🍗"],
     [/beef/, "🥩"], [/egg/, "🥚"], [/salad/, "🥗"], [/soup/, "🍲"],
   ];
   return rules.find(([re]) => re.test(t))?.[1] ?? "🍽️";
