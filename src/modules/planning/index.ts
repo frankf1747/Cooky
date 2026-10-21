@@ -108,6 +108,41 @@ export async function createPlan(userId: string, input: z.infer<typeof PlanCreat
   return { plan: winner.plan, run };
 }
 
+export type PlanFormData = {
+  defaults: { servings: number; budgetCents: number; maxMinutes: number; meals: number };
+  fridgeItems: { id: string; name: string; qty: number; unit: string; expiresOn: string | null }[];
+  recentPlans: z.infer<typeof PlanSummary>[];
+};
+
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+
+/** What the /plan page needs: profile defaults (PLN1), fridge items to pin, and recent plans. */
+export async function planFormData(userId: string): Promise<PlanFormData> {
+  const db = await reader();
+  const L = targets.limits;
+  const [profileRes, fridgeRes, recentPlans] = await Promise.all([
+    db.from("profiles").select("household_size, budget_cents_default, max_minutes_default").eq("user_id", userId).maybeSingle(),
+    db.from("fridge_items").select("id, name, qty, unit, expires_on")
+      .eq("user_id", userId).eq("status", "active").eq("kind", "ingredient").order("expires_on", { ascending: true }),
+    listSummaries(db, userId),
+  ]);
+  if (profileRes.error) throw new Error(`planning: loading profile failed: ${profileRes.error.message}`);
+  if (fridgeRes.error) throw new Error(`planning: loading fridge failed: ${fridgeRes.error.message}`);
+  const p = profileRes.data as { household_size: number; budget_cents_default: number; max_minutes_default: number } | null;
+  return {
+    // No profile yet: the database defaults (2 people, $40, 30 minutes).
+    defaults: {
+      servings: clamp(p?.household_size ?? 2, L.servingsMin, L.servingsMax),
+      budgetCents: p?.budget_cents_default ?? 4000,
+      maxMinutes: p?.max_minutes_default ?? 30,
+      meals: clamp(3, L.mealsPerPlanMin, L.mealsPerPlanMax),
+    },
+    fridgeItems: ((fridgeRes.data ?? []) as { id: string; name: string; qty: number | string; unit: string; expires_on: string | null }[])
+      .map((f) => ({ id: f.id, name: f.name, qty: Number(f.qty), unit: f.unit, expiresOn: f.expires_on })),
+    recentPlans: recentPlans.slice(0, 5),
+  };
+}
+
 export async function listPlans(userId: string): Promise<{ items: z.infer<typeof PlanSummary>[] }> {
   return { items: await listSummaries(await reader(), userId) };
 }
