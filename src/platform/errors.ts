@@ -27,16 +27,19 @@ export const notImplemented = (what: string) => new ApiError(501, "not_implement
 export const upstream = (code: string, message: string) => new ApiError(502, code, message);
 export const unavailable = (code: string, message = "Temporarily unavailable") => new ApiError(503, code, message);
 
-/** The error body for any thrown value. Unknown errors become a 500 without leaking their message. */
+/**
+ * The error body for any thrown value. Unknown errors become a 500 without leaking their message.
+ * `extra` adds fields but can never replace error, status, code or requestId.
+ */
 export function toErrorBody(err: unknown, requestId: string): ErrorBody & Record<string, unknown> {
   if (err instanceof ApiError) {
     return {
+      ...(err.extra ?? {}),
       error: err.message,
       status: err.status,
       code: err.code,
       requestId,
       ...(err.resetAt ? { resetAt: err.resetAt } : {}),
-      ...(err.extra ?? {}),
     };
   }
   return { error: "Internal error", status: 500, code: "internal", requestId };
