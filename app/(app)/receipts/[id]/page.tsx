@@ -7,7 +7,6 @@ import { getSessionUser } from "@/platform/auth";
 import { ApiError } from "@/platform/errors";
 import { getForReview, type PlanLabels } from "@/modules/receipts";
 import { PlanDiffPanel } from "./PlanDiffPanel";
-import { RetryButton } from "./RetryButton";
 import { ReviewForm } from "./ReviewForm";
 
 export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">) {
@@ -39,9 +38,11 @@ export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">)
 
       {receipt.status === "failed" && (
         <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
-          <p className="text-red-800 dark:text-red-200">Cooky couldn&apos;t read this receipt. Nothing was added to your fridge.</p>
+          <p className="text-red-800 dark:text-red-200">
+            Cooky couldn&apos;t read this receipt. Nothing was added to your fridge, and Cooky doesn&apos;t keep receipt photos, so scan it again to retry.
+          </p>
           <div className="mt-3 flex flex-wrap items-center gap-4">
-            <RetryButton receiptId={receipt.receiptId} />
+            <Link href="/receipts/new" className="rounded-md bg-zinc-900 px-4 py-2 text-white dark:bg-zinc-100 dark:text-zinc-900">Scan again</Link>
             <Link href="/fridge" className="text-sm font-medium underline">Add groceries by hand</Link>
           </div>
         </div>

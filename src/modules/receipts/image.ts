@@ -1,12 +1,12 @@
-// Receipt image intake and private storage (SPEC RCT1, RCT9). The client downsizes; the server
-// checks the type from the file's own bytes and the size limit from targets.json.
+// Receipt image intake (SPEC RCT1, RCT9). The client downsizes; the server checks the type from
+// the file's own bytes and the size limit from targets.json. Photos are read in memory and never
+// stored (decided with Platform, 2026-10-21); removeImage only clears photos saved before that.
 import targets from "@spec/targets.json";
 import { writer } from "@/platform/db";
 import { badRequest, tooLarge } from "@/platform/errors";
 import type { ImageMediaType } from "./reader";
 
 export const BUCKET = "receipts";
-export const imagePath = (userId: string, receiptId: string) => `${userId}/${receiptId}`;
 
 /** The media type from magic bytes; a renamed PDF or HEIC is rejected whatever its name says. */
 export function sniffImage(b: Uint8Array): ImageMediaType | null {
@@ -28,19 +28,6 @@ export async function parseUpload(form: FormData): Promise<{ bytes: Uint8Array; 
   const planId = form.get("planId");
   if (planId !== null && (typeof planId !== "string" || !/^pln_[0-9a-z_]+$/.test(planId))) throw badRequest("invalid_input", "planId is not a plan id");
   return { bytes, mediaType, planId: planId || null };
-}
-
-export async function putImage(userId: string, receiptId: string, bytes: Uint8Array, mediaType: ImageMediaType): Promise<string> {
-  const path = imagePath(userId, receiptId);
-  const { error } = await writer(userId).db.storage.from(BUCKET).upload(path, bytes, { contentType: mediaType, upsert: false });
-  if (error) throw new Error(`receipts: storing the image failed: ${error.message}`);
-  return path;
-}
-
-export async function getImage(userId: string, path: string): Promise<Uint8Array> {
-  const { data, error } = await writer(userId).db.storage.from(BUCKET).download(path);
-  if (error || !data) throw new Error(`receipts: reading the image failed: ${error?.message ?? "no data"}`);
-  return new Uint8Array(await data.arrayBuffer());
 }
 
 export async function removeImage(userId: string, path: string): Promise<void> {

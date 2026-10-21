@@ -77,8 +77,8 @@ export async function readReceipt(db: SupabaseClient, userId: string, receiptId:
   return data as ReceiptRow;
 }
 
-export async function insertReceipt(w: { db: SupabaseClient; userId: string }, row: { id: string; planId: string | null; imagePath: string }): Promise<void> {
-  const { error } = await w.db.from("receipts").insert({ id: row.id, user_id: w.userId, status: "parsing", plan_id: row.planId, image_path: row.imagePath });
+export async function insertReceipt(w: { db: SupabaseClient; userId: string }, row: { id: string; planId: string | null }): Promise<void> {
+  const { error } = await w.db.from("receipts").insert({ id: row.id, user_id: w.userId, status: "parsing", plan_id: row.planId, image_path: null });
   if (error) fail("saving the receipt", error);
 }
 

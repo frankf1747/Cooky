@@ -16,18 +16,18 @@ vi.mock("@/platform/db", () => ({
 const images = new Map<string, Uint8Array>();
 vi.mock("./image", async (orig) => ({
   ...(await orig<typeof import("./image")>()),
-  putImage: async (userId: string, receiptId: string, bytes: Uint8Array) => (images.set(`${userId}/${receiptId}`, bytes), `${userId}/${receiptId}`),
-  getImage: async (_userId: string, path: string) => {
-    const b = images.get(path);
-    if (!b) throw new Error("no image");
-    return b;
-  },
   removeImage: async (_userId: string, path: string) => {
     if (failRemove) throw new Error("storage down");
     images.delete(path);
   },
 }));
 let failRemove = false;
+/** A receipt saved before photos stopped being stored: its photo is still in storage. */
+function legacyPhoto(receiptId: string) {
+  const path = `${U1}/${receiptId}`;
+  images.set(path, JPEG);
+  tables.receipts.find((r) => r.id === receiptId)!.image_path = path;
+}
 // Stand-in for fridge.applyBatch with the database function's rule: one batch key writes once,
 // and a repeat returns the first result.
 const batches = new Map<string, { events: BatchEvent[]; ids: string[] }>();
@@ -124,12 +124,12 @@ afterEach(() => {
 });
 
 describe("receipts.upload (RCT1, RCT2, RCT4)", () => {
-  it("stores the image privately, reads it, and returns a parsed draft classified by code", async () => {
+  it("reads the photo in memory, stores nothing, and returns a parsed draft classified by code", async () => {
     const { receipt, run } = await receipts.upload(U1, form(JPEG), "req_1");
     expect(ReceiptDraft.parse(receipt)).toEqual(receipt);
     expect(run.terminated).toBe("done");
     expect(receipt).toMatchObject({ status: "parsed", store: "Trader Joe's", purchasedOn: null, planDiff: null });
-    expect(images.has(`${U1}/${receipt.receiptId}`)).toBe(true);
+    expect(images.size).toBe(0);
 
     expect(receipt.lines.map((l) => [l.name, l.decision, l.flagReason, l.qty, l.unit])).toEqual([
       ["Chicken breast", "auto", null, 598.74, "g"],
@@ -142,7 +142,7 @@ describe("receipts.upload (RCT1, RCT2, RCT4)", () => {
     expect(receipt.lines[0]).toMatchObject({ location: "fridge", expiresOn: "2026-10-22" });
     expect(receipt.lines.every((l) => /^rln_/.test(l.lineId))).toBe(true);
 
-    expect(tables.receipts).toEqual([expect.objectContaining({ id: receipt.receiptId, user_id: U1, status: "parsed", image_path: `${U1}/${receipt.receiptId}`, run_id: run.runId })]);
+    expect(tables.receipts).toEqual([expect.objectContaining({ id: receipt.receiptId, user_id: U1, status: "parsed", image_path: null, run_id: run.runId })]);
     expect(tables.receipt_lines).toHaveLength(5);
     expect(tables.receipt_lines.every((r) => r.user_id === U1 && r.receipt_id === receipt.receiptId)).toBe(true);
   });
@@ -198,11 +198,11 @@ describe("receipts.upload failures (RCT7)", () => {
     expect(tables.receipt_lines).toHaveLength(0);
   });
 
-  it("model error → 502, saved failed with the reason, image kept for retry", async () => {
+  it("model error → 502, saved failed with the reason; no photo is kept", async () => {
     transport.mockRejectedValueOnce(new Error("overloaded"));
     await expect(receipts.upload(U1, form(JPEG), "r")).rejects.toMatchObject({ status: 502, code: "model_error" });
-    expect(tables.receipts[0]).toMatchObject({ status: "failed", failure_reason: "model_error" });
-    expect(images.size).toBe(1);
+    expect(tables.receipts[0]).toMatchObject({ status: "failed", failure_reason: "model_error", image_path: null });
+    expect(images.size).toBe(0);
   });
 
   it("output that stays invalid after repairs → 502, never a partial draft", async () => {
@@ -248,23 +248,21 @@ describe("receipts.get", () => {
 });
 
 describe("receipts.retry (RCT7)", () => {
-  it("re-reads a failed receipt from its stored image", async () => {
+  it("no photo is kept, so a failed receipt asks for a new scan (409 rescan_needed)", async () => {
     transport.mockRejectedValueOnce(new Error("timeout"));
     await expect(receipts.upload(U1, form(JPEG), "r")).rejects.toMatchObject({ status: 502 });
     const id = tables.receipts[0].id as string;
-
-    const { receipt } = await receipts.retry(U1, id, "r2");
-    expect(receipt).toMatchObject({ receiptId: id, status: "parsed" });
-    expect(receipt.lines).toHaveLength(5);
-    expect(tables.receipts[0]).toMatchObject({ status: "parsed", failure_reason: null });
+    await expect(receipts.retry(U1, id, "r2")).rejects.toMatchObject({ status: 409, code: "rescan_needed" });
+    expect(transport).toHaveBeenCalledTimes(1);
   });
 
-  it("only failed receipts can be retried; another user's is 404", async () => {
+  it("a parsed receipt is 409 not_failed; another user's is 404", async () => {
     const { receipt } = await receipts.upload(U1, form(JPEG), "r");
     await expect(receipts.retry(U1, receipt.receiptId, "r2")).rejects.toMatchObject({ status: 409, code: "not_failed", extra: { receiptStatus: "parsed" } });
     await expect(receipts.retry(U2, receipt.receiptId, "r2")).rejects.toMatchObject({ status: 404 });
   });
 });
+
 
 describe("today comes from the user's timezone (localToday, #12)", () => {
   it("a user with no profile yet gets dates from the default timezone, not UTC", async () => {
@@ -386,8 +384,17 @@ describe("receipts.confirm (RCT6, RCT9)", () => {
     expect(applyBatch).not.toHaveBeenCalled();
   });
 
-  it("if deleting the photo fails, the error is loud and a retry with the same key finishes the job", async () => {
+  it("a photo stored before this change is deleted on confirm", async () => {
     const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    legacyPhoto(receipt.receiptId);
+    await receipts.confirm(U1, receipt.receiptId, confirmInput(receipt));
+    expect(images.size).toBe(0);
+    expect(tables.receipts[0].image_path).toBeNull();
+  });
+
+  it("if deleting an old photo fails, the error is loud and a retry with the same key finishes the job", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    legacyPhoto(receipt.receiptId);
     failRemove = true;
     await expect(receipts.confirm(U1, receipt.receiptId, confirmInput(receipt))).rejects.toMatchObject({ status: 502, code: "storage_error" });
     expect(tables.receipts[0]).toMatchObject({ status: "confirmed" });
@@ -403,8 +410,9 @@ describe("receipts.confirm (RCT6, RCT9)", () => {
 });
 
 describe("receipts.remove (RCT9)", () => {
-  it("deletes the photo, the receipt and its lines; another user's receipt is 404", async () => {
+  it("deletes the receipt, its lines and any old photo; another user's receipt is 404", async () => {
     const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    legacyPhoto(receipt.receiptId);
     await expect(receipts.remove(U2, receipt.receiptId)).rejects.toMatchObject({ status: 404 });
     await receipts.remove(U1, receipt.receiptId);
     expect(images.size).toBe(0);
