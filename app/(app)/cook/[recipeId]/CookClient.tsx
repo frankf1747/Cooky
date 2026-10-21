@@ -8,6 +8,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Chunk, CookAnswer, Recipe } from "@spec/contract";
 import { cookErrorMessage, formatQty, formatTimer, scaled, type ApiErrorBody } from "../../recipes/ui";
+import { Mascot, type Mood } from "../../recipes/Mascot";
+import { Confetti, FunStyles, ThinkingDots, dishEmoji, stepCheer } from "../../recipes/fun";
 
 type Limits = { servingsMin: number; servingsMax: number; questionMaxChars: number; feedbackMaxChars: number };
 type Failure = ReturnType<typeof cookErrorMessage>;
@@ -49,13 +51,20 @@ function ErrorNote({ failure, onRetry, busy }: { failure: Failure; onRetry?: () 
   );
 }
 
-function Timer({ seconds }: { seconds: number }) {
+function Timer({ seconds, onDone }: { seconds: number; onDone?: () => void }) {
   const [total, setTotal] = useState(seconds);
   const [left, setLeft] = useState(seconds);
   const [running, setRunning] = useState(false);
+  const doneRef = useRef(onDone);
+  useEffect(() => {
+    doneRef.current = onDone;
+  }, [onDone]);
   useEffect(() => {
     if (!running || left <= 0) return;
-    const t = setTimeout(() => setLeft((s) => s - 1), 1000);
+    const t = setTimeout(() => {
+      setLeft((s) => s - 1);
+      if (left === 1) doneRef.current?.();
+    }, 1000);
     return () => clearTimeout(t);
   }, [running, left]);
   const pct = total ? (total - left) / total : 0;
@@ -70,7 +79,7 @@ function Timer({ seconds }: { seconds: number }) {
         </span>
       </div>
       <div className="text-sm">
-        <p className="text-zinc-300">{running ? "Timer running." : left === 0 ? "Time's up." : "Tap start when the step begins."}</p>
+        <p className="text-zinc-300">{running ? "Timer running… I'll cheer when it's done." : left === 0 ? "Ding! Time's up 🔔" : "Tap start when the step begins."}</p>
         <div className="mt-2 flex gap-2">
           <button
             onClick={() => {
@@ -142,6 +151,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
   const [confirmed, setConfirmed] = useState<{ proposals: Proposal[] } | null>(null);
   const [choices, setChoices] = useState<Record<string, ProposalState>>({});
   const [leftoverDays, setLeftoverDays] = useState(0);
+  const [timerDone, setTimerDone] = useState(false);
 
   // One row per ingredient (design frame 9); its items are the proposal's, oldest pack first.
   const groups = done
@@ -163,7 +173,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
     for (const d of res.data.deductions) totals[d.ingredientId] = (totals[d.ingredientId] ?? 0) + d.qty;
     setAmounts(Object.fromEntries(Object.entries(totals).map(([k, v]) => [k, String(Math.round(v * 100) / 100)])));
     setLeftovers(res.data.leftovers.servings);
-    setLeftoverDays(Math.max(0, Math.round((Date.parse(`${res.data.leftovers.expiresOn}T00:00:00Z`) - Date.now()) / 86_400_000)));
+    setLeftoverDays(Math.max(0, Math.ceil((Date.parse(`${res.data.leftovers.expiresOn}T00:00:00Z`) - Date.now()) / 86_400_000)));
   }
 
   const badAmount = groups.some((g) => amounts[g.ingredientId] === "" || !(Number(amounts[g.ingredientId]) >= 0));
@@ -206,14 +216,21 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
   if (done) {
     return (
       <section className="mx-auto w-full max-w-xl p-6">
-        <h1 className="text-2xl font-semibold tracking-tight">{confirmed ? "Your fridge is updated" : "Nice cooking!"}</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          {confirmed ? `${recipe.title} is logged.` : "Check what you used. Your fridge only changes when you confirm."}
-        </p>
+        <FunStyles />
+        {confirmed && <Confetti />}
+        <div className="cooky-pop flex items-center gap-4 rounded-3xl bg-amber-50 p-4 dark:bg-amber-950/40">
+          <Mascot mood={confirmed ? "cheer" : "proud"} size={72} className={confirmed ? "cooky-wiggle shrink-0" : "cooky-float shrink-0"} />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{confirmed ? "All logged, chef! 🎉" : `Nice cooking! ${dishEmoji(recipe.title)}`}</h1>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+              {confirmed ? `${recipe.title} is done and your fridge is up to date.` : "Check what you used. Your fridge only changes when you confirm."}
+            </p>
+          </div>
+        </div>
 
         {!confirmed && (
           <>
-            <ul className="mt-5 divide-y divide-zinc-100 rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+            <ul className="mt-5 divide-y divide-zinc-100 rounded-3xl border bg-white dark:bg-zinc-900 border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
               {groups.map((g) => (
                 <li key={g.ingredientId} className="flex items-center justify-between gap-3 px-4 py-3">
                   <div className="text-sm">
@@ -247,23 +264,23 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
               {groups.length === 0 && (done.missing ?? []).length === 0 && <li className="px-4 py-3 text-sm">Nothing from your fridge to take off.</li>}
             </ul>
 
-            <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-zinc-200 px-4 py-3 dark:border-zinc-800">
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-3xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
               <div className="text-sm">
-                <p className="font-medium">Save leftovers</p>
+                <p className="font-medium">🥡 Save leftovers</p>
                 <p className="text-xs text-zinc-500">Goes in the fridge as a dish · keeps about {leftoverDays} days (typical guide, USDA FoodKeeper)</p>
               </div>
               <div className="flex items-center gap-2">
-                <button aria-label="One fewer leftover serving" onClick={() => setLeftovers((n) => Math.max(0, n - 1))} className="h-8 w-8 rounded-lg border border-zinc-300 dark:border-zinc-700">−</button>
+                <button aria-label="One fewer leftover serving" onClick={() => setLeftovers((n) => Math.max(0, n - 1))} className="h-9 w-9 rounded-full border border-zinc-300 text-lg transition active:scale-90 dark:border-zinc-700">−</button>
                 <span className="w-5 text-center tabular-nums" aria-live="polite">{leftovers}</span>
-                <button aria-label="One more leftover serving" onClick={() => setLeftovers((n) => Math.min(limits.servingsMax, n + 1))} className="h-8 w-8 rounded-lg border border-zinc-300 dark:border-zinc-700">+</button>
+                <button aria-label="One more leftover serving" onClick={() => setLeftovers((n) => Math.min(limits.servingsMax, n + 1))} className="h-9 w-9 rounded-full border border-zinc-300 text-lg transition active:scale-90 dark:border-zinc-700">+</button>
               </div>
             </div>
 
-            <div className="mt-3 rounded-xl border border-zinc-200 px-4 py-3 dark:border-zinc-800">
-              <p className="text-sm font-medium">How was it?</p>
+            <div className="mt-3 rounded-3xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
+              <p className="text-sm font-medium">😋 How was it?</p>
               <div className="mt-1 flex gap-1" role="radiogroup" aria-label="Rating">
                 {[1, 2, 3, 4, 5].map((n) => (
-                  <button key={n} role="radio" aria-checked={rating === n} aria-label={`${n} star${n > 1 ? "s" : ""}`} onClick={() => setRating(rating === n ? null : n)} className={`text-2xl leading-none ${rating !== null && n <= rating ? "text-amber-500" : "text-zinc-300 dark:text-zinc-600"}`}>
+                  <button key={n} role="radio" aria-checked={rating === n} aria-label={`${n} star${n > 1 ? "s" : ""}`} onClick={() => setRating(rating === n ? null : n)} className={`text-3xl leading-none transition hover:scale-125 active:scale-90 ${rating !== null && n <= rating ? "text-amber-400" : "text-zinc-300 dark:text-zinc-600"}`}>
                     ★
                   </button>
                 ))}
@@ -273,12 +290,13 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
                 placeholder="Tasty, but a bit dry" aria-label="A note for next time"
                 className="mt-2 w-full rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-sm dark:border-zinc-700"
               />
+              {rating !== null && <p className="cooky-pop mt-1 text-xs text-zinc-500">{["", "Oh no, we'll do better next time 🥲", "Not quite, noted 📝", "Pretty good! 🙂", "Yum! 😋", "Chef's kiss! 🤌"][rating]}</p>}
               {pro && <p className="mt-1 text-xs text-zinc-500">Cooky may suggest a preference from your note. Nothing is saved unless you choose it.</p>}
             </div>
 
             {badAmount && <p className="mt-3 text-sm text-red-700">Each amount must be a number of 0 or more.</p>}
-            <button onClick={confirm} disabled={busy || badAmount} className="mt-5 w-full rounded-xl bg-green-700 px-4 py-3 text-sm font-medium text-white disabled:opacity-50">
-              {busy ? "Updating your fridge…" : "Confirm & update fridge"}
+            <button onClick={confirm} disabled={busy || badAmount} className="mt-5 w-full rounded-full bg-green-700 px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-green-800 active:scale-[0.98] disabled:opacity-50">
+              {busy ? "Updating your fridge…" : "Confirm & update fridge ✓"}
             </button>
             <button
               onClick={() => {
@@ -294,7 +312,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
           <>
             {leftovers > 0 && <p className="mt-4 text-sm">{leftovers} leftover serving{leftovers > 1 ? "s" : ""} added to your fridge.</p>}
             {confirmed.proposals.map((p) => (
-              <div key={p.id} className="mt-4 rounded-xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-900 dark:bg-violet-950">
+              <div key={p.id} className="cooky-pop mt-4 rounded-3xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-900 dark:bg-violet-950">
                 <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">✧ Remember this for next time?</p>
                 <p className="mt-1 font-semibold">{p.value}</p>
                 <p className="text-xs text-zinc-600 dark:text-zinc-400">{p.reason}</p>
@@ -311,7 +329,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
               </div>
             ))}
             <div className="mt-6 flex gap-4 text-sm">
-              <Link className="rounded-lg bg-zinc-900 px-4 py-2 text-white dark:bg-zinc-100 dark:text-zinc-900" href="/fridge">See your fridge</Link>
+              <Link className="rounded-full bg-green-700 px-4 py-2 text-white shadow-sm transition hover:-translate-y-0.5" href="/fridge">🧊 See your fridge</Link>
               <Link className="px-2 py-2 underline" href="/recipes">Back to recipes</Link>
             </div>
           </>
@@ -322,12 +340,15 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
 
   // ---------------------------------------------------------------- frame 8: cook with your coach
   const tip = step ? tips.get(step.stepNo) : undefined;
+  const mood: Mood = asking ? "thinking" : askFailure || doneFailure ? "worried" : timerDone ? "cheer" : thread.at(-1)?.a.notCovered ? "worried" : "happy";
   return (
     <section className="mx-auto w-full max-w-xl p-6">
+      <FunStyles />
       <div className="flex items-center gap-3">
         <Link href={`/recipes/${recipe.id}`} aria-label="Back to the recipe" className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 dark:border-zinc-700">‹</Link>
+        <Mascot mood={mood} size={48} className={timerDone ? "cooky-wiggle shrink-0" : "cooky-float shrink-0"} />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate font-semibold">{recipe.title}</h1>
+          <h1 className="truncate font-semibold">{dishEmoji(recipe.title)} {recipe.title}</h1>
           <p className="text-xs text-green-700 dark:text-green-400">Dinner in about {minutesLeft} min</p>
         </div>
         <div className="flex gap-1" aria-label={`Step ${index + 1} of ${steps.length}`}>
@@ -335,7 +356,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
         </div>
       </div>
 
-      <details className="mt-3 rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800">
+      <details className="mt-3 rounded-2xl border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800">
         <summary className="cursor-pointer">
           Ingredients for{" "}
           <select value={servings} onChange={(e) => setServings(Number(e.target.value))} onClick={(e) => e.stopPropagation()} aria-label="Servings" className="rounded border border-zinc-300 bg-transparent px-1 dark:border-zinc-700">
@@ -353,17 +374,24 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
       </details>
 
       {step ? (
-        <div className="mt-4 rounded-2xl bg-zinc-900 p-5 text-white">
+        <div key={step.id} className="cooky-slide mt-4 rounded-3xl bg-zinc-900 p-5 text-white shadow-lg">
           <div className="flex justify-between text-xs font-semibold uppercase tracking-wide">
             <span className="text-green-300">Step {index + 1} of {steps.length}</span>
             {steps.length > 2 && index === Math.floor((steps.length - 1) / 2) && <span className="normal-case text-zinc-300">Halfway there</span>}
             {index === steps.length - 1 && <span className="normal-case text-zinc-300">Last step</span>}
           </div>
+          <p className="mt-1 text-sm text-zinc-300">{stepCheer(index, steps.length)}</p>
           <p className="mt-2 text-lg font-semibold leading-snug">{step.text}</p>
-          {step.timerSeconds && <Timer key={step.id} seconds={step.timerSeconds} />}
+          {step.timerSeconds && <Timer key={step.id} seconds={step.timerSeconds} onDone={() => setTimerDone(true)} />}
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <button onClick={() => setIndex((i) => i - 1)} disabled={index === 0} className="rounded-xl border border-white/30 py-2.5 text-sm disabled:opacity-40">Back</button>
-            <button onClick={() => setIndex((i) => i + 1)} disabled={index === steps.length - 1} className="rounded-xl bg-white py-2.5 text-sm font-medium text-zinc-900 disabled:opacity-40">Next step</button>
+            <button onClick={() => {
+                setTimerDone(false);
+                setIndex((i) => i - 1);
+              }} disabled={index === 0} className="rounded-full border border-white/30 py-2.5 text-sm disabled:opacity-40">Back</button>
+            <button onClick={() => {
+                setTimerDone(false);
+                setIndex((i) => i + 1);
+              }} disabled={index === steps.length - 1} className="rounded-full bg-white transition active:scale-95 py-2.5 text-sm font-medium text-zinc-900 disabled:opacity-40">Next step</button>
           </div>
         </div>
       ) : (
@@ -380,8 +408,8 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
         )}
         {thread.map(({ q, a }, i) => (
           <div key={i} className="space-y-2">
-            <p className="ml-auto w-fit max-w-[85%] rounded-xl bg-zinc-100 px-3 py-2 text-sm dark:bg-zinc-800">{q}</p>
-            <CoachCard>
+            <p className="cooky-pop ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-green-100 dark:bg-green-950 px-3 py-2 text-sm dark:bg-zinc-800">{q}</p>
+            <CoachCard mood={a.notCovered ? "worried" : "happy"}>
               <p>{a.answer}</p>
               {a.citations.length > 0 && (
                 <p className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
@@ -413,7 +441,11 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
             </CoachCard>
           </div>
         ))}
-        {asking && <p className="text-sm text-zinc-500" role="status">Your coach is checking the recipe…</p>}
+        {asking && (
+          <CoachCard mood="thinking">
+            <p className="flex items-center gap-2 text-zinc-500" role="status">Checking the recipe <ThinkingDots /></p>
+          </CoachCard>
+        )}
         {askFailure && <ErrorNote failure={askFailure} onRetry={() => ask(lastQuestion.current)} busy={asking} />}
       </div>
 
@@ -422,7 +454,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
           <p className="text-xs text-zinc-500">Quick questions · one tap</p>
           <div className="mt-1.5 flex flex-wrap gap-2">
             {QUICK.map((q) => (
-              <button key={q} onClick={() => askQuick(q)} disabled={asking} className="rounded-full border border-violet-300 px-3 py-1 text-sm text-violet-800 hover:bg-violet-50 disabled:opacity-50 dark:border-violet-700 dark:text-violet-200 dark:hover:bg-violet-950">
+              <button key={q} onClick={() => askQuick(q)} disabled={asking} className="rounded-full border bg-white transition hover:-translate-y-0.5 active:scale-95 dark:bg-zinc-900 border-violet-300 px-3 py-1 text-sm text-violet-800 hover:bg-violet-50 disabled:opacity-50 dark:border-violet-700 dark:text-violet-200 dark:hover:bg-violet-950">
                 {q}
               </button>
             ))}
@@ -437,31 +469,31 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
             <input
               value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={limits.questionMaxChars}
               placeholder="Ask about this recipe…" aria-label="Your question"
-              className="min-w-0 flex-1 rounded-xl border border-zinc-300 bg-transparent px-3 py-2 text-sm dark:border-zinc-700"
+              className="min-w-0 flex-1 rounded-full border px-4 border-zinc-300 bg-transparent px-3 py-2 text-sm dark:border-zinc-700"
             />
-            <button disabled={asking || !question.trim()} className="rounded-xl border border-zinc-300 px-3 text-sm disabled:opacity-50 dark:border-zinc-700">Ask</button>
+            <button disabled={asking || !question.trim()} className="rounded-full border px-4 border-zinc-300 px-3 text-sm disabled:opacity-50 dark:border-zinc-700">Ask</button>
           </form>
         </div>
       ) : (
-        <p className="mt-4 rounded-xl border border-zinc-200 p-3 text-sm dark:border-zinc-800">
+        <p className="mt-4 rounded-3xl border border-zinc-200 p-3 text-sm dark:border-zinc-800">
           Questions while you cook are part of Cooky Pro; steps, timers and tips stay free. <Link className="underline" href="/billing">Unlock Pro</Link>
         </p>
       )}
 
-      <button onClick={finish} disabled={busy} className="mt-5 w-full rounded-xl bg-green-700 py-3 text-sm font-medium text-white disabled:opacity-50">
-        {busy ? "Checking your fridge…" : "I'm done, time to eat"}
+      <button onClick={finish} disabled={busy} className="mt-5 w-full rounded-full bg-green-700 py-3 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-green-800 active:scale-[0.98] disabled:opacity-50">
+        {busy ? "Checking your fridge…" : "I'm done, time to eat 🍽️"}
       </button>
       {doneFailure && <ErrorNote failure={doneFailure} onRetry={finish} busy={busy} />}
     </section>
   );
 }
 
-function CoachCard({ children }: { children: ReactNode }) {
+function CoachCard({ children, mood = "happy" }: { children: ReactNode; mood?: Mood }) {
   return (
-    <div className="flex gap-3">
-      <span aria-hidden className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-700 text-sm text-white">⌂</span>
-      <div className="flex-1 rounded-xl border border-zinc-200 p-3 text-sm dark:border-zinc-800">
-        <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">Your coach</p>
+    <div className="cooky-pop flex gap-2">
+      <Mascot mood={mood} size={40} className="mt-1 shrink-0" />
+      <div className="flex-1 rounded-3xl rounded-tl-sm border border-violet-100 bg-violet-50/60 p-3 text-sm dark:border-violet-900 dark:bg-violet-950/40">
+        <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">Bao, your coach</p>
         <div className="mt-1">{children}</div>
       </div>
     </div>
