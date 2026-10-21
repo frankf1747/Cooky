@@ -390,7 +390,7 @@ the human-readable index; the code wins.
 - **Errors:** `{ "error": string, "status": number, "code": string, "requestId": string, "resetAt"?: string }`.
   `400` invalid input · `401` not signed in · `403` not allowed (`not_pro`) · `404` unknown or
   not yours · `409` conflict (`stale_version`, `already_confirmed`, `already_pro`,
-  `insufficient_stock`, `stale_quantity`) · `413` too large · `422` valid but impossible (`infeasible`,
+  `insufficient_stock`, `stale_quantity`, `item_not_active`) · `413` too large · `422` valid but impossible (`infeasible`,
   `no_alternative`, `not_a_recipe`, `not_a_receipt`, `ai_refused`) · `429` quota (`resetAt`) ·
   `501` not implemented (every stub) · `502` upstream failed (`model_error`, `plan_invalid`,
   `parse_failed`) · `503` temporarily unavailable (`ai_paused` when the team spend cap is hit).
@@ -452,7 +452,7 @@ GET    /api/fridge                       -> 200 FridgeView { items: FridgeItem[]
 POST   /api/fridge/items                 // { ingredientId, qty, unit, location, expiresOn?, idempotencyKey }
                                          -> 201 { itemId }
 PATCH  /api/fridge/items/{id}            // { qty?, location?, expiresOn?, status?: "used"|"tossed", expectedQty?, idempotencyKey }
-                                         -> 200 FridgeItem | 404 | 409 stale_quantity
+                                         -> 200 FridgeItem | 400 | 404 | 409 stale_quantity, item_not_active
 POST   /api/fridge/check                 // { updates: [{ itemId, action: "keep"|"used"|"tossed", qty? }], idempotencyKey }
                                          -> 200 FridgeView
 

@@ -3,7 +3,7 @@
 -- check, exact shortfall details, and the user's local date for added_on.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(23);
+select plan(26);
 
 insert into auth.users (id, email) values
   ('33333333-3333-3333-3333-333333333333', 'edit-a@test.local'),
@@ -68,6 +68,12 @@ select is((select count(*)::int from public.inventory_events where user_id = '33
 
 select throws_like(format($f$ select public.edit_fridge_item('33333333-3333-3333-3333-333333333333', %L, 'man:neg', 150, p_qty => -1) $f$, pg_temp.kale()),
   'invalid_quantity:%', 'a negative quantity is refused');
+select throws_ok(format($f$ select public.edit_fridge_item('33333333-3333-3333-3333-333333333333', %L, 'edt:noexp', null, p_qty => 1) $f$, pg_temp.kale()),
+  '22023', 'invalid_edit:expected_qty_required', 'an edit without the quantity the user saw is refused');
+select throws_ok(format($f$ select public.edit_fridge_item('33333333-3333-3333-3333-333333333333', %L, 'edt:badloc', 150, p_location => 'garage') $f$, pg_temp.kale()),
+  '22023', 'invalid_edit:location', 'an unknown location is a bad request, not a constraint error');
+select throws_ok($$ select public.edit_fridge_item('33333333-3333-3333-3333-333333333333', 'itm_other', 'man:add1', 150, p_qty => 1) $$,
+  '22023', 'invalid_edit:key_reused', 'a key already used for another change is refused, not replayed');
 
 -- move to the freezer with a recomputed date (stored date came from the table)
 select public.edit_fridge_item('33333333-3333-3333-3333-333333333333', pg_temp.kale(), 'man:move1', 150,

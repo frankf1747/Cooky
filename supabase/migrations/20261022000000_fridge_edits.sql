@@ -14,7 +14,7 @@ drop function public.apply_inventory_batch(uuid, text, jsonb);
 -- below zero, and 'item_not_found:<itemId>' (P0002) for an unknown or foreign item; the whole batch rolls back.
 create function public.apply_inventory_batch(p_user uuid, p_batch_key text, p_events jsonb, p_today date default null)
 returns jsonb
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, pg_temp as $$
 declare
   prior jsonb;
   ev jsonb;
@@ -78,22 +78,23 @@ begin
 end $$;
 
 -- Edit one fridge item atomically (SPEC FRG4). Pass only the fields being changed.
---   p_expected_qty: the quantity the user saw; any other current quantity raises 'stale_quantity:<itemId>'
+--   p_expected_qty (required): the quantity the user saw; any other current quantity raises 'stale_quantity:<itemId>'
 --     (P0001, DETAIL {"expected","actual"}) so the route can answer 409 and the client can refresh.
 --   p_qty: new absolute quantity (>= 0), recorded as an 'adjust' event of the difference.
 --   p_status: 'used' or 'tossed' takes the whole remaining quantity to zero ('adjust' or 'toss' event).
 --   p_location: a move, recorded as a 'move' event of zero.
 --   p_expires_on + p_expiry_source: 'user' always applies; 'table' or 'category' (a date recomputed by code, e.g.
 --     after a move) applies only when the stored date was not set by the user.
--- A repeat with the same key returns the first result plus "replayed": true and writes nothing.
+-- Use keys 'edt:<idempotencyKey>'. A repeat with the same key returns the first result plus "replayed": true and
+-- writes nothing; a key already used for another item or for a batch raises 'invalid_edit:key_reused'.
 -- Raises 'item_not_found:<itemId>' (P0002) for an unknown or foreign item, 'item_not_active:<itemId>' (P0001) for
--- an item already used or tossed, and 'invalid_edit:<reason>' (22023) for a request no client should send.
+-- an item already used or tossed, and 'invalid_quantity' or 'invalid_edit:<reason>' (22023) for a bad request.
 create function public.edit_fridge_item(
   p_user uuid, p_item text, p_key text, p_expected_qty numeric,
   p_qty numeric default null, p_status text default null, p_location text default null,
   p_expires_on date default null, p_expiry_source text default null)
 returns jsonb
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, pg_temp as $$
 declare
   prior jsonb;
   it fridge_items%rowtype;
@@ -101,6 +102,9 @@ declare
   v_qty numeric;
   v_result jsonb;
 begin
+  if p_expected_qty is null then
+    raise exception 'invalid_edit:expected_qty_required' using errcode = '22023';
+  end if;
   if p_qty is not null and p_qty < 0 then
     raise exception 'invalid_quantity:%', p_qty using errcode = '22023';
   end if;
@@ -110,6 +114,12 @@ begin
   if p_status is not null and p_status not in ('used', 'tossed') then
     raise exception 'invalid_edit:status' using errcode = '22023';
   end if;
+  if p_location is not null and p_location not in ('fridge', 'freezer', 'pantry') then
+    raise exception 'invalid_edit:location' using errcode = '22023';
+  end if;
+  if p_expiry_source is not null and p_expiry_source not in ('table', 'category', 'user') then
+    raise exception 'invalid_edit:expiry_source' using errcode = '22023';
+  end if;
   if (p_expires_on is null) <> (p_expiry_source is null) then
     raise exception 'invalid_edit:expiry_needs_source' using errcode = '22023';
   end if;
@@ -117,6 +127,9 @@ begin
   insert into inventory_batches (user_id, batch_key) values (p_user, p_key) on conflict do nothing;
   select b.result into prior from inventory_batches b where b.user_id = p_user and b.batch_key = p_key for update;
   if prior is not null then
+    if prior->>'itemId' is distinct from p_item then
+      raise exception 'invalid_edit:key_reused' using errcode = '22023';
+    end if;
     return prior || jsonb_build_object('replayed', true);
   end if;
 

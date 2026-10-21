@@ -83,7 +83,7 @@ by key, and can be called only from server code through `writer(userId).db.rpc(.
 | Function | Use it for | Errors (message prefix, SQLSTATE) |
 |---|---|---|
 | `apply_inventory_batch(p_user, p_batch_key, p_events, p_today?)` | adding items and relative changes (receipt confirm `rct:<receiptId>`, cook confirm `cke_…`, manual add `man:<key>`) | `insufficient_stock:<itemId>` P0001, DETAIL `{"available","requested","shortBy"}` → 409 · `item_not_found:<itemId>` P0002 → 404 |
-| `edit_fridge_item(p_user, p_item, p_key, p_expected_qty, p_qty?, p_status?, p_location?, p_expires_on?, p_expiry_source?)` | one item: set a quantity, mark used or tossed, move, change the date | `stale_quantity:<itemId>` P0001, DETAIL `{"expected","actual"}` → 409 · `item_not_active:<itemId>` P0001 → 409 · `item_not_found:<itemId>` P0002 → 404 · `invalid_quantity` / `invalid_edit:<why>` 22023 → 400 |
+| `edit_fridge_item(p_user, p_item, p_key, p_expected_qty, p_qty?, p_status?, p_location?, p_expires_on?, p_expiry_source?)` | one item: set a quantity, mark used or tossed, move, change the date (key `edt:<idempotencyKey>`; `p_expected_qty` is required) | `stale_quantity:<itemId>` P0001, DETAIL `{"expected","actual"}` → 409 · `item_not_active:<itemId>` P0001 → 409 · `item_not_found:<itemId>` P0002 → 404 · `invalid_quantity` / `invalid_edit:<why>` 22023 → 400 (`key_reused` when the key belongs to another change) |
 
 - A repeat with the same key returns the first result with `"replayed": true` and writes
   nothing. Answer `200` (not `201`) for a replay.
