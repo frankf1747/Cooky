@@ -3,9 +3,11 @@
 import type { Chunk } from "@spec/contract";
 
 const STOP = new Set(
-  ("a an and are as at be but by can do does for from how i if in into is it its me my no not of on or " +
+  (
+    "a an and are as at be but by can do does for from how i if in into is it its me my no not of on or " +
     "should so than that the then there these this to too was what when where which while who why will " +
-    "with without would you your we our use using get make much many any some just".split(" ")),
+    "with without would you your we our use using get make much many any some just"
+  ).split(" "),
 );
 
 function stem(w: string): string {
