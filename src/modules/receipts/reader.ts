@@ -38,16 +38,16 @@ export function receiptContent(image: Uint8Array, mediaType: ImageMediaType): Co
   ];
 }
 
-/** Violations the gateway sends back for a repair: ids outside the catalog, impossible numbers. */
+/**
+ * Violations the gateway sends back for a repair: ids outside the catalog. Numbers are not
+ * repaired here: coupons and refunds print negatives, and classifyLine() makes those lines safe.
+ */
 export function validateExtraction(out: ReceiptExtraction, catalogIds: ReadonlySet<string>): string[] {
   const v: string[] = [];
   if (!out.isReceipt) return v;
   out.lines.forEach((l, i) => {
     if (l.ingredientId !== null && !catalogIds.has(l.ingredientId)) v.push(`lines.${i}.ingredientId: "${l.ingredientId}" is not in the catalog; use a listed id or null`);
     if (l.ingredientId !== null && l.kind !== "food") v.push(`lines.${i}: only food lines may have an ingredientId`);
-    if (l.qty !== null && !(l.qty >= 0)) v.push(`lines.${i}.qty: must be zero or more, or null`);
-    if (l.packageCount !== null && !(Number.isInteger(l.packageCount) && l.packageCount > 0)) v.push(`lines.${i}.packageCount: must be a positive whole number, or null`);
-    if (l.priceCents !== null && !(Number.isInteger(l.priceCents) && l.priceCents >= 0)) v.push(`lines.${i}.priceCents: must be whole cents, zero or more, or null`);
   });
   return v;
 }

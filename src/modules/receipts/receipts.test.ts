@@ -172,6 +172,22 @@ describe("receipts.upload failures (RCT7)", () => {
     expect(tables.receipt_lines).toHaveLength(0);
   });
 
+  it("a coupon and a refund do not fail the receipt: no repair, lines saved inside the contract", async () => {
+    const out = aiFixtures.receipt_reader({ system: "", text: "" }) as { lines: Record<string, unknown>[] };
+    out.lines.push(
+      { raw: "SC COUPON -1.00", kind: "discount", ingredientId: null, category: null, name: "Coupon", qty: null, unit: null, packageCount: null, priceCents: -100, confidence: "high" },
+      { raw: "RFND CHKN BRST -1.32 LB", kind: "food", ingredientId: "ing_chicken_breast", category: "meat", name: "Chicken breast", qty: -1.32, unit: "lb", packageCount: 1, priceCents: -799, confidence: "high" },
+    );
+    transport.mockResolvedValueOnce(reply(out));
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect(receipt.lines.slice(-2).map((l) => [l.decision, l.flagReason, l.qty, l.priceCents])).toEqual([
+      ["ignored", null, null, null],
+      ["flagged", "implausible_quantity", null, null],
+    ]);
+    expect(tables.receipt_lines.every((r) => (r.price_cents === null || (r.price_cents as number) >= 0) && (r.qty === null || (r.qty as number) >= 0))).toBe(true);
+  });
+
   it("an illegible purchase date from the model is dropped, not stored", async () => {
     const out = aiFixtures.receipt_reader({ system: "", text: "" }) as Record<string, unknown>;
     transport.mockResolvedValueOnce(reply({ ...out, purchasedOn: "2026-13-45" }));
