@@ -1,4 +1,4 @@
-id,title,base_servings,minutes,equipment,tags,source_url,source_label
-rcp_lemon_garlic_chicken,Lemon garlic chicken with spinach,2,30,skillet,dinner|one-pan|high-protein,,PLACEHOLDER: team-written sample
-rcp_spinach_frittata,Spinach frittata,2,20,oven-safe skillet,dinner|vegetarian|uses-leftovers,,PLACEHOLDER: team-written sample
-rcp_egg_fried_rice,Egg fried rice,2,20,skillet,dinner|quick|uses-leftovers,,PLACEHOLDER: team-written sample
+id,title,base_servings,minutes,equipment,tags,source_url,source_label,image_url
+rcp_lemon_garlic_chicken,Lemon garlic chicken with spinach,2,30,skillet,dinner|one-pan|high-protein,,PLACEHOLDER: team-written sample,
+rcp_spinach_frittata,Spinach frittata,2,20,oven-safe skillet,dinner|vegetarian|uses-leftovers,,PLACEHOLDER: team-written sample,
+rcp_egg_fried_rice,Egg fried rice,2,20,skillet,dinner|quick|uses-leftovers,,PLACEHOLDER: team-written sample,

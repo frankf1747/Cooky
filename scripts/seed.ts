@@ -72,6 +72,7 @@ const products = read("products.csv").map((r, i) => {
 const recipes = read("recipes.csv").map((r, i) => {
   const at = `recipes.csv row ${i + 2}`;
   check(/^rcp_[0-9a-z_]+$/.test(r.id), `${at}: bad id "${r.id}"`);
+  check(r.image_url === "" || r.image_url.startsWith("https://"), `${at}: image_url must be https or empty`);
   return {
     id: r.id,
     owner_id: null,
@@ -82,6 +83,7 @@ const recipes = read("recipes.csv").map((r, i) => {
     tags: list(r.tags),
     source_url: r.source_url || null,
     source_label: r.source_label,
+    image_url: r.image_url || null,
   };
 });
 const recipeIds = new Set(recipes.map((r) => r.id));
@@ -99,9 +101,11 @@ const chunks = read("recipe_chunks.csv").map((r, i) => {
   const at = `recipe_chunks.csv row ${i + 2}`;
   check(/^chk_[0-9a-z_]+$/.test(r.id), `${at}: bad id "${r.id}"`);
   check(recipeIds.has(r.recipe_id), `${at}: unknown recipe ${r.recipe_id}`);
-  check(r.kind === "step" || r.kind === "faq", `${at}: kind must be step or faq`);
-  check(r.kind === "faq" || Boolean(int(r.step_no)), `${at}: steps need step_no`);
-  return { id: r.id, recipe_id: r.recipe_id, kind: r.kind, step_no: int(r.step_no) ?? null, label: r.label, text: r.text };
+  check(["step", "faq", "tip"].includes(r.kind), `${at}: kind must be step, faq or tip`);
+  check(r.kind === "faq" || Boolean(int(r.step_no)), `${at}: steps and tips need step_no`);
+  check(r.timer_seconds === "" || (Number.isInteger(Number(r.timer_seconds)) && Number(r.timer_seconds) > 0), `${at}: timer_seconds must be a positive whole number`);
+  check(r.timer_seconds === "" || r.kind === "step", `${at}: only steps have timers`);
+  return { id: r.id, recipe_id: r.recipe_id, kind: r.kind, step_no: int(r.step_no) ?? null, label: r.label, text: r.text, timer_seconds: int(r.timer_seconds) ?? null };
 });
 
 if (errors.length) {
