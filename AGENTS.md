@@ -22,9 +22,9 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
   |---|---|
   | Platform (Frank) | `src/platform/`, `src/ui/`, `spec/contract.ts`, `supabase/migrations/`, `src/modules/{billing,alerts}/`, `app/(marketing)/`, `app/(auth)/`, `app/(app)/{onboarding,settings,billing,alerts}/`, `app/layout.tsx`, `app/api/{health,me,profile,billing,stripe,cron,alerts}/`, `.claude/`, this file and `docs/{SPEC,DESIGN,TECHNICAL}.md`, CI, deploy config |
   | Recipes & Cook | `src/modules/{recipes,cook}/`, `app/(app)/{recipes,cook}/`, `app/api/{recipes,ingredients,cook}/`, catalog data `supabase/seed/*.csv` (others contribute rows by PR) |
-  | Plan & Shop | `src/modules/{planning,preferences}/`, `app/(app)/{plan,shop,preferences}/`, `app/api/{plans,preferences}/` |
-  | Receipts | `src/modules/receipts/`, `app/(app)/receipts/`, `app/api/receipts/` |
-  | Fridge | `src/modules/fridge/`, `app/(app)/fridge/`, `app/api/{fridge,stats}/` |
+  | Plan & Shop (Richard) | `src/modules/{planning,preferences}/`, `app/(app)/{plan,shop,preferences}/`, `app/api/{plans,preferences}/` |
+  | Receipts (Hanson) | `src/modules/receipts/`, `app/(app)/receipts/`, `app/api/receipts/` |
+  | Fridge (Una) | `src/modules/fridge/`, `app/(app)/fridge/`, `app/api/{fridge,stats}/` |
   | Data & Proof | `eval/`, `e2e/`, `docs/PRD.md`, write-up; seed rows by PR to Recipes & Cook |
 
 - **Build in:** the folders your user owns. Keep route files thin (parse, call one module

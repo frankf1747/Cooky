@@ -54,11 +54,16 @@ placeholders until the team assigns them.
 |---|---|---|
 | Platform (Frank) | `src/platform/`, `src/ui/`, `spec/contract.ts`, `supabase/migrations/`, `src/modules/{billing,alerts}/`, landing, auth, onboarding, settings, billing and alerts pages, `.claude/`, CI, deploy | No: propose changes |
 | Recipes & Cook | `src/modules/{recipes,cook}/`, recipe library and cook pages, catalog CSVs in `supabase/seed/` | No |
-| Plan & Shop | `src/modules/{planning,preferences}/`, plan, shop and preferences pages | No |
+| Plan & Shop (Richard) | `src/modules/{planning,preferences}/`, plan, shop and preferences pages | No |
 | Receipts (Hanson) | `src/modules/receipts/`, camera and receipt review pages | No |
-| Fridge | `src/modules/fridge/`, fridge page, stats | No |
+| Fridge (Una) | `src/modules/fridge/`, fridge page, stats | No |
 | Data & Proof (non-coders) | `eval/` cases, `docs/PRD.md`, write-up, slides; seed rows by PR | No |
 | Everyone, with review | `spec/targets.json` (Data & Proof owner approves), `package.json` (Platform owner approves) | Only through the owner |
+
+## Where we are
+
+What works on `main` today, step by step through the journey, and what is next: SPEC §14.5.
+Review requests follow `.github/CODEOWNERS`.
 
 ## Build order (two days)
 

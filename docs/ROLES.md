@@ -12,8 +12,8 @@ exact shapes live in [`../spec/contract.ts`](../spec/contract.ts); the tables in
 | **Platform** | Frank | 1 set up, 2 unlock Pro | Login, onboarding, Stripe, AI gateway, database, deploy |
 | **Recipes & Cook** | ____ | 3 choose (the library), 8 cook | A large, clean recipe library and catalog; cook mode and the cooking assistant |
 | **Plan & Shop** | Richard | 3 plan, 4 shop, 9 learn | Picks meals from the library, does the shopping math, remembers preferences |
-| **Receipts** | ____ | 5 scan, 6 review | Turns a receipt photo into confirmed fridge items, aligned with the catalog |
-| **Fridge** | ____ | 7 fridge, 8–9 deductions | The fridge record: ledger, fridge page, use-soon, Cook now, cooking deductions |
+| **Receipts** | Hanson | 5 scan, 6 review | Turns a receipt photo into confirmed fridge items, aligned with the catalog |
+| **Fridge** | Una | 7 fridge, 8–9 deductions | The fridge record: ledger, fridge page, use-soon, Cook now, cooking deductions |
 | **Data & Proof** | ____ | all | Real data rows, test cases, results, write-up, slides, demo |
 
 ## How the data connects
@@ -116,7 +116,7 @@ that already exists.
   cookbook photo (RCP4–RCP7, already stubbed); users' own recipes; "pin a recipe" in step 3
   (needs a new `mustIncludeRecipeIds` field: agree with Plan & Shop and Frank).
 
-### Receipts: from paper to aligned data
+### Receipts (Hanson): from paper to aligned data
 - **Owns:** `src/modules/receipts/`, `app/(app)/receipts/` (camera at `receipts/new`, review at
   `receipts/[id]`), `app/api/receipts/`, `eval/smoke/receipts/` runner (cases from Data & Proof).
 - **Why it matters:** this is the core demo feature and the main way food enters the fridge.
@@ -141,7 +141,7 @@ that already exists.
   learning your store's prices for the next plan; a photo of groceries with no receipt; barcode
   scan.
 
-### Fridge: the record everything else trusts
+### Fridge (Una): the record everything else trusts
 - **Owns:** `src/modules/fridge/`, `app/(app)/fridge/`, `app/api/fridge/`, `app/api/stats/`.
 - **Why it matters:** the fridge record is the product. Plans, Cook now, rescue tips and the
   demo all depend on it matching reality.
