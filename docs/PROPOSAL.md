@@ -81,6 +81,8 @@ Fill in names at the first stand-up. Each person owns folders and both builds *a
    fill `.env.local`, `npm run seed`, `npm run dev`.
 4. Sign up at http://localhost:3000/signup, then give yourself Pro locally:
    `npm run dev:grant-pro -- you@example.com` (works only on your local database).
+   The **shared live database** is already set up; you only need it to test against real
+   shared data (`npm run dev:hosted`, secret key from Frank privately; see TECHNICAL).
 5. Read [`SPEC.md`](SPEC.md) §0 (what ships) and your section below. Your requirement IDs
    (like `RCT4`) are your to-do list.
 6. Open Claude Code in the repo. It reads `AGENTS.md` automatically. Start with:

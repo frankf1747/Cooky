@@ -92,13 +92,40 @@ npx supabase db reset         # wipe local data and re-apply migrations (then np
 Local email confirmation is off (`supabase/config.toml`), so sign-up logs you straight in.
 Local auth emails, if turned on, land in Mailpit at http://127.0.0.1:56324.
 
+## Shared hosted database
+
+The team's live Supabase project is `jrkhuohfhqyzwkwrcvii` (US West). It has the full schema and
+the seed data, and the same access rules as local (checked: with only the public key, user tables
+read empty and every write is refused).
+
+| What | Where it lives | Who has it |
+|---|---|---|
+| Project URL and publishable key | `.env.hosted.example` (committed; public by design, RLS protects data) | everyone |
+| Secret key | `.env.hosted` (gitignored), Vercel env vars | Frank shares it privately, never in chat or git |
+| Database password | Supabase dashboard | Frank only (needed for schema changes) |
+
+```bash
+cp .env.hosted.example .env.hosted    # then paste SUPABASE_SECRET_KEY from Frank
+npm run dev:hosted                    # the app on http://localhost:3000 against the live database
+npm run seed:hosted                   # reload seed data (Data & Proof, after CSV changes)
+npx supabase db push                  # schema changes: Platform only; asks for the database password
+```
+
+Rules for the live database: it is shared, so use your own test account (`you+cooky@...`), never
+delete other people's rows, and keep day-to-day development on the local database. Schema
+changes are Platform-only: a new file in `supabase/migrations/`, tested locally with
+`npx supabase db reset && npx supabase test db`, then `npx supabase db push`.
+
+Hosted auth settings live in the Supabase dashboard (Authentication → URL Configuration): add
+`http://localhost:3000` and the Vercel URL as redirect URLs. Email confirmation is on by
+default and Supabase's built-in email sender is rate-limited; turn confirmation off for the
+demo or connect Resend SMTP.
+
 ## Build order, with commands
 
 The skeleton (SPEC §14.1) is in place; the critical path is SPEC §14.2.
 
-1. **Deploy (Platform, once).** Create a Supabase project and run `npx supabase link` then
-   `npx supabase db push`; set `.env` values from the project's API settings and run `npm run seed`
-   against it. Import the GitHub repo in Vercel, set the env vars below for Preview and
+1. **Deploy (Platform, once).** Supabase is done (see above). Import the GitHub repo in Vercel, set the env vars below for Preview and
    Production, deploy. In Stripe (test mode), create the Pro price, then a webhook endpoint
    `https://<url>/api/stripe/webhook` for `checkout.session.completed` and
    `checkout.session.async_payment_succeeded`; put its signing secret in Vercel.

@@ -22,6 +22,11 @@ npm run dev                           # http://localhost:3000 → sign up → cl
 npm run dev:grant-pro -- you@example.com   # local only: unlock Pro features before billing exists
 ```
 
+**Shared live database.** The team's hosted Supabase is already set up and seeded. Build
+against your local database day to day; to run against the live one, copy
+`.env.hosted.example` to `.env.hosted`, add the secret key Frank sends you privately, then run
+`npm run dev:hosted`. Details: [TECHNICAL](docs/TECHNICAL.md#shared-hosted-database).
+
 Every panel that says "Not implemented" is the progress bar. AI runs in fake mode until
 `ANTHROPIC_API_KEY` is set, so you can build pages without spending the team budget.
 Building a feature with Claude Code? It loads `AGENTS.md`; ask it to use the `cooky-module` skill.

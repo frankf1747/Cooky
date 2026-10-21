@@ -5,7 +5,9 @@ import { createClient } from "@supabase/supabase-js";
 import { Category, Unit } from "../spec/contract";
 import { parseCsv } from "./csv";
 
-if (existsSync(".env.local")) process.loadEnvFile(".env.local");
+// ENV_FILE=.env.hosted npm run seed  loads the hosted project instead of local Supabase.
+const envFile = process.env.ENV_FILE ?? ".env.local";
+if (existsSync(envFile)) process.loadEnvFile(envFile);
 
 const DIR = "supabase/seed";
 const errors: string[] = [];

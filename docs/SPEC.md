@@ -712,7 +712,7 @@ Only what teammates need to start in parallel. Everything else waits.
 | S4 | Platform: `handler.ts`, auth, `db.ts` (reader + writer), `ai.ts` with `AI_MODE=fake` fixtures, quotas, units, money, ids, errors | a stub route answers through the wrapper with a request id | ✅ done |
 | S5 | Every v1 route file returns `501`; every module's `index.ts` exports typed stubs for the joins in §14.3 | `curl` shows `501` everywhere except `/api/health` | ✅ done |
 | S6 | App shell: auth pages, nav, one page per v1 feature with "not implemented" panels | a signed-in user can click through every page | ✅ done |
-| S7 | Deployed on Vercel with Supabase and Stripe test keys; Stripe webhook endpoint registered | the public URL serves `/api/health` | ⬜ Frank: needs the Supabase, Vercel and Stripe accounts (TECHNICAL, Build order step 1) |
+| S7 | Deployed on Vercel with Supabase and Stripe test keys; Stripe webhook endpoint registered | the public URL serves `/api/health` | ◐ Supabase hosted project live, schema pushed and seeded (2026-10-20); Vercel and Stripe still to do |
 | S8 | Team harness: `.claude/skills/cooky-module/SKILL.md`, `.claude/agents/contract-reviewer.md`, seed CSV templates with a `README.md` | a teammate's Claude Code follows the skill on a stub | ✅ done |
 | S9 | CI running checks 0–1 on push | a PR shows a green check | ✅ written; runs once the repo is on GitHub |
 
