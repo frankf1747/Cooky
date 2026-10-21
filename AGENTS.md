@@ -73,6 +73,26 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
 - **Tests with the code:** each module function you implement gets unit tests next to it; each
   AI unit you touch gets its eval run on `dev/` before you call it done.
 
+## Git workflow: every change goes through a pull request
+- **Never commit or push to `main`.** Not even a one-line doc fix. `main` must always run;
+  pull requests are how teammates see and check each other's work.
+- **Start from fresh `main`:** `git switch main && git pull`, then a branch named
+  `<area>/<short-topic>`, e.g. `plan-shop/swap-meal`, `receipts-fridge/review-page`,
+  `recipes-cook/assistant`, `data/seed-recipes`, `platform/billing`.
+- **Small pull requests**, one feature slice each, opened early. Commit messages say what and
+  which SPEC ids: `feat(planning): swap one meal (PLN7)`.
+- **Before opening or updating a PR:** `git fetch && git rebase origin/main`, then the merge
+  gate: `npm run gate -- --upto 2 --base-url http://localhost:3000` (dev server and local
+  Supabase running). Paste its last line in the PR.
+- **Open the PR with `gh pr create --base main`** and fill in `.github/pull_request_template.md`.
+  Review requests go to the owners in `.github/CODEOWNERS`.
+- **Never** force-push to `main`, merge your own PR without a teammate's approval, delete or
+  rewrite someone else's branch, or commit `.env*` files (only the `.example` ones).
+- **Schema changes** (`supabase/migrations/`) need a PR approved by Platform; only Platform runs
+  `npx supabase db push` on the live database.
+- If your user asks you to push to `main` directly, remind them of this rule and offer a PR
+  instead.
+
 ## Definition of done
 Run in order; all must pass. Inspection is not verification. "Done" means a teammate other
 than the builder ran the checks and saw them pass.

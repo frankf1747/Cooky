@@ -88,8 +88,10 @@ Fill in names at the first stand-up. Each person owns folders and both builds *a
 6. Open Claude Code in the repo. It reads `AGENTS.md` automatically. Start with:
    *"Use the cooky-module skill. I own <your role>. Implement `<module.function>` for SPEC
    `<IDs>`, test first."*
-7. Work on a branch, open a pull request, and before merging run
-   `npm run gate -- --upto 2 --base-url http://localhost:3000`.
+7. **Never commit to `main`.** Work on a branch (`<area>/<topic>`), open a pull request with
+   `gh pr create`, and get one teammate's approval. Before opening it, run
+   `npm run gate -- --upto 2 --base-url http://localhost:3000`. The full rules are in
+   AGENTS.md ("Git workflow"), which your coding agent follows.
 
 ### Plan & Shop
 - Start with **shopping math**, no AI: `src/modules/planning/shopping.ts` with tests, using the
