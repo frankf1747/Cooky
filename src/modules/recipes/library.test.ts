@@ -104,3 +104,19 @@ describe("recipes.retrieveChunks (ASK2)", () => {
     expect(top.every((c) => c.recipeId === "rcp_fried_rice")).toBe(true);
   });
 });
+
+describe("perServingCents (library cards)", () => {
+  it("prices the share of each package a serving uses, at the cheapest rate", () => {
+    const products = [
+      { ingredientId: "ing_rice", packageSize: 1000, priceCents: 400 },
+      { ingredientId: "ing_rice", packageSize: 500, priceCents: 300 },
+      { ingredientId: "ing_egg", packageSize: 12, priceCents: 600 },
+    ];
+    // 150 g rice at 0.4 c/g = 60, 3 eggs at 50 c = 150; 210 for 2 servings
+    expect(recipes.perServingCents([{ ingredientId: "ing_rice", qty: 150, optional: false }, { ingredientId: "ing_egg", qty: 3, optional: false }], products, 2)).toBe(105);
+  });
+  it("ignores optional ingredients and is null when a required one has no price", () => {
+    expect(recipes.perServingCents([{ ingredientId: "ing_peas", qty: 100, optional: true }], [], 2)).toBe(0);
+    expect(recipes.perServingCents([{ ingredientId: "ing_saffron", qty: 1, optional: false }], [], 2)).toBeNull();
+  });
+});

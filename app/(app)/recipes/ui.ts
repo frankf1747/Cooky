@@ -18,9 +18,6 @@ export function formatTimer(seconds: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-/** Minutes filter steps offered on the library page. */
-export const MINUTE_CHOICES = [20, 25, 30] as const;
-
 export type ApiErrorBody = { error?: string; code?: string; status?: number; resetAt?: string; shortfall?: number };
 
 /** One honest sentence for each error the cook and recipe routes can return (SPEC §8). */

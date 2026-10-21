@@ -5,7 +5,7 @@ import type { z } from "zod";
 import type { ImportRequest, IngredientCreate } from "@spec/contract";
 import { notImplemented } from "@/platform/errors";
 
-export { get, list, listIngredients, retrieveChunks } from "./library";
+export { get, libraryCards, list, listIngredients, perServingCents, retrieveChunks, type LibraryCard } from "./library";
 
 // ---- v2
 export async function createIngredient(userId: string, input: z.infer<typeof IngredientCreate>): Promise<{ ingredientId: string }> {

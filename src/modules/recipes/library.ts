@@ -3,6 +3,7 @@
 import type { z } from "zod";
 import targets from "@spec/targets.json";
 import type { Chunk, Ingredient, Recipe, RecipeSummary, RecipesQuery, Unit } from "@spec/contract";
+import { localToday } from "@/platform/dates";
 import { reader } from "@/platform/db";
 import { notFound, upstream } from "@/platform/errors";
 import * as fridge from "@/modules/fridge";
@@ -186,4 +187,71 @@ export async function retrieveChunks(recipeId: string, question: string): Promis
   const res = await db.from("recipe_chunks").select("id, recipe_id, kind, step_no, label, text, timer_seconds").eq("recipe_id", recipeId);
   const chunks = rows<ChunkRow>(res, "recipe chunks").map(chunk).sort((a, b) => (a.kind === "faq" ? 1 : 0) - (b.kind === "faq" ? 1 : 0) || byStep(a, b));
   return rankChunks(chunks, question, targets.limits.retrievalTopK);
+}
+
+// ---------------------------------------------------------------- library page (RCP3, design frame 3)
+
+export type LibraryCard = RecipeSummary & {
+  /** Ingredient cost of one serving at catalog prices (the share of each package used), or null if any is unpriced. */
+  perServingCents: number | null;
+  /** The soonest-expiring fridge item this recipe uses, for the "Uses your chicken (2 days)" badge. */
+  usesFridge: { name: string; daysLeft: number | null } | null;
+  /** Fridge's Cook now coverage of required ingredients (0..1). */
+  coverage: number;
+};
+
+/** Pure: cost of one serving from the cheapest price per unit of each required ingredient. */
+export function perServingCents(
+  ingredients: { ingredientId: string; qty: number; optional: boolean }[],
+  products: { ingredientId: string; packageSize: number; priceCents: number }[],
+  baseServings: number,
+): number | null {
+  let total = 0;
+  for (const i of ingredients.filter((x) => !x.optional)) {
+    const rates = products.filter((p) => p.ingredientId === i.ingredientId && p.packageSize > 0).map((p) => p.priceCents / p.packageSize);
+    if (!rates.length) return null;
+    total += i.qty * Math.min(...rates);
+  }
+  return Math.round(total / baseServings);
+}
+
+/** Everything the library cards show, in one read per table. */
+export async function libraryCards(userId: string): Promise<LibraryCard[]> {
+  const recipes = await visibleRecipes(userId);
+  const ids = recipes.map((r) => r.id);
+  const db = await reader();
+  const riRows = ids.length
+    ? rows<RecipeIngredientRow>(await db.from("recipe_ingredients").select("recipe_id, ingredient_id, qty, unit, optional").in("recipe_id", ids), "recipe ingredients")
+    : [];
+  const ingIds = [...new Set(riRows.map((r) => r.ingredient_id))];
+  const prodRows = ingIds.length
+    ? rows<{ ingredient_id: string; package_size: number | string; price_cents: number }>(
+        await db.from("products").select("ingredient_id, package_size, price_cents").in("ingredient_id", ingIds),
+        "products",
+      )
+    : [];
+  const products = prodRows.map((p) => ({ ingredientId: p.ingredient_id, packageSize: Number(p.package_size), priceCents: p.price_cents }));
+  const [view, today] = await Promise.all([fridge.view(userId), localToday(userId)]);
+  const coverage = new Map(view.cookNow.map((e) => [e.recipeId, e.coverage]));
+  const stock = view.items.filter((i) => i.kind === "ingredient" && i.ingredientId);
+  const days = (d: string | null) => (d ? Math.round((Date.parse(`${d}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000) : null);
+
+  return recipes
+    .map((r) => {
+      const mine = riRows.filter((ri) => ri.recipe_id === r.id);
+      const used = stock
+        .filter((s) => mine.some((ri) => ri.ingredient_id === s.ingredientId))
+        .sort((a, b) => (a.expiresOn ?? "9999").localeCompare(b.expiresOn ?? "9999"))[0];
+      return {
+        ...summary(r),
+        perServingCents: perServingCents(
+          mine.map((ri) => ({ ingredientId: ri.ingredient_id, qty: Number(ri.qty), optional: ri.optional })),
+          products,
+          Number(r.base_servings),
+        ),
+        usesFridge: used ? { name: used.name, daysLeft: days(used.expiresOn) } : null,
+        coverage: coverage.get(r.id) ?? 0,
+      };
+    })
+    .sort((a, b) => a.title.localeCompare(b.title));
 }
