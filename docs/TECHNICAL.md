@@ -153,9 +153,14 @@ demo or connect Resend SMTP.
 The skeleton (SPEC §14.1) is in place; the critical path is SPEC §14.2.
 
 1. **Deploy (Platform, once).** Supabase is done (see above). Import the GitHub repo in Vercel, set the env vars below for Preview and
-   Production, deploy. In Stripe (test mode), create the Pro price, then a webhook endpoint
-   `https://<url>/api/stripe/webhook` for `checkout.session.completed` and
+   Production, deploy. In Stripe (test mode), create the Pro price (one-time, USD, the amount in
+   `spec/targets.json` → `costModel.proPriceUsd`; the webhook refuses any other amount), then a
+   webhook endpoint `https://<url>/api/stripe/webhook` for `checkout.session.completed` and
    `checkout.session.async_payment_succeeded`; put its signing secret in Vercel.
+   **Local:** put the test key and price id in `.env.local`, run
+   `stripe listen --forward-to localhost:3000/api/stripe/webhook` and use the `whsec_…` it prints
+   as `STRIPE_WEBHOOK_SECRET`. Pay with card `4242 4242 4242 4242`. Without Stripe keys,
+   *Unlock Pro* says payments aren't set up; `npm run dev:grant-pro -- <email>` still works locally.
 2. **Feature work** in each owner's folders: replace `notImplemented(...)` in
    `src/modules/<m>/index.ts`, test first, then the page. Merge small and often to an
    always-runnable `main`.
@@ -175,7 +180,7 @@ The skeleton (SPEC §14.1) is in place; the critical path is SPEC §14.2.
 | `RECEIPT_MODEL` | `config.ts` | no | optional per-unit override, e.g. `claude-sonnet-5-5` |
 | `AI_MODE` | `ai.ts` | no | `live` or `fake` (tests and the skeleton) |
 | `STRIPE_SECRET_KEY` | `billing/` only | yes | must start with `sk_test_` |
-| `STRIPE_WEBHOOK_SECRET` | `billing/webhook.ts` | yes | |
+| `STRIPE_WEBHOOK_SECRET` | `billing/` | yes | per endpoint; the Stripe CLI prints one for local dev |
 | `STRIPE_PRICE_ID_PRO` | `billing/` | no | the only allowlisted price |
 | `RESEND_API_KEY` | `email.ts` | yes | |
 | `CRON_SECRET` | `/api/cron/alerts` | yes | Vercel sends it as a bearer token |
