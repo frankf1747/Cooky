@@ -75,6 +75,12 @@ See SPEC §8.3. The three that break teammates most often: AI endpoints never wr
 every id in AI output is validated against the run's candidates; money is integer cents with
 `null` for unknown.
 
+### Today's date
+
+Use `localToday(userId)` from `src/platform/dates.ts` for "today" (added dates, expiry dates,
+expiring soon). It uses the profile timezone, or the `profiles.timezone` default for a user who
+has not onboarded yet; never the server's UTC date.
+
 ### Fridge writes
 
 Two database functions change the fridge. Both run as one locked transaction, are idempotent

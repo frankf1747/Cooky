@@ -4,19 +4,14 @@
 import targets from "@spec/targets.json";
 import { forbidden, tooMany, upstream } from "./errors";
 import { reader, writer } from "./db";
+import { DEFAULT_TIMEZONE, localDate } from "./dates";
 
 export type QuotaFeature = "plans" | "swaps" | "receipts" | "imports" | "cook_answers" | "preference_proposals";
 export type Tier = "free" | "pro";
 
-const DEFAULT_TZ = "America/Los_Angeles";
-
 export function quotaLimit(feature: QuotaFeature, plan: Tier): number {
   const table = plan === "free" ? (targets.quotas.free as Record<string, number>) : (targets.quotas.pro as Record<string, number>);
   return table[plan === "free" ? `${feature}_lifetime` : `${feature}_per_day`] ?? 0;
-}
-
-function localDate(tz: string, at: Date): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
 }
 
 /** Milliseconds the zone is ahead of UTC at a given instant (negative west of Greenwich). */
@@ -56,7 +51,7 @@ export async function tierAndTimezone(userId: string): Promise<{ plan: Tier; tz:
   ]);
   if (ent.error) throw upstream("db_error", `entitlement lookup failed: ${ent.error.message}`);
   if (prof.error) throw upstream("db_error", `profile lookup failed: ${prof.error.message}`);
-  return { plan: ent.data?.plan === "pro" ? "pro" : "free", tz: prof.data?.timezone || DEFAULT_TZ };
+  return { plan: ent.data?.plan === "pro" ? "pro" : "free", tz: prof.data?.timezone || DEFAULT_TIMEZONE };
 }
 
 export type QuotaUse = { used: number; limit: number; resetAt: string | null; release: () => Promise<void> };
