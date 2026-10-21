@@ -115,13 +115,13 @@ describe("findFeasibleSets (PLN2)", () => {
 describe("findFeasibleSets infeasible (PLN4)", () => {
   it("over budget: returns the cheapest total and says to relax the budget", () => {
     const res = findFeasibleSets(input({ budgetCents: 500 }));
-    expect(res).toEqual({ ok: false, cheapestFeasibleCents: 700, relax: ["budgetCents"] });
+    expect(res).toEqual({ ok: false, cheapestFeasibleCents: 700, relax: ["budgetCents"], droppedPicks: [] });
   });
 
   it("over budget but fewer meals would fit: also suggests fewer meals", () => {
     // cheapest 3-meal set is 1050 (omelette + fried rice + tofu); the 2-meal set at 700 fits
     const res = findFeasibleSets(input({ meals: 3, budgetCents: 700 }));
-    expect(res).toEqual({ ok: false, cheapestFeasibleCents: 1050, relax: ["budgetCents", "meals"] });
+    expect(res).toEqual({ ok: false, cheapestFeasibleCents: 1050, relax: ["budgetCents", "meals"], droppedPicks: [] });
   });
 
   it("too few recipes pass the filters: no estimate, names the constraint to relax", () => {
@@ -155,5 +155,46 @@ describe("findFeasibleSets infeasible (PLN4)", () => {
         expect(s.recipeIds).not.toContain("rcp_satay");
       }
     }
+  });
+});
+
+describe("findFeasibleSets with picked recipes (PLN1 mustIncludeRecipeIds)", () => {
+  it("every set contains the picks; the planner only fills the other meals", () => {
+    const res = findFeasibleSets(input({ meals: 3, mustIncludeRecipeIds: ["rcp_satay"] }));
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.sets.length).toBeGreaterThan(0);
+      expect(res.sets.every((s) => s.recipeIds.includes("rcp_satay") && s.recipeIds.length === 3)).toBe(true);
+      expect(res.droppedPicks).toEqual([]);
+    }
+  });
+
+  it("a pick even when it is not the cheapest: picks are not traded for price", () => {
+    const res = findFeasibleSets(input({ mustIncludeRecipeIds: ["rcp_satay"] }));
+    expect(res.ok && res.sets[0].recipeIds).toContain("rcp_satay");
+  });
+
+  it("picks filling every meal give exactly one set", () => {
+    const res = findFeasibleSets(input({ mustIncludeRecipeIds: ["rcp_tofu", "rcp_omelette"] }));
+    expect(ids(res)).toEqual(["rcp_omelette+rcp_tofu"]);
+  });
+
+  it("a pick that breaks a hard constraint is dropped and reported, and the meal is filled", () => {
+    const res = findFeasibleSets(input({ maxMinutes: 30, mustIncludeRecipeIds: ["rcp_satay", "rcp_tofu"] }));
+    expect(res.droppedPicks).toEqual([{ recipeId: "rcp_satay", because: "maxMinutes" }]);
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.sets.every((s) => s.recipeIds.includes("rcp_tofu") && !s.recipeIds.includes("rcp_satay"))).toBe(true);
+  });
+
+  it("over budget only because of a pick: says the pick is what to relax", () => {
+    // satay alone is 1050; any 2-meal set with it costs more than 1100, without it 700 fits
+    const res = findFeasibleSets(input({ budgetCents: 1100, mustIncludeRecipeIds: ["rcp_satay"] }));
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.relax).toEqual(["budgetCents", "mustIncludeRecipeIds"]);
+  });
+
+  it("duplicate picks count once", () => {
+    const res = findFeasibleSets(input({ mustIncludeRecipeIds: ["rcp_tofu", "rcp_tofu"] }));
+    expect(res.ok && res.sets.every((s) => s.recipeIds.filter((r) => r === "rcp_tofu").length === 1)).toBe(true);
   });
 });

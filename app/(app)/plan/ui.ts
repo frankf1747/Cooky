@@ -10,6 +10,7 @@ const RELAX: Record<string, string> = {
   meals: "plan fewer meals",
   maxMinutes: "allow more minutes per meal",
   mustUseItemIds: "un-pin a fridge item",
+  mustIncludeRecipeIds: "un-pick a dish",
   excludedIngredients: "remove an excluded ingredient in Settings",
   allergens: "review your allergen filters in Settings",
   equipment: "add equipment in Settings",

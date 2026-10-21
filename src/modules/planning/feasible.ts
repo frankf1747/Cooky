@@ -15,6 +15,8 @@ export type FeasibleInput = {
   maxMinutes: number;
   meals: number;
   mustUseItemIds: string[];
+  /** Recipes the user picked (PLN1, step 3): every set includes them unless they break a hard constraint. */
+  mustIncludeRecipeIds?: string[];
   recipes: PlanningRecipe[];
   ingredients: CatalogIngredient[];
   products: ProductInput[];
@@ -32,11 +34,16 @@ export type FeasibleSet = {
 };
 
 /** What to relax, named after the input field the user can change. */
-export type RelaxHint = "budgetCents" | "maxMinutes" | "meals" | "mustUseItemIds" | "excludedIngredients" | "allergens" | "equipment" | "preferences";
+export type RelaxHint =
+  | "budgetCents" | "maxMinutes" | "meals" | "mustUseItemIds" | "mustIncludeRecipeIds"
+  | "excludedIngredients" | "allergens" | "equipment" | "preferences";
+
+/** A picked recipe left out because it breaks a hard constraint, and which one. */
+export type DroppedPick = { recipeId: string; because: RelaxHint };
 
 export type FeasibleResult =
-  | { ok: true; sets: FeasibleSet[] }
-  | { ok: false; cheapestFeasibleCents: number | null; relax: RelaxHint[] };
+  | { ok: true; sets: FeasibleSet[]; droppedPicks: DroppedPick[] }
+  | { ok: false; cheapestFeasibleCents: number | null; relax: RelaxHint[]; droppedPicks: DroppedPick[] };
 
 type Filter = { hint: RelaxHint; rejects: (r: PlanningRecipe) => boolean };
 
@@ -83,12 +90,20 @@ function* combinations<T>(items: T[], k: number, start = 0, acc: T[] = []): Gene
   }
 }
 
-/** Every set of `meals` distinct candidates covering the must-use items, priced. */
-function pricedSets(input: FeasibleInput, candidates: PlanningRecipe[]) {
+/**
+ * Every set of `meals` distinct recipes that contains all `picks` and fills the other meals from
+ * `candidates`, covers the must-use items, and has every price known; priced.
+ */
+function pricedSets(input: FeasibleInput, candidates: PlanningRecipe[], picks: PlanningRecipe[]) {
   const mustUse = input.fridge.filter((f) => input.mustUseItemIds.includes(f.id));
   const stock = input.fridge.map(({ ingredientId, qty, unit }) => ({ ingredientId, qty, unit }));
+  const order = new Map(input.recipes.map((r, i) => [r.id, i]));
+  const others = candidates.filter((r) => !picks.includes(r));
+  const fill = input.meals - picks.length;
   const out: Omit<FeasibleSet, "setId">[] = [];
-  for (const combo of combinations(candidates, input.meals)) {
+  if (fill < 0) return out;
+  for (const rest of combinations(others, fill)) {
+    const combo = [...picks, ...rest].sort((a, b) => order.get(a.id)! - order.get(b.id)!);
     const used = new Set(combo.flatMap((r) => r.ingredients.filter((i) => !i.optional).map((i) => `${i.ingredientId}|${i.unit}`)));
     if (!mustUse.every((f) => used.has(`${f.ingredientId}|${f.unit}`))) continue;
     const shopping = buildShoppingList({
@@ -121,7 +136,20 @@ function soonestExpiry(set: Omit<FeasibleSet, "setId">, fridge: FridgeStock[]): 
 export function findFeasibleSets(input: FeasibleInput): FeasibleResult {
   const fs = filters(input);
   const candidates = input.recipes.filter((r) => !fs.some((f) => f.rejects(r)));
-  const priced = pricedSets(input, candidates);
+
+  // Picked recipes stay in every set unless they break a hard constraint; those are dropped and reported.
+  const pickIds = [...new Set(input.mustIncludeRecipeIds ?? [])];
+  const droppedPicks: DroppedPick[] = [];
+  const picks: PlanningRecipe[] = [];
+  for (const id of pickIds) {
+    const recipe = input.recipes.find((r) => r.id === id);
+    if (!recipe) throw new Error(`feasible: picked recipe ${id} was not loaded`);
+    const broken = fs.find((f) => f.rejects(recipe));
+    if (broken) droppedPicks.push({ recipeId: id, because: broken.hint });
+    else picks.push(recipe);
+  }
+
+  const priced = pricedSets(input, candidates, picks);
   const fitting = priced.filter((s) => s.totalCents <= input.budgetCents);
 
   if (fitting.length > 0) {
@@ -132,7 +160,7 @@ export function findFeasibleSets(input: FeasibleInput): FeasibleResult {
         soonestExpiry(a, input.fridge).localeCompare(soonestExpiry(b, input.fridge)) ||
         a.recipeIds.join().localeCompare(b.recipeIds.join()),
     );
-    return { ok: true, sets: fitting.map((s, i) => ({ setId: `set_${i + 1}`, ...s })) };
+    return { ok: true, sets: fitting.map((s, i) => ({ setId: `set_${i + 1}`, ...s })), droppedPicks };
   }
 
   const cheapest = priced.length > 0 ? Math.min(...priced.map((s) => s.totalCents)) : null;
@@ -140,17 +168,20 @@ export function findFeasibleSets(input: FeasibleInput): FeasibleResult {
   if (cheapest !== null) {
     relax.push("budgetCents");
     const fewer = input.meals - 1;
-    if (fewer >= targets.limits.mealsPerPlanMin && pricedSets({ ...input, meals: fewer }, candidates).some((s) => s.totalCents <= input.budgetCents)) {
+    if (fewer >= targets.limits.mealsPerPlanMin && fewer >= picks.length &&
+        pricedSets({ ...input, meals: fewer }, candidates, picks).some((s) => s.totalCents <= input.budgetCents)) {
       relax.push("meals");
     }
+    if (picks.length > 0 && pricedSets(input, candidates, []).some((s) => s.totalCents <= input.budgetCents)) relax.push("mustIncludeRecipeIds");
   } else {
     // Which single constraint, if dropped, would leave at least one set (ignoring the budget)?
     for (const f of fs) {
       const loosened = input.recipes.filter((r) => !fs.some((g) => g !== f && g.rejects(r)));
-      if (pricedSets(input, loosened).length > 0) relax.push(f.hint);
+      if (pricedSets(input, loosened, picks).length > 0) relax.push(f.hint);
     }
-    if (input.mustUseItemIds.length > 0 && pricedSets({ ...input, mustUseItemIds: [] }, candidates).length > 0) relax.push("mustUseItemIds");
+    if (input.mustUseItemIds.length > 0 && pricedSets({ ...input, mustUseItemIds: [] }, candidates, picks).length > 0) relax.push("mustUseItemIds");
+    if (picks.length > 0 && pricedSets(input, candidates, []).length > 0) relax.push("mustIncludeRecipeIds");
     if (candidates.length < input.meals) relax.push("meals");
   }
-  return { ok: false, cheapestFeasibleCents: cheapest, relax };
+  return { ok: false, cheapestFeasibleCents: cheapest, relax, droppedPicks };
 }
