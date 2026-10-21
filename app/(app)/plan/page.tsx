@@ -1,13 +1,53 @@
-import { NotImplemented } from "@/ui/NotImplemented";
+// Owner: Plan & Shop. Plan meals (PLN1–PLN6): the request form and recent plans.
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import targets from "@spec/targets.json";
+import { getSessionUser } from "@/platform/auth";
+import { formatUsd } from "@/platform/money";
+import { planFormData } from "@/modules/planning";
+import { PlanForm } from "./PlanForm";
 
-export default function PlanPage() {
+export default async function PlanPage() {
+  const user = await getSessionUser();
+  if (!user) redirect("/login");
+  const data = await planFormData(user.id);
+  const L = targets.limits;
+
   return (
-    <NotImplemented
-      title="Plan meals"
-      owner="Plan & Shop"
-      spec="PLN1-PLN6"
-      v={1}
-      purpose="Choose servings, budget and time; Cooky picks meals around your fridge and gives an exact shopping list."
-    />
+    <section className="mx-auto w-full max-w-3xl p-6">
+      <h1 className="text-2xl font-semibold tracking-tight">Plan meals</h1>
+      <p className="mt-1 text-sm text-zinc-500">
+        Cooky picks dinners around your fridge, budget and time, then gives you one shopping list in real package sizes.
+      </p>
+
+      <PlanForm
+        data={data}
+        limits={{ servingsMin: L.servingsMin, servingsMax: L.servingsMax, mealsMin: L.mealsPerPlanMin, mealsMax: L.mealsPerPlanMax, wishesMaxChars: L.wishesMaxChars }}
+      />
+
+      <h2 className="mt-10 text-lg font-semibold">Recent plans</h2>
+      {data.recentPlans.length === 0 ? (
+        <p className="mt-2 text-sm text-zinc-500">No plans yet. Your first one will show up here.</p>
+      ) : (
+        <ul className="mt-2 divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+          {data.recentPlans.map((p) => (
+            <li key={p.planId}>
+              <Link href={`/plan/${p.planId}`} className="flex items-center justify-between gap-4 px-4 py-3 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900">
+                <span>
+                  {p.mealTitles.join(" · ")}
+                  <span className="ml-2 text-zinc-500">{new Date(p.createdAt).toLocaleDateString()}</span>
+                </span>
+                <span className="flex shrink-0 items-center gap-3">
+                  <span className={`rounded-full px-2 py-0.5 text-xs ${p.status === "saved" ? "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300" : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"}`}>
+                    {p.status}
+                  </span>
+                  {formatUsd(p.totalCents)}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
