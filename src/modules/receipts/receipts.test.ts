@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ReceiptDraft } from "@spec/contract";
+import { ReceiptConfirmResponse, ReceiptDraft, type BatchEvent, type ReceiptConfirm } from "@spec/contract";
 import { __resetAiDeps, __setAiDeps, type ModelReply } from "@/platform/ai";
 import { aiFixtures } from "@/platform/ai-fixtures";
 import { fakeDb } from "../planning/fake-db";
@@ -22,7 +22,23 @@ vi.mock("./image", async (orig) => ({
     if (!b) throw new Error("no image");
     return b;
   },
-  removeImage: async (_userId: string, path: string) => void images.delete(path),
+  removeImage: async (_userId: string, path: string) => {
+    if (failRemove) throw new Error("storage down");
+    images.delete(path);
+  },
+}));
+let failRemove = false;
+// Stand-in for fridge.applyBatch with the database function's rule: one batch key writes once,
+// and a repeat returns the first result.
+const batches = new Map<string, { events: BatchEvent[]; ids: string[] }>();
+const applyBatch = vi.fn(async (userId: string, events: BatchEvent[], batchKey: string) => {
+  const key = `${userId}|${batchKey}`;
+  if (!batches.has(key)) batches.set(key, { events, ids: events.map((_, i) => `itm_${batchKey.replace(/\W/g, "")}${i}`) });
+  return { createdItemIds: batches.get(key)!.ids, fridge: { items: [], expiringSoon: [], cookNow: [] } };
+});
+vi.mock("@/modules/fridge", () => ({
+  applyBatch: (...a: Parameters<typeof applyBatch>) => applyBatch(...a),
+  view: async () => ({ items: [], expiringSoon: [], cookNow: [] }),
 }));
 const receipts = await import("./index");
 
@@ -48,6 +64,7 @@ function seed() {
       { category: "snacks", shelf_life_days: { pantry: 60 } },
       { category: "meat", shelf_life_days: { fridge: 2, freezer: 270 } },
       { category: "produce", shelf_life_days: { fridge: 5, freezer: 240 } },
+      { category: "pantry", shelf_life_days: { pantry: 365 } },
     ],
     profiles: [{ user_id: U1, timezone: "America/Los_Angeles" }],
     plans: [
@@ -59,6 +76,9 @@ function seed() {
   };
   db = fakeDb(tables);
   images.clear();
+  batches.clear();
+  applyBatch.mockClear();
+  failRemove = false;
 }
 
 const fixture = async (): Promise<ModelReply> => ({ parsed: aiFixtures.receipt_reader({ system: "", text: "" }), stopReason: "end_turn", usage: { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 } });
@@ -223,5 +243,153 @@ describe("receipts.retry (RCT7)", () => {
     const { receipt } = await receipts.upload(U1, form(JPEG), "r");
     await expect(receipts.retry(U1, receipt.receiptId, "r2")).rejects.toMatchObject({ status: 409, code: "not_failed", extra: { receiptStatus: "parsed" } });
     await expect(receipts.retry(U2, receipt.receiptId, "r2")).rejects.toMatchObject({ status: 404 });
+  });
+});
+
+describe("today comes from the user's timezone (localToday, #12)", () => {
+  it("a user with no profile yet gets dates from the default timezone, not UTC", async () => {
+    // 05:00 UTC on 2026-10-21 is still 2026-10-20 in the default zone (America/Los_Angeles).
+    const { receipt } = await receipts.upload(U2, form(JPEG), "r");
+    expect(receipt.lines[0]).toMatchObject({ name: "Chicken breast", expiresOn: "2026-10-22" });
+  });
+});
+
+/** The body the review screen sends: every non-ignored line the draft ticked, as drafted. */
+function confirmInput(receipt: ReceiptDraft, key = "key-confirm-1"): ReceiptConfirm {
+  return {
+    idempotencyKey: key,
+    lines: receipt.lines
+      .filter((l) => l.decision === "auto" || l.decision === "generic")
+      .map((l) => ({ lineId: l.lineId, include: true, ingredientId: l.ingredientId, name: l.name, category: l.category, qty: l.qty!, unit: l.unit!, location: l.location!, expiresOn: l.expiresOn })),
+  };
+}
+const byName = (r: ReceiptDraft, name: string) => r.lines.find((l) => l.name === name)!;
+
+describe("receipts.confirm (RCT6, RCT9)", () => {
+  it("writes the ticked lines as one fridge batch keyed rct:<receiptId>, then deletes the photo", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    const res = await receipts.confirm(U1, receipt.receiptId, confirmInput(receipt));
+
+    expect(ReceiptConfirmResponse.parse(res)).toEqual(res);
+    expect(applyBatch).toHaveBeenCalledTimes(1);
+    const [userId, events, batchKey] = applyBatch.mock.calls[0];
+    expect([userId, batchKey]).toEqual([U1, `rct:${receipt.receiptId}`]);
+    expect(events).toEqual([
+      { itemId: null, delta: 598.74, reason: "purchase", newItem: { kind: "ingredient", ingredientId: "ing_chicken_breast", recipeId: null, name: "Chicken breast", category: "meat", qty: 598.74, unit: "g", location: "fridge", expiresOn: "2026-10-22", expirySource: "table", origin: "receipt" } },
+      { itemId: null, delta: 170.1, reason: "purchase", newItem: { kind: "ingredient", ingredientId: "ing_spinach", recipeId: null, name: "Baby spinach", category: "produce", qty: 170.1, unit: "g", location: "fridge", expiresOn: "2026-10-25", expirySource: "table", origin: "receipt" } },
+      { itemId: null, delta: 1, reason: "purchase", newItem: { kind: "generic", ingredientId: null, recipeId: null, name: "Pita chips", category: "snacks", qty: 1, unit: "count", location: "pantry", expiresOn: "2026-12-19", expirySource: "category", origin: "receipt" } },
+    ]);
+    expect(res.addedItemIds).toHaveLength(3);
+
+    expect(tables.receipts[0]).toMatchObject({ status: "confirmed", confirm_idempotency_key: "key-confirm-1", confirm_result: { addedItemIds: res.addedItemIds }, image_path: null });
+    expect(images.size).toBe(0);
+    expect((await receipts.get(U1, receipt.receiptId)).status).toBe("confirmed");
+  });
+
+  it("an unticked flagged line is not added; a flagged line the user fixed is added as they set it", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    const body = confirmInput(receipt);
+    expect(body.lines.map((l) => l.name)).not.toContain("Herb blend?");
+    await receipts.confirm(U1, receipt.receiptId, body);
+    expect(applyBatch.mock.calls[0][1]).toHaveLength(3);
+
+    seed();
+    const again = (await receipts.upload(U1, form(JPEG), "r")).receipt;
+    const herb = byName(again, "Herb blend?");
+    const fixed = confirmInput(again, "key-confirm-2");
+    fixed.lines.push({ lineId: herb.lineId, include: true, ingredientId: null, name: "Herb blend", category: "pantry", qty: 1, unit: "count", location: "pantry", expiresOn: null });
+    await receipts.confirm(U1, again.receiptId, fixed);
+    expect(applyBatch.mock.calls[0][1][3].newItem).toMatchObject({ kind: "generic", name: "Herb blend", category: "pantry", location: "pantry", expiresOn: "2027-10-20", expirySource: "category" });
+  });
+
+  it("include: false lines are skipped", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    const body = confirmInput(receipt);
+    body.lines[1].include = false;
+    const res = await receipts.confirm(U1, receipt.receiptId, body);
+    expect(applyBatch.mock.calls[0][1].map((e) => e.newItem?.name)).toEqual(["Chicken breast", "Pita chips"]);
+    expect(res.addedItemIds).toHaveLength(2);
+  });
+
+  it("moving a line without touching its date recomputes the typical date; a date the user typed is kept", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    const body = confirmInput(receipt);
+    body.lines[0].location = "freezer"; // chicken: freezer shelf life 270 days
+    body.lines[1].expiresOn = "2026-10-23"; // spinach: the user's own date
+    await receipts.confirm(U1, receipt.receiptId, body);
+    const [chicken, spinach] = applyBatch.mock.calls[0][1].map((e) => e.newItem);
+    expect(chicken).toMatchObject({ location: "freezer", expiresOn: "2027-07-17", expirySource: "table" });
+    expect(spinach).toMatchObject({ location: "fridge", expiresOn: "2026-10-23", expirySource: "user" });
+  });
+
+  it("the same key again returns the original result and adds nothing (a double tap)", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    const first = await receipts.confirm(U1, receipt.receiptId, confirmInput(receipt));
+    const second = await receipts.confirm(U1, receipt.receiptId, confirmInput(receipt));
+    expect(second.addedItemIds).toEqual(first.addedItemIds);
+    expect(batches.size).toBe(1);
+  });
+
+  it("a different key on a confirmed receipt → 409 already_confirmed with the original result", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    const first = await receipts.confirm(U1, receipt.receiptId, confirmInput(receipt));
+    await expect(receipts.confirm(U1, receipt.receiptId, confirmInput(receipt, "key-other-99"))).rejects.toMatchObject({
+      status: 409, code: "already_confirmed", extra: { addedItemIds: first.addedItemIds },
+    });
+  });
+
+  it("rejects lines that are not this receipt's food lines, changed ids, wrong units and missing categories; nothing is written", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    const bag = byName(receipt, "Bag fee");
+    const cases: ((b: ReceiptConfirm) => void)[] = [
+      (b) => (b.lines[0].lineId = "rln_not_on_this_receipt"),
+      (b) => b.lines.push({ lineId: bag.lineId, include: true, ingredientId: null, name: "Bag fee", category: "other", qty: 1, unit: "count", location: "pantry", expiresOn: null }),
+      (b) => b.lines.push({ ...b.lines[0] }),
+      (b) => (b.lines[0].ingredientId = "ing_spinach"),
+      (b) => (b.lines[0].unit = "count"),
+      (b) => (b.lines[2].category = null),
+    ];
+    for (const mutate of cases) {
+      const body = confirmInput(receipt);
+      mutate(body);
+      await expect(receipts.confirm(U1, receipt.receiptId, body)).rejects.toMatchObject({ status: 400 });
+    }
+    expect(applyBatch).not.toHaveBeenCalled();
+    expect(tables.receipts[0].status).toBe("parsed");
+  });
+
+  it("another user's receipt is 404; a failed receipt cannot be confirmed (409)", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    await expect(receipts.confirm(U2, receipt.receiptId, confirmInput(receipt))).rejects.toMatchObject({ status: 404 });
+    tables.receipts[0].status = "failed";
+    await expect(receipts.confirm(U1, receipt.receiptId, confirmInput(receipt))).rejects.toMatchObject({ status: 409, code: "not_parsed" });
+    expect(applyBatch).not.toHaveBeenCalled();
+  });
+
+  it("if deleting the photo fails, the error is loud and a retry with the same key finishes the job", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    failRemove = true;
+    await expect(receipts.confirm(U1, receipt.receiptId, confirmInput(receipt))).rejects.toMatchObject({ status: 502, code: "storage_error" });
+    expect(tables.receipts[0]).toMatchObject({ status: "confirmed" });
+    expect(images.size).toBe(1);
+
+    failRemove = false;
+    const res = await receipts.confirm(U1, receipt.receiptId, confirmInput(receipt));
+    expect(res.addedItemIds).toHaveLength(3);
+    expect(batches.size).toBe(1);
+    expect(images.size).toBe(0);
+    expect(tables.receipts[0].image_path).toBeNull();
+  });
+});
+
+describe("receipts.remove (RCT9)", () => {
+  it("deletes the photo, the receipt and its lines; another user's receipt is 404", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    await expect(receipts.remove(U2, receipt.receiptId)).rejects.toMatchObject({ status: 404 });
+    await receipts.remove(U1, receipt.receiptId);
+    expect(images.size).toBe(0);
+    expect(tables.receipts).toHaveLength(0);
+    expect(tables.receipt_lines).toHaveLength(0);
+    await expect(receipts.get(U1, receipt.receiptId)).rejects.toMatchObject({ status: 404 });
   });
 });
