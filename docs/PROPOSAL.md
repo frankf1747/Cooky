@@ -67,7 +67,7 @@ Fill in names at the first stand-up. Each person owns folders and both builds *a
 | Role | Name | Owns | Day 1 deliverable | Day 2 deliverable |
 |---|---|---|---|---|
 | **Platform** | Frank | login, onboarding, settings, Stripe/Pro, AI gateway, database, deploy | Live URL; a new user can pay in test mode and becomes Pro | Help the others land; final deploy and keys |
-| **Plan & Shop** | ____ | `src/modules/planning`, `src/modules/preferences`, plan and preferences pages | A real AI plan with a correct shopping list on the live URL | Swap a meal; confirmed preferences change the next plan |
+| **Plan & Shop** | Richard Wen | `src/modules/planning`, `src/modules/preferences`, plan and preferences pages | A real AI plan with a correct shopping list on the live URL | Swap a meal; confirmed preferences change the next plan |
 | **Receipts & Fridge** | ____ | `src/modules/receipts`, `src/modules/fridge`, receipt and fridge pages | A real receipt stocks the fridge on the live URL | Cook deductions and leftovers; "cook now" and expiring-soon |
 | **Recipes & Cook** | ____ (or Frank after Day 1) | `src/modules/recipes`, `src/modules/cook`, recipe and cook pages | Recipe pages and step-by-step cook mode | Cooking assistant with citations |
 | **Data & Proof** | ____ | seed data, test cases, write-up, slides, classmate test | Real recipes, prices, shelf life and receipt photos loaded | Test results, write-up, slides, demo rehearsal |
