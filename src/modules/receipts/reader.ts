@@ -1,6 +1,6 @@
 // The receipt_reader prompt and its checks (SPEC RCT2, RCT8, §6.3). The model only reads printed
 // lines and picks catalog ids; lines.ts does every conversion and decision afterwards.
-import { Category, type ReceiptExtraction } from "@spec/contract";
+import { Category } from "@spec/contract";
 import type { ContentBlock } from "@/platform/ai";
 import type { CatalogIngredient } from "./lines";
 
@@ -36,20 +36,6 @@ export function receiptContent(image: Uint8Array, mediaType: ImageMediaType): Co
     { type: "image", source: { type: "base64", media_type: mediaType, data: Buffer.from(image).toString("base64") } },
     { type: "text", text: "</receipt_image> Return the receipt's lines." },
   ];
-}
-
-/**
- * Violations the gateway sends back for a repair: ids outside the catalog. Numbers are not
- * repaired here: coupons and refunds print negatives, and classifyLine() makes those lines safe.
- */
-export function validateExtraction(out: ReceiptExtraction, catalogIds: ReadonlySet<string>): string[] {
-  const v: string[] = [];
-  if (!out.isReceipt) return v;
-  out.lines.forEach((l, i) => {
-    if (l.ingredientId !== null && !catalogIds.has(l.ingredientId)) v.push(`lines.${i}.ingredientId: "${l.ingredientId}" is not in the catalog; use a listed id or null`);
-    if (l.ingredientId !== null && l.kind !== "food") v.push(`lines.${i}: only food lines may have an ingredientId`);
-  });
-  return v;
 }
 
 /** A legible YYYY-MM-DD calendar date, or null. The model's date is never trusted as-is. */
