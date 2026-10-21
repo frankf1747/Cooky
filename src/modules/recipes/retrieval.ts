@@ -25,6 +25,32 @@ export function stems(text: string): string[] {
   return (text.toLowerCase().match(/[a-z]+/g) ?? []).filter((w) => w.length > 1 && !STOP.has(w)).map(stem);
 }
 
+/** True when two words differ by at most one edit (typo tolerance for words of 5+ letters). */
+export function nearMatch(a: string, b: string): boolean {
+  if (a === b) return true;
+  if (Math.min(a.length, b.length) < 5 || Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i++;
+      j++;
+      continue;
+    }
+    if (++edits > 1) return false;
+    if (a.length > b.length) i++;
+    else if (b.length > a.length) j++;
+    else {
+      i++;
+      j++;
+    }
+  }
+  return edits + (a.length - i) + (b.length - j) <= 1;
+}
+
+const has = (set: Set<string>, w: string) => set.has(w) || [...set].some((x) => nearMatch(x, w));
+
 /** The step a question names explicitly ("step 3", "the 2nd step"), or null. */
 export function namedStep(question: string): number | null {
   const m = question.toLowerCase().match(/step\s*#?\s*(\d+)|(\d+)(?:st|nd|rd|th)?\s+step/);
@@ -45,7 +71,7 @@ export function rankChunks(chunks: Chunk[], question: string, topK: number): Chu
     const label = new Set(stems(c.label));
     const text = new Set(stems(c.text));
     let score = 0;
-    for (const w of q) score += (label.has(w) ? 2 : 0) + (text.has(w) ? 1 : 0);
+    for (const w of q) score += (has(label, w) ? 2 : 0) + (has(text, w) ? 1 : 0);
     if (step !== null && c.stepNo === step && c.kind !== "faq") score += 10;
     return { c, i, score };
   });
@@ -61,5 +87,5 @@ export function matchesQuery(query: string | undefined, haystack: string[]): boo
   const words = stems(query ?? "");
   if (!words.length) return true;
   const hay = new Set(haystack.flatMap(stems));
-  return words.every((w) => hay.has(w));
+  return words.every((w) => has(hay, w));
 }

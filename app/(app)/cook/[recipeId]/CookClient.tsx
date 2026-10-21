@@ -414,6 +414,9 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
             <p className="cooky-pop ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-green-100 px-3 py-2 text-sm dark:bg-green-950">{q}</p>
             <CoachCard mood={a.notCovered ? "worried" : "happy"}>
               <p>{a.answer}</p>
+              {a.notCovered && (
+                <p className="mt-1 text-xs text-zinc-500">I only answer from this recipe, so I won&apos;t guess. Try saying it another way, or tap a quick question below.</p>
+              )}
               {a.citations.length > 0 && (
                 <p className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                   <span className="font-medium text-violet-700 dark:text-violet-300">From:</span>

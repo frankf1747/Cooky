@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Chunk } from "@spec/contract";
-import { matchesQuery, namedStep, rankChunks, stems } from "./retrieval";
+import { matchesQuery, namedStep, nearMatch, rankChunks, stems } from "./retrieval";
 
 const c = (id: string, kind: Chunk["kind"], stepNo: number | null, label: string, text: string): Chunk => ({
   id, recipeId: "rcp_x", kind, stepNo, label, text, timerSeconds: null,
@@ -49,5 +49,20 @@ describe("matchesQuery (RCP3)", () => {
     expect(matchesQuery("chicken rice", ["Ginger soy chicken", "rice-bowl", "Jasmine rice (uncooked)"])).toBe(true);
     expect(matchesQuery("chicken beef", ["Ginger soy chicken"])).toBe(false);
     expect(matchesQuery(undefined, [])).toBe(true);
+  });
+});
+
+describe("typo tolerance", () => {
+  it("matches words of 5+ letters one edit apart, never short words", () => {
+    expect(nearMatch("soicy", "spicy")).toBe(true);
+    expect(nearMatch("tomatos", "tomato")).toBe(true);
+    expect(nearMatch("scalion", "scallion")).toBe(true);
+    expect(nearMatch("rice", "ride")).toBe(false);
+    expect(nearMatch("spicy", "spice")).toBe(true);
+    expect(nearMatch("sticky", "stuck")).toBe(false);
+  });
+  it("finds the FAQ despite a typo in the question", () => {
+    const faq = [c("chk_x_f9", "faq", null, "FAQ: too spicy", "Add more coconut milk.")];
+    expect(rankChunks(faq, "i want less soicy what to do", 5).map((x) => x.id)).toEqual(["chk_x_f9"]);
   });
 });

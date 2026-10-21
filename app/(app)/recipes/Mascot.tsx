@@ -8,14 +8,14 @@ export function Mascot({ mood = "happy", size = 56, className = "" }: { mood?: M
     proud: <><path d="M37 57 h10" /><path d="M57 57 h10" /></>,
     cheer: <><path d="M37 60 l5 -6 l5 6" /><path d="M57 60 l5 -6 l5 6" /></>,
     thinking: <><circle cx="42" cy="57" r="2.6" fill="#3b2f2f" stroke="none" /><circle cx="64" cy="54" r="2.6" fill="#3b2f2f" stroke="none" /></>,
-    worried: <><circle cx="42" cy="58" r="2.6" fill="#3b2f2f" stroke="none" /><circle cx="62" cy="58" r="2.6" fill="#3b2f2f" stroke="none" /><path d="M37 51 l8 3" /><path d="M67 51 l-8 3" /></>,
+    worried: <><circle cx="42" cy="59" r="2.6" fill="#3b2f2f" stroke="none" /><circle cx="62" cy="59" r="2.6" fill="#3b2f2f" stroke="none" /><path d="M36 53 q4 -3 9 -4" /><path d="M68 53 q-4 -3 -9 -4" /></>,
   }[mood];
   const mouth = {
     happy: <path d="M46 67 q6 6 12 0" />,
     proud: <path d="M45 66 q7 8 14 0 z" fill="#e86a5b" />,
     cheer: <path d="M44 65 q8 11 16 0 z" fill="#e86a5b" />,
     thinking: <path d="M48 69 h8" />,
-    worried: <path d="M46 70 q6 -5 12 0" />,
+    worried: <path d="M47 69 q5 -3 10 0" />,
   }[mood];
   return (
     <svg width={size} height={size} viewBox="0 0 104 104" role="img" aria-label={`Bao the chef, ${mood}`} className={className}>
