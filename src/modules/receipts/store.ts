@@ -11,6 +11,8 @@ type ReceiptRow = {
   store: string | null;
   purchased_on: string | null;
   image_path: string | null;
+  confirm_idempotency_key: string | null;
+  confirm_result: { addedItemIds: string[] } | null;
 };
 type LineRow = {
   id: string;
@@ -61,12 +63,6 @@ export async function loadCatalog(db: SupabaseClient, userId: string): Promise<L
   };
 }
 
-export async function userTimezone(db: SupabaseClient, userId: string): Promise<string> {
-  const { data, error } = await db.from("profiles").select("timezone").eq("user_id", userId).maybeSingle();
-  if (error) fail("loading the profile", error);
-  return (data?.timezone as string | undefined) ?? "UTC";
-}
-
 export async function ownsPlan(db: SupabaseClient, userId: string, planId: string): Promise<boolean> {
   const { data, error } = await db.from("plans").select("id").eq("id", planId).eq("user_id", userId).maybeSingle();
   if (error) fail("loading the plan", error);
@@ -74,7 +70,7 @@ export async function ownsPlan(db: SupabaseClient, userId: string, planId: strin
 }
 
 export async function readReceipt(db: SupabaseClient, userId: string, receiptId: string): Promise<ReceiptRow> {
-  const { data, error } = await db.from("receipts").select("id, status, store, purchased_on, image_path").eq("id", receiptId).eq("user_id", userId).maybeSingle();
+  const { data, error } = await db.from("receipts").select("id, status, store, purchased_on, image_path, confirm_idempotency_key, confirm_result").eq("id", receiptId).eq("user_id", userId).maybeSingle();
   if (error) fail("loading the receipt", error);
   if (!data) throw notFound();
   return data as ReceiptRow;
@@ -134,4 +130,24 @@ export async function readDraft(db: SupabaseClient, userId: string, receiptId: s
     })),
     planDiff: null,
   };
+}
+
+/** Records the confirm (RCT6) so a repeat can return it; the image path stays until it is deleted. */
+export async function markConfirmed(w: { db: SupabaseClient; userId: string }, receiptId: string, key: string, addedItemIds: string[]): Promise<void> {
+  const { error } = await w.db.from("receipts")
+    .update({ status: "confirmed", confirm_idempotency_key: key, confirm_result: { addedItemIds } })
+    .eq("id", receiptId).eq("user_id", w.userId);
+  if (error) fail("marking the receipt confirmed", error);
+}
+
+export async function clearImagePath(w: { db: SupabaseClient; userId: string }, receiptId: string): Promise<void> {
+  const { error } = await w.db.from("receipts").update({ image_path: null }).eq("id", receiptId).eq("user_id", w.userId);
+  if (error) fail("clearing the image path", error);
+}
+
+export async function deleteReceipt(w: { db: SupabaseClient; userId: string }, receiptId: string): Promise<void> {
+  const lines = await w.db.from("receipt_lines").delete().eq("receipt_id", receiptId).eq("user_id", w.userId);
+  if (lines.error) fail("deleting the lines", lines.error);
+  const r = await w.db.from("receipts").delete().eq("id", receiptId).eq("user_id", w.userId);
+  if (r.error) fail("deleting the receipt", r.error);
 }
