@@ -1,9 +1,26 @@
 // Owner: Receipts. Scan a receipt (RCT1): pick or take a photo, downsize it here, upload, review.
+// Optionally compare it with one of the user's plans (RCT5).
+import { redirect } from "next/navigation";
 import targets from "@spec/targets.json";
+import { getSessionUser } from "@/platform/auth";
+import { listPlans } from "@/modules/planning";
 import { ScanForm } from "./ScanForm";
 
 export default async function ReceiptsNewPage(props: PageProps<"/receipts/new">) {
   const { planId } = await props.searchParams;
+  const user = await getSessionUser();
+  if (!user) redirect("/login");
+
+  const { items } = await listPlans(user.id);
+  const plans = items.map((p) => ({
+    planId: p.planId,
+    label: `${p.mealTitles.slice(0, 3).join(", ") || "Plan"}${p.mealTitles.length > 3 ? "…" : ""} · ${p.createdAt.slice(0, 10)}${p.status === "saved" ? "" : " (draft)"}`,
+    saved: p.status === "saved",
+  }));
+  const asked = typeof planId === "string" ? plans.find((p) => p.planId === planId) : undefined;
+  // Most likely the list they shopped from: the plan they came from, else their newest saved plan.
+  const initial = asked?.planId ?? plans.find((p) => p.saved)?.planId ?? null;
+
   return (
     <section className="mx-auto w-full max-w-3xl p-6">
       <h1 className="text-2xl font-semibold tracking-tight">Scan a receipt</h1>
@@ -13,7 +30,8 @@ export default async function ReceiptsNewPage(props: PageProps<"/receipts/new">)
       <ScanForm
         maxPx={targets.limits.receiptImageMaxPx}
         maxMb={targets.limits.receiptImageMaxMb}
-        planId={typeof planId === "string" && /^pln_[0-9a-z_]+$/.test(planId) ? planId : null}
+        plans={plans.map(({ planId, label }) => ({ planId, label }))}
+        initialPlanId={initial}
       />
     </section>
   );

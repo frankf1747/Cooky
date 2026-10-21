@@ -5,6 +5,7 @@ import type { z } from "zod";
 import type { BatchEvent, FridgeView, ReceiptConfirm, RunInfo } from "@spec/contract";
 import { ReceiptExtraction, type ReceiptDraft } from "@spec/contract";
 import * as fridge from "@/modules/fridge";
+import * as planning from "@/modules/planning";
 import { runAi } from "@/platform/ai";
 import { reader, writer } from "@/platform/db";
 import { localToday } from "@/platform/dates";
@@ -13,8 +14,35 @@ import { newId } from "@/platform/ids";
 import { getImage, parseUpload, putImage, removeImage, sniffImage } from "./image";
 import { log } from "@/platform/log";
 import { classifyLine, typicalExpiry } from "./lines";
+import { planDiff } from "./plan-diff";
 import { legibleDate, receiptContent, receiptSystem, validateExtraction, type ImageMediaType } from "./reader";
 import { clearImagePath, deleteReceipt, insertReceipt, loadCatalog, markConfirmed, markFailed, ownsPlan, readDraft, readReceipt, saveParsed } from "./store";
+
+export type PlanLabels = { planId: string; ingredientNames: Record<string, string>; recipeTitles: Record<string, string> };
+
+/**
+ * The draft as the API returns it: with the plan diff (RCT5) when a plan is linked. A plan the
+ * user has since deleted gives no diff rather than an error; any other failure is loud.
+ */
+async function draftWithDiff(userId: string, receiptId: string): Promise<{ draft: ReceiptDraft; labels: PlanLabels | null }> {
+  const { draft, planId } = await readDraft(await reader(), userId, receiptId);
+  if (!planId || draft.status === "failed") return { draft, labels: null };
+  let plan: Awaited<ReturnType<typeof planning.getPlan>>;
+  try {
+    plan = await planning.getPlan(userId, planId);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return { draft, labels: null };
+    throw err;
+  }
+  return {
+    draft: { ...draft, planDiff: planDiff(draft.lines, plan.shopping) },
+    labels: {
+      planId,
+      ingredientNames: Object.fromEntries(plan.shopping.items.map((i) => [i.ingredientId, i.name])),
+      recipeTitles: Object.fromEntries(plan.meals.map((m) => [m.recipeId, m.title])),
+    },
+  };
+}
 
 /** RCT2–RCT4, RCT7: one receipt_reader run, then code classifies every line. Failures are saved. */
 async function read(userId: string, receiptId: string, image: Uint8Array, mediaType: ImageMediaType, requestId: string): Promise<{ receipt: ReceiptDraft; run: RunInfo }> {
@@ -50,7 +78,7 @@ async function read(userId: string, receiptId: string, image: Uint8Array, mediaT
   const dates = { purchasedOn, today };
   const lines = output.lines.map((l) => ({ lineId: newId("rln"), ...classifyLine(l, catalog, dates) }));
   await saveParsed(w, receiptId, { store: output.store, purchasedOn, runId: run.runId }, lines);
-  return { receipt: await readDraft(db, userId, receiptId), run };
+  return { receipt: (await draftWithDiff(userId, receiptId)).draft, run };
 }
 
 /** Accepts the multipart request (field "image", optional "planId"). */
@@ -64,7 +92,13 @@ export async function upload(userId: string, form: FormData, requestId: string):
 }
 
 export async function get(userId: string, receiptId: string): Promise<ReceiptDraft> {
-  return readDraft(await reader(), userId, receiptId);
+  return (await draftWithDiff(userId, receiptId)).draft;
+}
+
+/** For the review page: the draft plus names for the plan diff's ids. */
+export async function getForReview(userId: string, receiptId: string): Promise<{ receipt: ReceiptDraft; plan: PlanLabels | null }> {
+  const { draft, labels } = await draftWithDiff(userId, receiptId);
+  return { receipt: draft, plan: labels };
 }
 
 export async function retry(userId: string, receiptId: string, requestId: string): Promise<{ receipt: ReceiptDraft; run: RunInfo }> {
@@ -106,7 +140,7 @@ export async function confirm(userId: string, receiptId: string, input: z.infer<
   }
   if (r.status !== "parsed") throw conflict("not_parsed", { receiptStatus: r.status });
 
-  const [draft, catalog, today] = await Promise.all([readDraft(db, userId, receiptId), loadCatalog(db, userId), localToday(userId)]);
+  const [{ draft }, catalog, today] = await Promise.all([readDraft(db, userId, receiptId), loadCatalog(db, userId), localToday(userId)]);
   const drafted = new Map(draft.lines.map((l) => [l.lineId, l]));
   const dates = { purchasedOn: draft.purchasedOn, today };
   const seen = new Set<string>();
