@@ -1,9 +1,11 @@
-// Load supabase/seed/*.csv into the database (upsert by id). Validates every row first and loads
+// Load supabase/seed/*.csv into the database (upsert by id). Products the CSV no longer lists are
+// removed, so an old price can never be picked. Validates every row first and loads
 // nothing if any row is wrong. Usage: npm run seed   (reads .env.local; needs SUPABASE_SECRET_KEY)
 import { existsSync, readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import { Category, Unit } from "../spec/contract";
 import { parseCsv } from "./csv";
+import { staleIds } from "./seed-prune";
 
 // ENV_FILE=.env.hosted npm run seed  loads the hosted project instead of local Supabase.
 const envFile = process.env.ENV_FILE ?? ".env.local";
@@ -140,6 +142,23 @@ async function main() {
     }
     console.log(`seed: ${table} ${rows.length} rows`);
   }
+
+  // Products only: nothing references them, and the shopping math picks from every product of an
+  // ingredient. Ingredients and recipes are referenced by user rows, so they are never pruned here.
+  const existing = await db.from("products").select("id");
+  if (existing.error) {
+    console.log(`ERROR products: ${existing.error.message}`);
+    process.exit(2);
+  }
+  const stale = staleIds((existing.data ?? []).map((r) => r.id as string), products.map((p) => p.id));
+  if (stale.length) {
+    const { error } = await db.from("products").delete().in("id", stale);
+    if (error) {
+      console.log(`ERROR pruning products: ${error.message}`);
+      process.exit(2);
+    }
+  }
+  console.log(`seed: products removed ${stale.length}${stale.length ? ` (${stale.join(", ")})` : ""}`);
   console.log("seed: done");
 }
 void main();
