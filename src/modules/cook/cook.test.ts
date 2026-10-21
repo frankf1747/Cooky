@@ -77,7 +77,9 @@ describe("cook.ask (ASK1–ASK5)", () => {
     expect(sent).toContain("<question>");
     expect(sent).toContain("chk_fried_rice_f1");
 
+    reply = { answer: "Scramble the eggs first.", citations: ["chk_fried_rice_s1"], needsClarification: false, notCovered: false, safetyTopic: false };
     const again = await cook.ask(U1, "rcp_fried_rice", { question: "and step 1?", sessionId: a.sessionId }, "req_2");
+    expect(again.citations[0]).toMatchObject({ chunkId: "chk_fried_rice_s1", label: "Step 1" });
     expect(again.sessionId).toBe(a.sessionId);
     expect(JSON.stringify(transport.mock.calls[1])).toContain("user: I have no wok");
   });

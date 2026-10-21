@@ -1,8 +1,8 @@
 id,ingredient_id,package_size,unit,price_cents,store_label,region,price_date
 prd_chicken_breast_454g,ing_chicken_breast,454,g,749,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
 prd_chicken_thigh_454g,ing_chicken_thigh,454,g,749,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
-prd_spinach_170g,ing_spinach,170,g,229,"PLACEHOLDER: Trader Joe's, price not listed online - confirm in store",Los Angeles,2026-10-21
-prd_garlic_bulb_10ct,ing_garlic,10,count,69,"PLACEHOLDER: Trader Joe's, price not listed online - confirm in store",Los Angeles,2026-10-21
+prd_spinach_170g,ing_spinach,170,g,229,"Trader Joe's (team estimate; not listed online)",Los Angeles,2026-10-21
+prd_garlic_bulb_10ct,ing_garlic,10,count,50,"Trader Joe's (team estimate; not listed online)",Los Angeles,2026-10-21
 prd_lemon_bag_6ct,ing_lemon,6,count,349,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
 prd_egg_12ct,ing_egg,12,count,599,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
 prd_onion_1ct,ing_onion,1,count,99,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
