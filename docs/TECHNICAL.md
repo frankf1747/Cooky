@@ -109,7 +109,7 @@ Node 22 (`nvm use` reads `.nvmrc`; supabase-js needs Node 22's native WebSocket)
 nvm use && npm install
 npx supabase start            # ports 563xx (see supabase/config.toml), so it can run beside other local Supabase projects
 npx supabase status -o env    # API_URL, PUBLISHABLE_KEY, SECRET_KEY → .env.local
-npm run seed                  # idempotent; validates every CSV row before loading
+npm run seed                  # idempotent; validates every CSV row, then removes products the CSV no longer lists
 npm run dev
 npx supabase test db          # database tests: access rules, quota, fridge ledger
 npm run dev:grant-pro -- you@example.com   # local only: make a local account Pro (refuses hosted URLs)
