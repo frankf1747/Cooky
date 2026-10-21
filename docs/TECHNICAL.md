@@ -88,7 +88,7 @@ by key, and can be called only from server code through `writer(userId).db.rpc(.
 - A repeat with the same key returns the first result with `"replayed": true` and writes
   nothing. Answer `200` (not `201`) for a replay.
 - `added_on` is the user's local date: pass `p_today`, or leave it out and the function uses the
-  profile's timezone.
+  profile's timezone (the `profiles.timezone` default when the user has no profile row yet).
 - `edit_fridge_item` dates: `p_expiry_source: "user"` always applies; `"table"` or `"category"`
   (a date your code recomputed, e.g. after a move to the freezer) applies only when the stored
   date was not set by the user. Pass a date and its source together.
