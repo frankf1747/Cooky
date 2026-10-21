@@ -9,5 +9,11 @@ if (!set || !sets.includes(set)) {
   console.log(`eval: choose a set: ${sets.join(", ")}`);
   process.exit(2);
 }
-console.log(`eval: no runner for "${set}" yet. Its owner adds one here (see eval/README.md).`);
-process.exit(1);
+if (set === "receipts") {
+  import("../src/modules/receipts/eval-run")
+    .then((m) => m.runReceiptsEval())
+    .then((code) => process.exit(code), (err) => (console.error(err), process.exit(1)));
+} else {
+  console.log(`eval: no runner for "${set}" yet. Its owner adds one here (see eval/README.md).`);
+  process.exit(1);
+}

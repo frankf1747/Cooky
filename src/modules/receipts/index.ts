@@ -2,20 +2,19 @@
 // The draft never changes the fridge; confirm() sends BatchEvent[] to fridge.applyBatch() with
 // batch key `rct:<receiptId>`. Lines map to catalog ingredient ids, base units and categories.
 import type { z } from "zod";
-import type { BatchEvent, FridgeView, ReceiptConfirm, RunInfo } from "@spec/contract";
-import { ReceiptExtraction, type ReceiptDraft } from "@spec/contract";
+import type { BatchEvent, FridgeView, ReceiptConfirm, ReceiptDraft, RunInfo } from "@spec/contract";
 import * as fridge from "@/modules/fridge";
 import * as planning from "@/modules/planning";
-import { runAi } from "@/platform/ai";
 import { reader, writer } from "@/platform/db";
 import { localToday } from "@/platform/dates";
 import { ApiError, badRequest, conflict, notFound, unprocessable, upstream } from "@/platform/errors";
 import { newId } from "@/platform/ids";
-import { getImage, parseUpload, putImage, removeImage, sniffImage } from "./image";
 import { log } from "@/platform/log";
-import { classifyLine, typicalExpiry } from "./lines";
+import { extractReceipt, type Extracted } from "./extract";
+import { getImage, parseUpload, putImage, removeImage, sniffImage } from "./image";
+import { typicalExpiry } from "./lines";
 import { planDiff } from "./plan-diff";
-import { legibleDate, receiptContent, receiptSystem, validateExtraction, type ImageMediaType } from "./reader";
+import type { ImageMediaType } from "./reader";
 import { clearImagePath, deleteReceipt, insertReceipt, loadCatalog, markConfirmed, markFailed, ownsPlan, readDraft, readReceipt, saveParsed } from "./store";
 
 export type PlanLabels = { planId: string; ingredientNames: Record<string, string>; recipeTitles: Record<string, string> };
@@ -44,41 +43,28 @@ async function draftWithDiff(userId: string, receiptId: string): Promise<{ draft
   };
 }
 
-/** RCT2–RCT4, RCT7: one receipt_reader run, then code classifies every line. Failures are saved. */
+/** RCT2–RCT4, RCT7: read the image (extract.ts), save the classified draft. Failures are saved. */
 async function read(userId: string, receiptId: string, image: Uint8Array, mediaType: ImageMediaType, requestId: string): Promise<{ receipt: ReceiptDraft; run: RunInfo }> {
   const db = await reader();
   const w = writer(userId);
   const [catalog, today] = await Promise.all([loadCatalog(db, userId), localToday(userId)]);
-  const ids = new Set(catalog.ingredients.keys());
 
-  let output: ReceiptExtraction;
-  let run: RunInfo;
+  let out: Extracted;
   try {
-    ({ output, run } = await runAi({
-      unit: "receipt_reader",
-      userId,
-      requestId,
-      schema: ReceiptExtraction,
-      system: receiptSystem(catalog.list),
-      content: receiptContent(image, mediaType),
-      validate: (out) => validateExtraction(out, ids),
-    }));
+    out = await extractReceipt({ userId, requestId, image, mediaType, catalog, today });
   } catch (err) {
     const runId = err instanceof ApiError ? ((err.extra?.run as RunInfo | undefined)?.runId ?? null) : null;
     await markFailed(w, receiptId, err instanceof ApiError ? err.code : "internal", runId);
     throw err;
   }
 
-  if (!output.isReceipt) {
-    await markFailed(w, receiptId, "not_a_receipt", run.runId);
-    throw unprocessable("not_a_receipt", "This image does not look like a shopping receipt", { run });
+  if (!out.isReceipt) {
+    await markFailed(w, receiptId, "not_a_receipt", out.run.runId);
+    throw unprocessable("not_a_receipt", "This image does not look like a shopping receipt", { run: out.run });
   }
 
-  const purchasedOn = legibleDate(output.purchasedOn);
-  const dates = { purchasedOn, today };
-  const lines = output.lines.map((l) => ({ lineId: newId("rln"), ...classifyLine(l, catalog, dates) }));
-  await saveParsed(w, receiptId, { store: output.store, purchasedOn, runId: run.runId }, lines);
-  return { receipt: (await draftWithDiff(userId, receiptId)).draft, run };
+  await saveParsed(w, receiptId, { store: out.store, purchasedOn: out.purchasedOn, runId: out.run.runId }, out.lines);
+  return { receipt: (await draftWithDiff(userId, receiptId)).draft, run: out.run };
 }
 
 /** Accepts the multipart request (field "image", optional "planId"). */
