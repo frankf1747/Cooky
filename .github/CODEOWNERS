@@ -12,3 +12,13 @@
 /app/(app)/preferences/        @richardwen0916
 /app/api/plans/                @richardwen0916
 /app/api/preferences/          @richardwen0916
+
+# Recipes & Cook, Receipts, Fridge: replace @frankf1747 with each owner's GitHub username
+# once assigned (docs/ROLES.md). Until then, Frank reviews.
+/src/modules/recipes/          @frankf1747
+/src/modules/cook/             @frankf1747
+/supabase/seed/                @frankf1747
+/src/modules/receipts/         @frankf1747
+/app/api/receipts/             @frankf1747
+/src/modules/fridge/           @frankf1747
+/app/api/fridge/               @frankf1747

@@ -11,7 +11,8 @@ interface of the skeleton (SPEC §14.1); until the skeleton lands, they do not e
  Browser ──HTTPS──► │ app/(auth) app/(app)/settings,billing        [Platform]          │
                     │ app/(app)/recipes, cook                      [Recipes & Cook]    │
                     │ app/(app)/plan, shop                         [Plan & Shop]       │
-                    │ app/(app)/receipts, fridge                   [Receipts & Fridge] │
+                    │ app/(app)/receipts                           [Receipts]          │
+                    │ app/(app)/fridge                             [Fridge]            │
                     │                                                                  │
                     │ app/api/**  ──► src/platform/handler.ts      [Platform]          │
                     │                   │                                              │
@@ -107,7 +108,7 @@ read empty and every write is refused).
 ```bash
 cp .env.hosted.example .env.hosted    # then paste SUPABASE_SECRET_KEY from Frank
 npm run dev:hosted                    # the app on http://localhost:3000 against the live database
-npm run seed:hosted                   # reload seed data (Data & Proof, after CSV changes)
+npm run seed:hosted                   # reload seed data (Recipes & Cook, after CSV changes)
 npx supabase db push                  # schema changes: Platform only; asks for the database password
 ```
 

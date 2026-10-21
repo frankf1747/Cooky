@@ -1,5 +1,6 @@
-// Owner: Receipts & Fridge. Receipt photo → draft → confirmed fridge items (SPEC §5.4).
-// The draft never changes the fridge; confirm() writes through fridge.applyBatch().
+// Owner: Receipts. Receipt photo → draft → confirmed fridge items (SPEC §5.4, docs/ROLES.md).
+// The draft never changes the fridge; confirm() sends BatchEvent[] to fridge.applyBatch() with
+// batch key `rct:<receiptId>`. Lines map to catalog ingredient ids, base units and categories.
 import type { z } from "zod";
 import type { FridgeView, ReceiptConfirm, ReceiptDraft, RunInfo } from "@spec/contract";
 import { notImplemented } from "@/platform/errors";
