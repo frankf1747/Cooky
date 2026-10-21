@@ -30,8 +30,8 @@ export function Mascot({ mood = "happy", size = 56, className = "" }: { mood?: M
       <path d="M14 70 C14 46 30 34 52 34 C74 34 90 46 90 70 C90 86 74 94 52 94 C30 94 14 86 14 70 Z" fill="#fff4e0" stroke="#f0d9b5" strokeWidth="2.5" />
       <path d="M44 38 q8 6 16 0" stroke="#f0d9b5" strokeWidth="2" fill="none" />
       {/* cheeks */}
-      <ellipse cx="32" cy="68" rx="6" ry="4" fill="#ffb4a8" opacity="0.8" />
-      <ellipse cx="72" cy="68" rx="6" ry="4" fill="#ffb4a8" opacity="0.8" />
+      <ellipse cx="32" cy="68" rx="6" ry="4" fill="#FFB7C5" opacity="0.8" />
+      <ellipse cx="72" cy="68" rx="6" ry="4" fill="#FFB7C5" opacity="0.8" />
       <g stroke="#3b2f2f" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
         {eyes}
         {mouth}
