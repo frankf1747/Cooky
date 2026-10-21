@@ -10,6 +10,8 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
 - `spec/contract.ts` outranks prose on shapes; `spec/targets.json` outranks prose on numbers
   (targets, budgets, quotas, limits). If prose disagrees with either, say so rather than
   following the prose. Never copy a number from the JSON into code or docs; import it.
+- `docs/ROLES.md` shows how data moves between roles and the alignment rules at each handoff
+  (one ingredient id, three units, one category list, batch-key prefixes). Follow them.
 - `docs/TECHNICAL.md` has commands, deploy and troubleshooting.
 - `README.md` and `docs/PRD.md` are for intent, never for numbers.
 
@@ -19,10 +21,11 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
   | Owner | Folders |
   |---|---|
   | Platform (Frank) | `src/platform/`, `src/ui/`, `spec/contract.ts`, `supabase/migrations/`, `src/modules/{billing,alerts}/`, `app/(marketing)/`, `app/(auth)/`, `app/(app)/{onboarding,settings,billing,alerts}/`, `app/layout.tsx`, `app/api/{health,me,profile,billing,stripe,cron,alerts}/`, `.claude/`, this file and `docs/{SPEC,DESIGN,TECHNICAL}.md`, CI, deploy config |
-  | Recipes & Cook | `src/modules/{recipes,cook}/`, `app/(app)/{recipes,cook}/`, `app/api/{recipes,ingredients,cook}/` |
+  | Recipes & Cook | `src/modules/{recipes,cook}/`, `app/(app)/{recipes,cook}/`, `app/api/{recipes,ingredients,cook}/`, catalog data `supabase/seed/*.csv` (others contribute rows by PR) |
   | Plan & Shop | `src/modules/{planning,preferences}/`, `app/(app)/{plan,shop,preferences}/`, `app/api/{plans,preferences}/` |
-  | Receipts & Fridge | `src/modules/{receipts,fridge}/`, `app/(app)/{receipts,fridge}/`, `app/api/{receipts,fridge,stats}/` |
-  | Data & Proof | seed data files `supabase/seed/*.csv`, `eval/`, `e2e/`, `docs/PRD.md`, write-up |
+  | Receipts | `src/modules/receipts/`, `app/(app)/receipts/`, `app/api/receipts/` |
+  | Fridge | `src/modules/fridge/`, `app/(app)/fridge/`, `app/api/{fridge,stats}/` |
+  | Data & Proof | `eval/`, `e2e/`, `docs/PRD.md`, write-up; seed rows by PR to Recipes & Cook |
 
 - **Build in:** the folders your user owns. Keep route files thin (parse, call one module
   function, return).
@@ -77,7 +80,7 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
 - **Never commit or push to `main`.** Not even a one-line doc fix. `main` must always run;
   pull requests are how teammates see and check each other's work.
 - **Start from fresh `main`:** `git switch main && git pull`, then a branch named
-  `<area>/<short-topic>`, e.g. `plan-shop/swap-meal`, `receipts-fridge/review-page`,
+  `<area>/<short-topic>`, e.g. `plan-shop/swap-meal`, `receipts/review-page`, `fridge/cook-now`,
   `recipes-cook/assistant`, `data/seed-recipes`, `platform/billing`.
 - **Small pull requests**, one feature slice each, opened early. Commit messages say what and
   which SPEC ids: `feat(planning): swap one meal (PLN7)`.

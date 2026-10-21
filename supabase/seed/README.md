@@ -1,4 +1,4 @@
-# Seed data (owner: Data & Proof)
+# Seed data (owner: Recipes & Cook; Data & Proof and Receipts contribute rows by pull request)
 
 The recipe library, ingredient catalog, prices and shelf life Cooky plans with. Edit these CSVs
 (in a spreadsheet is fine: export as CSV, UTF-8, keep the header row exactly as documented),

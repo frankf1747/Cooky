@@ -1,4 +1,4 @@
-// Owner: Receipts & Fridge. The virtual fridge and its ledger (SPEC §5.5). ledger.ts (create it)
+// Owner: Fridge. The virtual fridge and its ledger (SPEC §5.5). ledger.ts (create it)
 // is the only code that changes quantities, via the apply_inventory_batch() database function.
 import type { z } from "zod";
 import type { BatchEvent, CookNowEntry, Deduction, FridgeCheck, FridgeItem, FridgeItemCreate, FridgeItemPatch, FridgeView } from "@spec/contract";
@@ -22,7 +22,11 @@ export async function updateItem(userId: string, itemId: string, input: z.infer<
   throw notImplemented("fridge.updateItem");
 }
 
-/** Join: apply one confirmed batch atomically; a repeated batchKey writes nothing (SPEC FRG2). */
+/**
+ * Join: apply one confirmed batch atomically; a repeated batchKey writes nothing (SPEC FRG2).
+ * Callers prefix their keys so features never collide: `rct:<receiptId>` (Receipts),
+ * the cook event id `cke_…` (Recipes & Cook), `man:<idempotencyKey>` (Fridge's own edits).
+ */
 export async function applyBatch(userId: string, events: BatchEvent[], batchKey: string): Promise<{ createdItemIds: string[]; fridge: FridgeView }> {
   void userId;
   void events;

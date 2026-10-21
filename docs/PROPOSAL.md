@@ -68,9 +68,13 @@ Fill in names at the first stand-up. Each person owns folders and both builds *a
 |---|---|---|---|---|
 | **Platform** | Frank | login, onboarding, settings, Stripe/Pro, AI gateway, database, deploy | Live URL; a new user can pay in test mode and becomes Pro | Help the others land; final deploy and keys |
 | **Plan & Shop** | Richard | `src/modules/planning`, `src/modules/preferences`, plan and preferences pages | A real AI plan with a correct shopping list on the live URL | Swap a meal; confirmed preferences change the next plan |
-| **Receipts & Fridge** | ____ | `src/modules/receipts`, `src/modules/fridge`, receipt and fridge pages | A real receipt stocks the fridge on the live URL | Cook deductions and leftovers; "cook now" and expiring-soon |
-| **Recipes & Cook** | ____ (or Frank after Day 1) | `src/modules/recipes`, `src/modules/cook`, recipe and cook pages | Recipe pages and step-by-step cook mode | Cooking assistant with citations |
-| **Data & Proof** | ____ | seed data, test cases, write-up, slides, classmate test | Real recipes, prices, shelf life and receipt photos loaded | Test results, write-up, slides, demo rehearsal |
+| **Recipes & Cook** | ____ | `src/modules/recipes`, `src/modules/cook`, recipe library and cook pages, the catalog CSVs | A large, clean library (well past the placeholders) with search and filters | Cook mode and the cooking coach with citations |
+| **Receipts** | ____ | `src/modules/receipts`, camera and receipt review pages | A real receipt is read, reviewed and stocks the fridge on the live URL | Plan diff, retries, accuracy on the receipt test set |
+| **Fridge** | ____ | `src/modules/fridge`, the fridge page | The fridge ledger and fridge page with use-by dates | Cook now, cooking deductions and leftovers, use-soon |
+| **Data & Proof** | ____ | test cases, write-up, slides, classmate test; seed rows by PR | Real prices, shelf life and receipt photos with hand-checked answers | Test results, write-up, slides, demo rehearsal |
+
+How the data moves between these roles, the rules that keep it aligned, and what each role can
+grow into: **[ROLES.md](ROLES.md)**. Read it before you start.
 
 ## What you do in your first hour
 
@@ -100,22 +104,34 @@ Fill in names at the first stand-up. Each person owns folders and both builds *a
   `unit: "planner"` (PLN5), then the `/plan` and `/plan/[id]` pages.
 - Ask Data & Proof for the `eval/smoke/calc` cases early; they are your answer key.
 
-### Receipts & Fridge
-- Start with the **fridge**: `fridge.view`, `addItem`, `applyBatch` (it calls the database
-  function `apply_inventory_batch`, already built and tested) and the `/fridge` page with expiry
-  dates. Then the receipt: upload, `runAi` with `unit: "receipt_reader"`, the auto-accept rule in
-  code (RCT4), generic items (RCT10), the review page, confirm.
-- Ask Data & Proof for real receipt photos on Day 1 morning; test the reader on them first.
-
 ### Recipes & Cook
-- `recipes.list`, `recipes.get`, `recipes.listIngredients` and the recipe pages first (the seed
-  already has three sample recipes). Then cook mode steps (CK1), `cook.done` and `cook.confirm`
-  (with Receipts & Fridge's `fridge.proposeDeductions`). Then the assistant: `retrieveChunks` and
-  `cook.ask` with citation checks (ASK2–ASK4).
+- Day 1 morning, with Data & Proof: grow `supabase/seed/*.csv` well past the three placeholder
+  recipes (at least `workload.smokeSets.seedRecipes` in `spec/targets.json`), every ingredient
+  with a base unit, category, receipt aliases, a dated price and shelf life. `npm run seed`, then
+  `npm run check:contract`.
+- Then `recipes.list` with search and filters, `recipes.get`, `recipes.listIngredients`, and the
+  library and recipe pages: this is what step 3 chooses from.
+- Day 2: cook mode (CK1), `cook.done` / `cook.confirm` using Fridge's `proposeDeductions` and
+  `applyBatch`, then the coach: `retrieveChunks` and `cook.ask` with citation checks (ASK2–ASK4),
+  plus a prep tip and FAQs per recipe.
+
+### Receipts
+- Agree with Recipes & Cook on aliases and categories, and with Fridge on the `NewFridgeItem`
+  fields you will send (see the handoffs table in ROLES.md).
+- Camera / upload page and storage first, then `runAi` with `unit: "receipt_reader"` on Data &
+  Proof's real receipt photos, then the decision rule in code (RCT4, RCT10), the review page, and
+  `receipts.confirm` → `fridge.applyBatch` with key `rct:<receiptId>`.
+
+### Fridge
+- `fridge.applyBatch` first (it wraps the database function `apply_inventory_batch`, already
+  built and tested): Receipts and Recipes & Cook both depend on it. Then `view`, `addItem`,
+  `updateItem` and the fridge page (doors, shelves, use-by badges).
+- Day 2: `cookNow`, `expiringSoon`, `proposeDeductions`, and the Cook now plates.
 
 ### Data & Proof (no coding needed)
-- **Tonight / Day 1 morning:** replace the placeholder rows in `supabase/seed/*.csv` (open them in
-  a spreadsheet; the column rules are in `supabase/seed/README.md`). Sizes for v1 are
+- **Tonight / Day 1 morning:** with Recipes & Cook, replace the placeholder rows in
+  `supabase/seed/*.csv` (open them in a spreadsheet; the column rules are in
+  `supabase/seed/README.md`; send changes as a pull request to Recipes & Cook). Sizes for v1 are
   `workload.smokeSets` in `spec/targets.json` (today: 12 recipes, about 40 ingredients). Prices
   from one Los Angeles store with the date you checked; shelf life from a named source such as
   USDA FoodKeeper.

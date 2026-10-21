@@ -716,7 +716,7 @@ Only what teammates need to start in parallel. Everything else waits.
 | S8 | Team harness: `.claude/skills/cooky-module/SKILL.md`, `.claude/agents/contract-reviewer.md`, seed CSV templates with a `README.md` | a teammate's Claude Code follows the skill on a stub | ✅ done |
 | S9 | CI running checks 0–1 on push | a PR shows a green check | ✅ written; runs once the repo is on GitHub |
 
-**In parallel, no code needed (Data & Proof, Day 0 → Day 1 H3):** fill the seed CSVs from
+**In parallel, no code needed (Data & Proof with Recipes & Cook, Day 0 → Day 1 H3):** fill the seed CSVs from
 `supabase/seed/README.md`: recipes with steps and FAQs, ingredients with aliases, products and
 prices from one Los Angeles store with the date, shelf life per ingredient, category defaults
 with their source. Photograph real receipts (card digits covered). Write the smoke cases:
@@ -729,13 +729,13 @@ Sizes: `workload.smokeSets`.
 |---|---|---|---|
 | Day 1 H0–H2 | Skeleton lands; coders read §0 and their requirement IDs | everyone runs `main` locally and sees `501`s | Frank |
 | Day 1 H2–H5 | Accounts, onboarding, Stripe checkout and webhook | `scn:billing` success and cancel pass on the public URL | Frank |
-| | Seed load, fridge ledger, fridge page with manual add and expiry | items persist; `GET /api/fridge` sorts by expiry | Receipts & Fridge |
+| | Fridge ledger, fridge page with manual add and expiry | items persist; `GET /api/fridge` sorts by expiry | Fridge |
 | | Shopping math and feasible sets, no AI | `eval:calc` smoke set passes exactly | Plan & Shop |
-| | Recipe pages and cook-mode steps | recipes render with scaled ingredients | Recipes & Cook |
+| | Catalog grown past the placeholders; recipe library with search and filters; cook-mode steps | `check:seed` passes; the library lists every recipe | Recipes & Cook |
 | Day 1 H5–H8 | Planner call, plan page, save | a real plan with a correct list on the public URL | Plan & Shop |
-| | Receipt reader, review screen, confirm into the fridge | a real receipt stocks the fridge on the public URL | Receipts & Fridge |
+| | Camera and upload, receipt reader, review screen, confirm into the fridge | a real receipt stocks the fridge on the public URL | Receipts |
 | **Day 1 gate** | New account on the public URL: sign up → test payment → Pro → plan → save → read back; one receipt → fridge | shown live, not described | all |
-| Day 2 H0–H3 | Cook *Done* → deductions and leftovers confirm; *Cook now* and expiring-soon | the fridge changes only after confirm | Receipts & Fridge |
+| Day 2 H0–H3 | Cook *Done* → deductions and leftovers confirm; *Cook now* and expiring-soon | the fridge changes only after confirm | Fridge (+ Recipes & Cook) |
 | | Cooking assistant with citations | cook smoke set meets its targets | Recipes & Cook |
 | | Swap and preferences (only if the Day 1 gate passed) | a confirmed "too dry" changes the next plan | Plan & Shop |
 | Day 2 H3–H5 | **Feature freeze.** Smoke evals, `scn:billing`, `scn:authz`; fix blockers only; 10-minute classmate tests | results saved under `eval/runs/` | Data & Proof signs off |
@@ -750,14 +750,18 @@ teammates who own data, evaluation and the story.
 |---|---|
 | **Platform** (Frank) | `src/platform/**` (incl. `email.ts`), `src/ui/**`, `spec/contract.ts`, `supabase/migrations/**`, the seed loader script, `src/modules/{billing,alerts}/**`, `app/(marketing)/**`, `app/(auth)/**`, `app/(app)/{onboarding,settings,billing,alerts}/**`, `app/layout.tsx`, `app/api/{health,me,profile,billing,stripe,cron,alerts}/**`, `.claude/**`, `docs/{SPEC,DESIGN,TECHNICAL}.md`, `AGENTS.md`, deploy, CI |
 | **Plan & Shop** (coder) | `src/modules/{planning,preferences}/**`, `app/(app)/{plan,shop,preferences}/**`, `app/api/{plans,preferences}/**` |
-| **Receipts & Fridge** (coder) | `src/modules/{receipts,fridge}/**`, `app/(app)/{receipts,fridge}/**`, `app/api/{receipts,fridge,stats}/**` |
-| **Recipes & Cook** (third coder; if none, Frank after the Day 1 gate) | `src/modules/{recipes,cook}/**`, `app/(app)/{recipes,cook}/**`, `app/api/{recipes,ingredients,cook}/**` |
-| **Data & Proof** (non-coders) | seed data files in `supabase/seed/*.csv`, `eval/**` cases and results, `docs/PRD.md`, write-up, slides, classmate tests; signs off every other owner's checks |
+| **Recipes & Cook** (coder) | `src/modules/{recipes,cook}/**`, `app/(app)/{recipes,cook}/**`, `app/api/{recipes,ingredients,cook}/**`, catalog data `supabase/seed/*.csv` |
+| **Receipts** (coder) | `src/modules/receipts/**`, `app/(app)/receipts/**`, `app/api/receipts/**` |
+| **Fridge** (coder) | `src/modules/fridge/**`, `app/(app)/fridge/**`, `app/api/{fridge,stats}/**` |
+| **Data & Proof** (non-coders) | `eval/**` cases and results, `docs/PRD.md`, write-up, slides, classmate tests; seed rows by pull request to Recipes & Cook; signs off every other owner's checks |
+
+How data moves between these roles, the alignment rules and each role's growth options:
+[`ROLES.md`](ROLES.md).
 
 Doc changes outside your own files go through their owner, like code.
 
 Joins between owners are module functions declared as stubs in the skeleton:
-`fridge.proposeDeductions(userId, recipeId, servings)`, `fridge.applyBatch(userId, events, batchKey)`,
+`fridge.proposeDeductions(userId, recipeId, servings)`, `fridge.applyBatch(userId, events, batchKey)` (batch keys prefixed per sender: `rct:`, `cke_`, `man:`; see ROLES.md),
 `fridge.expiringSoon(userId)`, `recipes.retrieveChunks(recipeId, question)`,
 `planning.priceRecipes(userId, recipeIds, servings)`, `preferences.propose(userId, text, context)`,
 `fridge.cookNow(userId)`.
@@ -795,12 +799,12 @@ items for off-catalog food; a small model budget, so `claude-haiku-5-5` by defau
 | Question | Owner |
 |---|---|
 | Exact presentation date and time (`ASSUMED:` end of Day 2) | Frank |
-| Names for the ownership roles (§14.3), and whether there is a third coder for Recipes & Cook | Frank |
+| Names for the ownership roles (§14.3) | Frank |
 | Free vs Pro split (ACC4) and price (`costModel.proPriceUsd`), one-time vs subscription | Frank + team |
 | Vercel plan (function duration limits) and whether email confirmation is on for the demo | Platform |
 | Which store the price snapshot and receipts come from | Data & Proof |
 | Shelf-life source and licence (USDA FoodKeeper data or another) | Data & Proof |
-| Recipe list and cuisines for the seed library | Data & Proof |
+| Recipe list and cuisines for the seed library | Recipes & Cook |
 | Receipt image retention: delete on confirm and after a grace period for unconfirmed ones (current), or keep for user history | Frank |
 
 ## 17. Stretch goals

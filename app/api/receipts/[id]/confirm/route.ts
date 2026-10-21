@@ -1,4 +1,4 @@
-// Owner: Receipts & Fridge. Thin route: validate with the contract, call one module function, return.
+// Owner: Receipts. Thin route: validate with the contract, call one module function, return.
 // Every route goes through route() (src/platform/handler.ts): request id, identity, Pro check, errors.
 import { ReceiptConfirm } from "@spec/contract";
 import { route } from "@/platform/handler";

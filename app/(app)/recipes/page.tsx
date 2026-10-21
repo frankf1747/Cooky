@@ -7,7 +7,7 @@ export default function RecipesPage() {
       owner="Recipes & Cook"
       spec="RCP3"
       v={1}
-      purpose="Browse the recipe library and see what you can cook now."
+      purpose="Browse the full recipe library: search and filter by tag, time and equipment, and see what you can cook now."
     />
   );
 }

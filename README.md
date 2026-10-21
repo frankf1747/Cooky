@@ -36,6 +36,7 @@ Building a feature with Claude Code? It loads `AGENTS.md`; ask it to use the `co
 | # | Read | Why | Minutes |
 |---|---|---|---|
 | 0 | [`docs/PROPOSAL.md`](docs/PROPOSAL.md) | **Start here:** the plan, who does what, and your first hour | 10 |
+| 0b | [`docs/ROLES.md`](docs/ROLES.md) | How data moves between roles, handoffs, what each role can grow into | 10 |
 | 1 | [`docs/PRD.md`](docs/PRD.md) | What we are building, the journey without and with Cooky, the core tension | 10 |
 | 2 | [`docs/DESIGN.md`](docs/DESIGN.md) | The five design questions and our trade-offs | 8 |
 | 3 | [`docs/TECHNICAL.md`](docs/TECHNICAL.md) | Architecture by owner, env vars, commands, troubleshooting | 12 |
@@ -52,10 +53,11 @@ placeholders until the team assigns them.
 | Owner | Folders | Others may edit? |
 |---|---|---|
 | Platform (Frank) | `src/platform/`, `src/ui/`, `spec/contract.ts`, `supabase/migrations/`, `src/modules/{billing,alerts}/`, landing, auth, onboarding, settings, billing and alerts pages, `.claude/`, CI, deploy | No: propose changes |
-| Recipes & Cook (third coder, or Frank after Day 1) | `src/modules/{recipes,cook}/`, recipes and cook pages | No |
+| Recipes & Cook | `src/modules/{recipes,cook}/`, recipe library and cook pages, catalog CSVs in `supabase/seed/` | No |
 | Plan & Shop | `src/modules/{planning,preferences}/`, plan, shop and preferences pages | No |
-| Receipts & Fridge | `src/modules/{receipts,fridge}/`, receipts and fridge pages | No |
-| Data & Proof (non-coders) | seed data CSVs in `supabase/seed/`, `eval/` cases, `docs/PRD.md`, write-up, slides | No |
+| Receipts | `src/modules/receipts/`, camera and receipt review pages | No |
+| Fridge | `src/modules/fridge/`, fridge page, stats | No |
+| Data & Proof (non-coders) | `eval/` cases, `docs/PRD.md`, write-up, slides; seed rows by PR | No |
 | Everyone, with review | `spec/targets.json` (Data & Proof owner approves), `package.json` (Platform owner approves) | Only through the owner |
 
 ## Build order (two days)
