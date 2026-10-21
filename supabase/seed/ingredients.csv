@@ -1,15 +1,42 @@
 id,name,aliases,category,base_unit,allergen_tags,fridge_days,freezer_days,pantry_days,shelf_life_source,plausible_max_qty
-ing_chicken_breast,Chicken breast,ORG BNLS CHKN BRST|BNLS SKNLS CHICKEN BREAST|CHKN BRST,meat,g,,2,270,,PLACEHOLDER,3000
-ing_spinach,Baby spinach,BABY SPINACH|SPINACH,produce,g,,5,,,PLACEHOLDER,1000
-ing_garlic,Garlic,GARLIC|GARLIC BULB,produce,count,,,,60,PLACEHOLDER,30
-ing_lemon,Lemon,LEMON|LEMONS,produce,count,,21,,7,PLACEHOLDER,20
-ing_egg,Eggs,EGGS|LARGE EGGS|DOZ EGGS,eggs,count,egg,21,,,PLACEHOLDER,36
-ing_onion,Yellow onion,YELLOW ONION|ONION,produce,count,,30,,30,PLACEHOLDER,10
-ing_rice,Jasmine rice,JASMINE RICE|RICE,pantry,g,,,,365,PLACEHOLDER,5000
-ing_soy_sauce,Soy sauce,SOY SAUCE,pantry,ml,soy|wheat,,,365,PLACEHOLDER,2000
-ing_olive_oil,Olive oil,OLIVE OIL|EVOO,pantry,ml,,,,365,PLACEHOLDER,2000
-ing_butter,Butter,BUTTER|UNSALTED BUTTER,dairy,g,milk,30,180,,PLACEHOLDER,2000
-ing_parmesan,Parmesan,PARMESAN|PARM REGGIANO,dairy,g,milk,30,,,PLACEHOLDER,1000
-ing_scallion,Scallions,GREEN ONION|SCALLIONS,produce,count,,7,,,PLACEHOLDER,20
-ing_frozen_peas,Frozen peas,FROZEN PEAS|PEAS,frozen,g,,,240,,PLACEHOLDER,3000
-ing_pasta,Spaghetti,SPAGHETTI|PASTA,pantry,g,wheat,,,365,PLACEHOLDER,5000
+ing_chicken_breast,Chicken breast,ORG BNLS CHKN BRST|BNLS SKNLS CHICKEN BREAST|CHKN BRST|CHICKEN BREAST,meat,g,,1,270,,USDA FSIS FoodKeeper #117 (shorter end of range; retrieved 2026-10-21),3000
+ing_chicken_thigh,Chicken thighs (boneless),BNLS SKNLS THIGHS|CHICKEN THIGHS|ORG CHKN THIGH,meat,g,,1,270,,USDA FSIS FoodKeeper #118 (shorter end of range; retrieved 2026-10-21),3000
+ing_spinach,Baby spinach,BABY SPINACH|ORG BABY SPINACH|SPINACH,produce,g,,3,,,USDA FSIS FoodKeeper #291 (shorter end of range; retrieved 2026-10-21),1000
+ing_garlic,Garlic (cloves),GARLIC|GARLIC BULB,produce,count,,,30,30,USDA FSIS FoodKeeper #285 (shorter end of range; retrieved 2026-10-21),60
+ing_lemon,Lemon,LEMON|LEMONS|SEEDLESS LEMONS,produce,count,,10,,10,USDA FSIS FoodKeeper #256 (shorter end of range; retrieved 2026-10-21),20
+ing_egg,Eggs,EGGS|LARGE EGGS|DOZ EGGS|BROWN EGGS,eggs,count,egg,21,,,USDA FSIS FoodKeeper #21 (shorter end of range; retrieved 2026-10-21),36
+ing_onion,Yellow onion,YELLOW ONION|ONION|JUMBO YELLOW ONION,produce,count,,,300,30,USDA FSIS FoodKeeper #294 (shorter end of range; retrieved 2026-10-21),10
+ing_rice,Jasmine rice (uncooked),JASMINE RICE|RICE,pantry,g,,,,730,USDA FSIS FoodKeeper #338 (shorter end of range; retrieved 2026-10-21),5000
+ing_soy_sauce,Soy sauce,SOY SAUCE|SOY SAUCE RED SODIUM,pantry,ml,soy|wheat,,,1095,USDA FSIS FoodKeeper #360 (shorter end of range; retrieved 2026-10-21),2000
+ing_olive_oil,Olive oil,OLIVE OIL|EVOO|EXTRA VIRGIN OLIVE OIL,pantry,ml,,,,180,USDA FSIS FoodKeeper #227 (shorter end of range; retrieved 2026-10-21),2000
+ing_butter,Butter,BUTTER|UNSALTED BUTTER|BUTTER QUARTERS,dairy,g,milk,30,180,,USDA FSIS FoodKeeper #1 (shorter end of range; retrieved 2026-10-21),2000
+ing_parmesan,Grated parmesan,PARMESAN|GRATED PARMESAN|PARM REGGIANO,dairy,g,milk,365,,,USDA FSIS FoodKeeper #4 (shorter end of range; retrieved 2026-10-21),1000
+ing_scallion,Scallions,GREEN ONION|GREEN ONIONS|SCALLIONS,produce,count,,7,300,,USDA FSIS FoodKeeper #295 (shorter end of range; retrieved 2026-10-21),20
+ing_frozen_peas,Frozen peas,FROZEN PEAS|PETITE PEAS|PEAS,frozen,g,,,240,,USDA FSIS FoodKeeper #273 (shorter end of range; retrieved 2026-10-21),3000
+ing_pasta,Spaghetti,SPAGHETTI|PASTA,pantry,g,wheat,,,730,USDA FSIS FoodKeeper #335 (shorter end of range; retrieved 2026-10-21),5000
+ing_green_beans,Green beans,GREEN BEANS|FRENCH GREEN BEANS|HARICOTS VERTS,produce,g,,3,240,,USDA FSIS FoodKeeper #273 (shorter end of range; retrieved 2026-10-21),2000
+ing_ginger,Peeled ginger,GINGER|PEELED GINGER|ORG PEELED GINGER,produce,g,,14,180,,USDA FSIS FoodKeeper #286 (shorter end of range; retrieved 2026-10-21),500
+ing_avocado_oil,Avocado oil (neutral cooking oil),AVOCADO OIL,pantry,ml,,,,730,USDA FSIS FoodKeeper #668 (shorter end of range; retrieved 2026-10-21),2000
+ing_honey,Honey,HONEY|CLOVER HONEY,pantry,g,,,,730,USDA FSIS FoodKeeper #345 (shorter end of range; retrieved 2026-10-21),2000
+ing_tomato,Tomatoes,TOMATOES|CAMPARI TOMATOES|TOMATO,produce,g,,,60,7,USDA FSIS FoodKeeper #306 (shorter end of range; retrieved 2026-10-21),3000
+ing_sugar,Sugar,SUGAR|CANE SUGAR,pantry,g,,,,540,USDA FSIS FoodKeeper #240 (shorter end of range; retrieved 2026-10-21),5000
+ing_marinara,Marinara sauce,MARINARA|MARINARA SAUCE|TOMATO BASIL MARINARA,pantry,g,,,,365,USDA FSIS FoodKeeper #373 (shorter end of range; retrieved 2026-10-21),3000
+ing_bell_pepper,Red bell pepper,BELL PEPPERS|RED BELL PEPPERS|BELL PEPPER,produce,g,,4,180,,USDA FSIS FoodKeeper #296 (shorter end of range; retrieved 2026-10-21),2000
+ing_flour_tortilla,Flour tortillas,FLOUR TORTILLAS|TORTILLAS,bakery,g,wheat,,180,90,USDA FSIS FoodKeeper #196 (shorter end of range; retrieved 2026-10-21),3000
+ing_ground_beef,Ground beef,GROUND BEEF|GRND BEEF|GROUND BEEF 80/20,meat,g,,1,90,,USDA FSIS FoodKeeper #43 (shorter end of range; retrieved 2026-10-21),3000
+ing_cheddar,Shredded cheddar,CHEDDAR|SHREDDED CHEDDAR|SHRD CHEDDAR,dairy,g,milk,30,90,,USDA FSIS FoodKeeper #5 (shorter end of range; retrieved 2026-10-21),1000
+ing_salmon,Salmon fillet,SALMON|ATLANTIC SALMON|SALMON FILLET,seafood,g,fish,1,60,,USDA FSIS FoodKeeper #146 (shorter end of range; retrieved 2026-10-21),2000
+ing_potato,Russet potato,RUSSET POTATO|POTATOES|POTATO,produce,count,,,,30,USDA FSIS FoodKeeper #297 (shorter end of range; retrieved 2026-10-21),20
+ing_chickpeas,Canned chickpeas,GARBANZO BEANS|CHICKPEAS|ORG GARBANZO,pantry,g,,,,730,USDA FSIS FoodKeeper #372 (shorter end of range; retrieved 2026-10-21),5000
+ing_black_beans,Canned black beans,BLACK BEANS,pantry,g,,,,730,USDA FSIS FoodKeeper #372 (shorter end of range; retrieved 2026-10-21),5000
+ing_coconut_milk,Coconut milk (canned),COCONUT MILK|ORG COCONUT MILK,pantry,ml,,,,730,USDA FSIS FoodKeeper #602 (shorter end of range; retrieved 2026-10-21),3000
+ing_yellow_curry_sauce,Thai-style yellow curry sauce,YELLOW CURRY SAUCE|THAI YELLOW CURRY,pantry,g,,,,365,USDA FSIS FoodKeeper #373 (shorter end of range; retrieved 2026-10-21),2000
+ing_smoked_paprika,Smoked paprika,SMOKED PAPRIKA|PAPRIKA,pantry,g,,,,730,USDA FSIS FoodKeeper #238 (shorter end of range; retrieved 2026-10-21),500
+ing_sesame_oil,Toasted sesame oil,SESAME OIL|TOASTED SESAME OIL,pantry,ml,sesame,,,730,USDA FSIS FoodKeeper #612 (shorter end of range; retrieved 2026-10-21),1000
+ing_carrot,Carrots,CARROTS|ORG CARROTS,produce,g,,14,300,,USDA FSIS FoodKeeper #279 (shorter end of range; retrieved 2026-10-21),3000
+ing_milk,Milk,MILK|ORGANIC MILK|WHOLE MILK,dairy,ml,milk,7,90,,USDA FSIS FoodKeeper #27 (package use-by date; 7 days used as a typical guide) retrieved 2026-10-21,8000
+ing_zucchini,Zucchini,ZUCCHINI|ZUCCHINI SQUASH,produce,g,,4,300,,USDA FSIS FoodKeeper #302 (shorter end of range; retrieved 2026-10-21),3000
+ing_mushroom,Cremini mushrooms,MUSHROOMS|CRIMINI MUSHROOMS|CREMINI,produce,g,,3,300,,USDA FSIS FoodKeeper #292 (shorter end of range; retrieved 2026-10-21),2000
+ing_kale,Tuscan kale,KALE|TUSCAN KALE,produce,g,,3,240,,USDA FSIS FoodKeeper #423 (shorter end of range; retrieved 2026-10-21),2000
+ing_avocado,Avocado,AVOCADO|HASS AVOCADO,produce,count,,3,,,USDA FSIS FoodKeeper #250 (shorter end of range; retrieved 2026-10-21),12
+ing_pico_de_gallo,Pico de gallo (fresh salsa),PICO DE GALLO|SALSA,prepared,g,,4,,,USDA FSIS FoodKeeper #572 (shorter end of range; retrieved 2026-10-21),2000

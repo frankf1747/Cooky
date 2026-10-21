@@ -3,18 +3,259 @@ chk_lemon_garlic_chicken_s1,rcp_lemon_garlic_chicken,step,1,Step 1,Pat the chick
 chk_lemon_garlic_chicken_s2,rcp_lemon_garlic_chicken,step,2,Step 2,Heat the olive oil in a skillet over medium-high heat and cook the chicken until browned on both sides and cooked through. Move it to a plate.,480
 chk_lemon_garlic_chicken_s3,rcp_lemon_garlic_chicken,step,3,Step 3,Lower the heat. Add the sliced garlic and cook for one minute without letting it brown.,60
 chk_lemon_garlic_chicken_s4,rcp_lemon_garlic_chicken,step,4,Step 4,Add the spinach and the juice of the lemon. Stir until the spinach wilts. Return the chicken and spoon the pan sauce over it.,120
+chk_lemon_garlic_chicken_t2,rcp_lemon_garlic_chicken,tip,2,Tip,"While the chicken sears, slice the garlic and squeeze the lemon for steps 3 and 4.",
 chk_lemon_garlic_chicken_f1,rcp_lemon_garlic_chicken,faq,,FAQ: chicken too dry,Slice the breast in half horizontally so it cooks faster and stays juicy. Thighs also work and are harder to overcook.,
 chk_lemon_garlic_chicken_f2,rcp_lemon_garlic_chicken,faq,,FAQ: no lemon,A splash of white wine vinegar gives the sauce acidity. Bottled lemon juice works but tastes flatter.,
-chk_spinach_frittata_s1,rcp_spinach_frittata,step,1,Step 1,Heat the oven to 200 C (400 F). Whisk the eggs with a pinch of salt and the grated parmesan.,
+chk_lemon_garlic_chicken_f3,rcp_lemon_garlic_chicken,faq,,FAQ: sticking pan,Leave it a minute longer. Once the underside browns it releases on its own; forcing it tears the crust.,
+chk_spinach_frittata_s1,rcp_spinach_frittata,step,1,Step 1,"Heat the oven to 200 C (400 F). Whisk the eggs with a pinch of salt, the milk if using, and the grated parmesan.",
 chk_spinach_frittata_s2,rcp_spinach_frittata,step,2,Step 2,Melt the butter in an oven-safe skillet and soften the sliced onion for five minutes. Add the spinach and stir until it wilts.,300
 chk_spinach_frittata_s3,rcp_spinach_frittata,step,3,Step 3,Pour in the eggs and cook without stirring until the edges set. Move the skillet to the oven and bake until the center is set.,720
+chk_spinach_frittata_t2,rcp_spinach_frittata,tip,2,Tip,"While the onion softens, whisk the eggs with the parmesan so step 3 is ready to pour.",
 chk_spinach_frittata_f1,rcp_spinach_frittata,faq,,FAQ: no oven-safe skillet,Cook it covered on the stove over low heat until the top sets. The top will not brown.,
+chk_spinach_frittata_f2,rcp_spinach_frittata,faq,,FAQ: no milk,Leave it out or use a splash of water. Milk makes the frittata a little softer but is not needed.,
+chk_spinach_frittata_f3,rcp_spinach_frittata,faq,,FAQ: frozen spinach,"Thaw it and squeeze out as much water as you can first, or the frittata turns watery.",
 chk_egg_fried_rice_s1,rcp_egg_fried_rice,step,1,Step 1,Scramble the eggs in a hot oiled skillet until just set and move them to a plate.,
-chk_egg_fried_rice_s2,rcp_egg_fried_rice,step,2,Step 2,Add the cold cooked rice and the peas. Spread the rice out and let it fry without stirring for a minute before tossing.,60
-chk_egg_fried_rice_s3,rcp_egg_fried_rice,step,3,Step 3,Add the soy sauce and the eggs back in. Toss and finish with sliced scallions.,
+chk_egg_fried_rice_s2,rcp_egg_fried_rice,step,2,Step 2,"Add the cold cooked rice, the diced carrot and the peas. Spread the rice out and let it fry without stirring for a minute before tossing.",60
+chk_egg_fried_rice_s3,rcp_egg_fried_rice,step,3,Step 3,Add the soy sauce and the eggs back in. Toss and finish with sliced scallions and a few drops of sesame oil.,
+chk_egg_fried_rice_t1,rcp_egg_fried_rice,tip,1,Tip,Slice the scallions before you start: once the rice hits the pan everything moves fast.,
 chk_egg_fried_rice_f1,rcp_egg_fried_rice,faq,,FAQ: freshly cooked rice,Fresh rice turns mushy. Spread it on a plate and chill it for 20 minutes first.,
 chk_egg_fried_rice_f2,rcp_egg_fried_rice,faq,,FAQ: no wok,A wide skillet works. Cook in two batches so the rice fries instead of steaming.,
-chk_lemon_garlic_chicken_t2,rcp_lemon_garlic_chicken,tip,2,Tip,"While the chicken sears, slice the garlic and squeeze the lemon for steps 3 and 4.",
-chk_lemon_garlic_chicken_f3,rcp_lemon_garlic_chicken,faq,,FAQ: sticking pan,Leave it a minute longer. Once the underside browns it releases on its own; forcing it tears the crust.,
-chk_spinach_frittata_t2,rcp_spinach_frittata,tip,2,Tip,"While the onion softens, whisk the eggs with the parmesan so step 3 is ready to pour.",
-chk_egg_fried_rice_t1,rcp_egg_fried_rice,tip,1,Tip,Slice the scallions before you start: once the rice hits the pan everything moves fast.,
+chk_egg_fried_rice_f3,rcp_egg_fried_rice,faq,,FAQ: no sesame oil,Skip it. It adds aroma at the end but the dish works without it. Do not fry with it: it burns at high heat.,
+chk_ginger_soy_chicken_s1,rcp_ginger_soy_chicken,step,1,Step 1,Rinse the rice and start cooking it with about 1 1/2 times its volume of water.,
+chk_ginger_soy_chicken_s2,rcp_ginger_soy_chicken,step,2,Step 2,Cut the chicken thighs into bite-size pieces. Grate the ginger and mince the garlic. Stir the soy sauce and honey together in a small bowl.,
+chk_ginger_soy_chicken_s3,rcp_ginger_soy_chicken,step,3,Step 3,"Heat the oil in a skillet over medium-high heat. Add the chicken in one layer and cook until browned and cooked through, turning once.",420
+chk_ginger_soy_chicken_s4,rcp_ginger_soy_chicken,step,4,Step 4,Add the green beans and a splash of water. Cover and cook until the beans are bright green and just tender.,180
+chk_ginger_soy_chicken_s5,rcp_ginger_soy_chicken,step,5,Step 5,"Add the ginger and garlic, stir for 30 seconds, then pour in the soy-honey sauce. Toss until the sauce is glossy and coats everything. Serve over the rice.",60
+chk_ginger_soy_chicken_t3,rcp_ginger_soy_chicken,tip,3,Tip,"While the chicken browns, trim the green beans so they are ready for step 4.",
+chk_ginger_soy_chicken_f1,rcp_ginger_soy_chicken,faq,,FAQ: chicken breast instead of thighs,"Breast works. Cut it a little thicker and take it off the heat as soon as it is cooked through, because it dries out faster than thighs.",
+chk_ginger_soy_chicken_f2,rcp_ginger_soy_chicken,faq,,FAQ: no fresh ginger,Leave it out rather than using ground ginger in large amounts; a small pinch of ground ginger is fine but it tastes different.,
+chk_ginger_soy_chicken_f3,rcp_ginger_soy_chicken,faq,,FAQ: sauce burns,Honey burns quickly. Lower the heat before adding the sauce and keep tossing; add a spoon of water if it gets too thick.,
+chk_garlic_butter_pasta_s1,rcp_garlic_butter_pasta,step,1,Step 1,Bring a large pot of salted water to a boil and cook the spaghetti until just tender. Add the frozen peas for the last two minutes.,600
+chk_garlic_butter_pasta_s2,rcp_garlic_butter_pasta,step,2,Step 2,"Before draining, scoop out a cup of the pasta water. Drain the pasta and peas.",
+chk_garlic_butter_pasta_s3,rcp_garlic_butter_pasta,step,3,Step 3,Melt the butter in the empty pot or a skillet over low heat. Add the sliced garlic and cook gently until fragrant but not brown.,90
+chk_garlic_butter_pasta_s4,rcp_garlic_butter_pasta,step,4,Step 4,"Add the pasta, peas, parmesan and a splash of pasta water. Toss until a light sauce forms. Finish with lemon zest and a squeeze of juice if using.",
+chk_garlic_butter_pasta_t1,rcp_garlic_butter_pasta,tip,1,Tip,"While the water heats, slice the garlic and grate the lemon zest.",
+chk_garlic_butter_pasta_f1,rcp_garlic_butter_pasta,faq,,FAQ: sauce is dry or clumpy,Add more pasta water a spoonful at a time and keep tossing off the heat. The starch in the water makes the cheese smooth.,
+chk_garlic_butter_pasta_f2,rcp_garlic_butter_pasta,faq,,FAQ: no parmesan,"Any hard grated cheese works. Without cheese, add a little more butter and salt; it will be lighter.",
+chk_garlic_butter_pasta_f3,rcp_garlic_butter_pasta,faq,,FAQ: olive oil instead of butter,Olive oil works for a lighter version. The sauce will be less creamy.,
+chk_tomato_egg_stir_fry_s1,rcp_tomato_egg_stir_fry,step,1,Step 1,Start the rice. Cut the tomatoes into wedges and slice the scallions. Beat the eggs with a pinch of salt.,
+chk_tomato_egg_stir_fry_s2,rcp_tomato_egg_stir_fry,step,2,Step 2,"Heat half the oil in a skillet over medium-high heat. Pour in the eggs, stir gently until softly set, and move them to a plate.",60
+chk_tomato_egg_stir_fry_s3,rcp_tomato_egg_stir_fry,step,3,Step 3,"Add the rest of the oil and the tomatoes. Cook, stirring, until they soften and release their juice.",180
+chk_tomato_egg_stir_fry_s4,rcp_tomato_egg_stir_fry,step,4,Step 4,"Stir in the sugar and the soy sauce if using. Return the eggs, fold them in, and finish with scallions. Serve over rice.",30
+chk_tomato_egg_stir_fry_t3,rcp_tomato_egg_stir_fry,tip,3,Tip,"While the tomatoes cook, check the rice so both are ready together.",
+chk_tomato_egg_stir_fry_f1,rcp_tomato_egg_stir_fry,faq,,FAQ: why sugar,"A little sugar balances the acidity of the tomatoes. Reduce it if your tomatoes are very sweet, but do not skip it entirely.",
+chk_tomato_egg_stir_fry_f2,rcp_tomato_egg_stir_fry,faq,,FAQ: too watery,"Cook the tomatoes a minute longer before adding the eggs back, so some of the juice cooks off.",
+chk_tomato_egg_stir_fry_f3,rcp_tomato_egg_stir_fry,faq,,FAQ: canned tomatoes,Diced canned tomatoes work in a pinch. Drain them first; the texture will be softer.,
+chk_mushroom_marinara_pasta_s1,rcp_mushroom_marinara_pasta,step,1,Step 1,"Bring a large pot of salted water to a boil and cook the spaghetti until just tender. Save half a cup of pasta water, then drain.",600
+chk_mushroom_marinara_pasta_s2,rcp_mushroom_marinara_pasta,step,2,Step 2,"Meanwhile heat the olive oil in a skillet over medium-high heat. Add the sliced mushrooms and cook without stirring until browned, then stir and cook until their liquid is gone.",420
+chk_mushroom_marinara_pasta_s3,rcp_mushroom_marinara_pasta,step,3,Step 3,"Add the minced garlic for 30 seconds, then the marinara. Simmer for five minutes. Stir in the spinach until it wilts, if using.",300
+chk_mushroom_marinara_pasta_s4,rcp_mushroom_marinara_pasta,step,4,Step 4,Toss the pasta with the sauce and a splash of pasta water. Top with parmesan if using.,
+chk_mushroom_marinara_pasta_t2,rcp_mushroom_marinara_pasta,tip,2,Tip,Slice the mushrooms while the water comes to a boil.,
+chk_mushroom_marinara_pasta_f1,rcp_mushroom_marinara_pasta,faq,,FAQ: mushrooms are soggy,Use a hot pan and do not crowd it. Cook them in two batches if needed and salt them only after they brown.,
+chk_mushroom_marinara_pasta_f2,rcp_mushroom_marinara_pasta,faq,,FAQ: no mushrooms,Zucchini cut into half-moons works the same way. Without vegetables it becomes a plain marinara pasta.,
+chk_mushroom_marinara_pasta_f3,rcp_mushroom_marinara_pasta,faq,,FAQ: vegan,Skip the parmesan. The rest of the recipe has no animal products.,
+chk_chicken_fajita_bowl_s1,rcp_chicken_fajita_bowl,step,1,Step 1,"Start the rice. Slice the chicken, peppers and onion into thin strips.",
+chk_chicken_fajita_bowl_s2,rcp_chicken_fajita_bowl,step,2,Step 2,Toss the chicken with half the smoked paprika and a pinch of salt. Heat half the oil in a skillet and cook the chicken until browned and cooked through. Move it to a plate.,360
+chk_chicken_fajita_bowl_s3,rcp_chicken_fajita_bowl,step,3,Step 3,"Add the rest of the oil, the peppers and the onion with the remaining paprika. Cook until soft and charred at the edges.",360
+chk_chicken_fajita_bowl_s4,rcp_chicken_fajita_bowl,step,4,Step 4,Warm the drained black beans in the same pan for two minutes.,120
+chk_chicken_fajita_bowl_s5,rcp_chicken_fajita_bowl,step,5,Step 5,"Build bowls with rice, beans, chicken and vegetables. Top with pico de gallo and sliced avocado if using.",
+chk_chicken_fajita_bowl_t2,rcp_chicken_fajita_bowl,tip,2,Tip,"While the chicken cooks, drain and rinse the beans.",
+chk_chicken_fajita_bowl_f1,rcp_chicken_fajita_bowl,faq,,FAQ: no smoked paprika,Regular paprika with a pinch of chili powder works. It will be less smoky.,
+chk_chicken_fajita_bowl_f2,rcp_chicken_fajita_bowl,faq,,FAQ: make it vegetarian,Leave out the chicken and use a second can of beans. Cook the vegetables the same way.,
+chk_chicken_fajita_bowl_f3,rcp_chicken_fajita_bowl,faq,,FAQ: tortillas instead of rice,Warm flour tortillas and serve the filling as fajitas. You can skip the rice entirely.,
+chk_beef_tacos_s1,rcp_beef_tacos,step,1,Step 1,Dice the onion. Heat a skillet over medium-high heat and add the ground beef and onion. Break the meat up as it browns.,420
+chk_beef_tacos_s2,rcp_beef_tacos,step,2,Step 2,Stir in the smoked paprika and a pinch of salt with two tablespoons of water. Cook until the beef is fully cooked and the pan is almost dry.,120
+chk_beef_tacos_s3,rcp_beef_tacos,step,3,Step 3,Warm the tortillas in a dry pan for about 20 seconds per side.,60
+chk_beef_tacos_s4,rcp_beef_tacos,step,4,Step 4,"Fill the tortillas with beef, cheddar and pico de gallo. Add sliced avocado if using.",
+chk_beef_tacos_t1,rcp_beef_tacos,tip,1,Tip,"While the beef browns, warm the tortillas in a second pan so everything is ready at once.",
+chk_beef_tacos_f1,rcp_beef_tacos,faq,,FAQ: no beef,Ground chicken or turkey works the same way. Add a little oil because they are leaner.,
+chk_beef_tacos_f2,rcp_beef_tacos,faq,,FAQ: too greasy,Spoon off the extra fat after the beef browns and before you add the paprika.,
+chk_beef_tacos_f3,rcp_beef_tacos,faq,,FAQ: corn tortillas,Corn tortillas work. Warm them well or they crack; doubling them up helps.,
+chk_honey_garlic_salmon_s1,rcp_honey_garlic_salmon,step,1,Step 1,Start the rice. Mince the garlic and stir it with the honey and soy sauce.,
+chk_honey_garlic_salmon_s2,rcp_honey_garlic_salmon,step,2,Step 2,Pat the salmon dry and season lightly with salt. Heat the oil in a skillet over medium-high heat and cook the salmon skin side down until crisp.,240
+chk_honey_garlic_salmon_s3,rcp_honey_garlic_salmon,step,3,Step 3,"Flip the salmon and cook until it flakes easily, then move it to a plate.",120
+chk_honey_garlic_salmon_s4,rcp_honey_garlic_salmon,step,4,Step 4,"Add the green beans and a splash of water, cover and steam until just tender.",180
+chk_honey_garlic_salmon_s5,rcp_honey_garlic_salmon,step,5,Step 5,"Lower the heat, pour in the honey-garlic sauce and let it bubble for 30 seconds. Return the salmon, spoon the sauce over and serve with the rice and beans.",30
+chk_honey_garlic_salmon_t2,rcp_honey_garlic_salmon,tip,2,Tip,"While the salmon cooks, trim the green beans for step 4.",
+chk_honey_garlic_salmon_f1,rcp_honey_garlic_salmon,faq,,FAQ: skinless salmon,Skinless works. Cook it a little shorter on the first side and handle it gently when flipping.,
+chk_honey_garlic_salmon_f2,rcp_honey_garlic_salmon,faq,,FAQ: frozen salmon,"Thaw it in the fridge overnight and pat it very dry before cooking, or it will steam instead of browning.",
+chk_honey_garlic_salmon_f3,rcp_honey_garlic_salmon,faq,,FAQ: sauce burns,Take the pan off the heat before adding the sauce if it is very hot. Honey and garlic burn in seconds.,
+chk_zucchini_potato_hash_s1,rcp_zucchini_potato_hash,step,1,Step 1,"Cut the potatoes into small cubes, the zucchini into half-moons and the onion into dice.",
+chk_zucchini_potato_hash_s2,rcp_zucchini_potato_hash,step,2,Step 2,"Heat the oil in a large skillet over medium heat. Add the potatoes with a pinch of salt, cover and cook, stirring now and then, until tender and golden.",720
+chk_zucchini_potato_hash_s3,rcp_zucchini_potato_hash,step,3,Step 3,"Add the onion, zucchini and smoked paprika. Cook uncovered until the vegetables are soft.",300
+chk_zucchini_potato_hash_s4,rcp_zucchini_potato_hash,step,4,Step 4,Make four wells in the hash and crack an egg into each. Cover and cook until the whites are set. Sprinkle with cheddar if using.,300
+chk_zucchini_potato_hash_t2,rcp_zucchini_potato_hash,tip,2,Tip,"While the potatoes cook, cut the zucchini and onion for step 3.",
+chk_zucchini_potato_hash_f1,rcp_zucchini_potato_hash,faq,,FAQ: potatoes still hard,Keep the lid on and lower the heat slightly; add a spoon of water if they start to stick. Small cubes cook much faster.,
+chk_zucchini_potato_hash_f2,rcp_zucchini_potato_hash,faq,,FAQ: no zucchini,"Bell pepper, mushrooms or spinach all work. Add spinach at the very end so it just wilts.",
+chk_zucchini_potato_hash_f3,rcp_zucchini_potato_hash,faq,,FAQ: make ahead,"Cook the potato hash ahead and reheat it, then add the eggs fresh. The eggs do not reheat well.",
+chk_chickpea_coconut_curry_s1,rcp_chickpea_coconut_curry,step,1,Step 1,"Start the rice. Dice the onion, mince the garlic and grate the ginger.",
+chk_chickpea_coconut_curry_s2,rcp_chickpea_coconut_curry,step,2,Step 2,Heat the oil in a pot over medium heat and soften the onion. Add the garlic and ginger and cook for one minute.,300
+chk_chickpea_coconut_curry_s3,rcp_chickpea_coconut_curry,step,3,Step 3,"Add the drained chickpeas, coconut milk and curry sauce. Simmer until slightly thickened.",600
+chk_chickpea_coconut_curry_s4,rcp_chickpea_coconut_curry,step,4,Step 4,"Stir in the kale, stems removed and leaves torn, and cook until tender. Taste for salt and serve over rice.",180
+chk_chickpea_coconut_curry_t3,rcp_chickpea_coconut_curry,tip,3,Tip,"While the curry simmers, strip the kale leaves from their stems.",
+chk_chickpea_coconut_curry_f1,rcp_chickpea_coconut_curry,faq,,FAQ: too spicy,Add more coconut milk or a squeeze of lemon. Serving with extra rice also helps.,
+chk_chickpea_coconut_curry_f2,rcp_chickpea_coconut_curry,faq,,FAQ: spinach instead of kale,Spinach works. Add it at the very end; it wilts in under a minute.,
+chk_chickpea_coconut_curry_f3,rcp_chickpea_coconut_curry,faq,,FAQ: no curry sauce,Use about two teaspoons of curry powder fried with the onion and add a little salt. The flavor will be simpler.,
+chk_lemon_garlic_chicken_f4,rcp_lemon_garlic_chicken,faq,,FAQ: is it done,"Chicken is done when the thickest part reaches 165 F (74 C) on a thermometer and the juices run clear. With no thermometer, cut into the thickest piece: it should be white all the way through.",
+chk_lemon_garlic_chicken_f5,rcp_lemon_garlic_chicken,faq,,FAQ: short on time,"Use thin-sliced chicken breast, or slice each breast in half horizontally; it cooks in about 3 minutes per side. Pre-washed spinach saves another few minutes.",
+chk_lemon_garlic_chicken_f6,rcp_lemon_garlic_chicken,faq,,FAQ: keep it juicy,Take the chicken off the heat as soon as it reaches 165 F and let it rest on the plate for 2 minutes; the pan sauce in step 4 adds moisture back.,
+chk_lemon_garlic_chicken_f7,rcp_lemon_garlic_chicken,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_spinach_frittata_f4,rcp_spinach_frittata,faq,,FAQ: is it done,"It is done when the center no longer jiggles and a knife in the middle comes out clean, about 12 minutes in the oven. The eggs should be fully set (160 F / 71 C).",
+chk_spinach_frittata_f5,rcp_spinach_frittata,faq,,FAQ: sticking,"Butter the whole pan, including the sides, and let the edges set before you move anything. Run a spatula around the edge before sliding it out.",
+chk_spinach_frittata_f6,rcp_spinach_frittata,faq,,FAQ: short on time,"Skip the oven: cover the pan and cook on low heat until the top sets, about 8 minutes. Slice the onion thin so it softens faster.",
+chk_spinach_frittata_f7,rcp_spinach_frittata,faq,,FAQ: keep it juicy,Take it out as soon as the center is just set; it keeps cooking from the pan's heat. Overbaked eggs turn rubbery and weep water.,
+chk_spinach_frittata_f8,rcp_spinach_frittata,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_egg_fried_rice_f4,rcp_egg_fried_rice,faq,,FAQ: sticking,"Heat the pan and oil until shimmering before the rice goes in, and do not stir for the first minute. A nonstick skillet helps; add a little more oil if it still sticks.",
+chk_egg_fried_rice_f5,rcp_egg_fried_rice,faq,,FAQ: is it done,"It is ready when the rice is hot all the way through, some grains are lightly toasted, and the eggs are fully set.",
+chk_egg_fried_rice_f6,rcp_egg_fried_rice,faq,,FAQ: short on time,"Use rice cooked yesterday or a microwave rice pouch, and frozen peas so the only chopping is the scallions.",
+chk_egg_fried_rice_f7,rcp_egg_fried_rice,faq,,FAQ: keep it juicy and moist,"If it tastes dry, add a tablespoon of water mixed into the soy sauce at the end rather than more oil.",
+chk_egg_fried_rice_f8,rcp_egg_fried_rice,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_ginger_soy_chicken_f4,rcp_ginger_soy_chicken,faq,,FAQ: is it done,"The chicken is done at 165 F (74 C) in the thickest piece, with no pink inside and clear juices.",
+chk_ginger_soy_chicken_f5,rcp_ginger_soy_chicken,faq,,FAQ: sticking,"Pat the chicken dry, let the pan get hot before adding it, and do not move the pieces until they brown; they release on their own.",
+chk_ginger_soy_chicken_f6,rcp_ginger_soy_chicken,faq,,FAQ: short on time,"Use a microwave rice pouch and frozen cut green beans, and buy chicken already cut for stir-fry.",
+chk_ginger_soy_chicken_f7,rcp_ginger_soy_chicken,faq,,FAQ: keep it juicy,"Thighs stay juicy; cook them in one layer so they brown instead of steaming, and stop as soon as they reach 165 F.",
+chk_ginger_soy_chicken_f8,rcp_ginger_soy_chicken,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_garlic_butter_pasta_f4,rcp_garlic_butter_pasta,faq,,FAQ: is it done,Pasta is done when it is tender but still slightly firm in the center (al dente). Taste a strand a minute before the package time.,
+chk_garlic_butter_pasta_f5,rcp_garlic_butter_pasta,faq,,FAQ: sticking,Use a big pot of boiling salted water and stir during the first minute. Toss the pasta with the butter right after draining.,
+chk_garlic_butter_pasta_f6,rcp_garlic_butter_pasta,faq,,FAQ: short on time,"Thin spaghetti or angel hair cooks in a few minutes, and a lid on the pot brings the water to a boil faster.",
+chk_garlic_butter_pasta_f7,rcp_garlic_butter_pasta,faq,,FAQ: keep it juicy and saucy,Keep a little extra pasta water and add a splash just before serving; the sauce thickens as it cools.,
+chk_garlic_butter_pasta_f8,rcp_garlic_butter_pasta,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_tomato_egg_stir_fry_f4,rcp_tomato_egg_stir_fry,faq,,FAQ: is it done,"The eggs are cooked through but still soft, and the tomatoes have softened into a glossy sauce.",
+chk_tomato_egg_stir_fry_f5,rcp_tomato_egg_stir_fry,faq,,FAQ: sticking,Let the oil get hot before the eggs go in and keep them moving gently; a nonstick pan makes this easy.,
+chk_tomato_egg_stir_fry_f6,rcp_tomato_egg_stir_fry,faq,,FAQ: short on time,"Cut the tomatoes while the rice cooks, or use a microwave rice pouch. The stir-fry itself takes about 5 minutes.",
+chk_tomato_egg_stir_fry_f7,rcp_tomato_egg_stir_fry,faq,,FAQ: keep it juicy,Take the eggs off while still soft and glossy; they finish in the sauce. Cover the pan for a minute so the tomatoes release more juice.,
+chk_tomato_egg_stir_fry_f8,rcp_tomato_egg_stir_fry,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_mushroom_marinara_pasta_f4,rcp_mushroom_marinara_pasta,faq,,FAQ: is it done,The pasta is al dente (tender with a slight bite) and the sauce has simmered until it clings to a spoon.,
+chk_mushroom_marinara_pasta_f5,rcp_mushroom_marinara_pasta,faq,,FAQ: sticking,"Stir the pasta in its first minute of boiling, and toss it with the sauce right after draining.",
+chk_mushroom_marinara_pasta_f6,rcp_mushroom_marinara_pasta,faq,,FAQ: short on time,Buy pre-sliced mushrooms and start the sauce while the water comes to a boil.,
+chk_mushroom_marinara_pasta_f7,rcp_mushroom_marinara_pasta,faq,,FAQ: keep it juicy and saucy,Add a splash of pasta water when tossing; it loosens the sauce and helps it coat the spaghetti.,
+chk_mushroom_marinara_pasta_f8,rcp_mushroom_marinara_pasta,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_chicken_fajita_bowl_f4,rcp_chicken_fajita_bowl,faq,,FAQ: is it done,"The chicken strips are done at 165 F (74 C), white throughout with no pink.",
+chk_chicken_fajita_bowl_f5,rcp_chicken_fajita_bowl,faq,,FAQ: sticking,"Pat the chicken dry, heat the oil first, and let the strips brown before turning them.",
+chk_chicken_fajita_bowl_f6,rcp_chicken_fajita_bowl,faq,,FAQ: short on time,Use pre-sliced peppers and onions and a microwave rice pouch; the cooking itself takes about 12 minutes.,
+chk_chicken_fajita_bowl_f7,rcp_chicken_fajita_bowl,faq,,FAQ: keep it juicy,"Slice the chicken thin so it cooks fast, take it off as soon as it is done, and let it rest while the vegetables cook.",
+chk_chicken_fajita_bowl_f8,rcp_chicken_fajita_bowl,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_beef_tacos_f4,rcp_beef_tacos,faq,,FAQ: is it done,"Ground beef is done at 160 F (71 C), with no pink left.",
+chk_beef_tacos_f5,rcp_beef_tacos,faq,,FAQ: sticking,Let the beef brown before breaking it up; the browned bits lift off when you add the two tablespoons of water in step 2.,
+chk_beef_tacos_f6,rcp_beef_tacos,faq,,FAQ: short on time,Warm the tortillas in the microwave under a damp paper towel for 30 seconds instead of in a pan.,
+chk_beef_tacos_f7,rcp_beef_tacos,faq,,FAQ: keep it juicy,Keep a spoon of the cooking liquid with the beef and add the pico de gallo just before eating.,
+chk_beef_tacos_f8,rcp_beef_tacos,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_honey_garlic_salmon_f4,rcp_honey_garlic_salmon,faq,,FAQ: is it done,"Salmon is done at 145 F (63 C), when it turns opaque and flakes easily with a fork.",
+chk_honey_garlic_salmon_f5,rcp_honey_garlic_salmon,faq,,FAQ: sticking,"Pat the fish dry, heat the oil until it shimmers, and leave the skin side down until it releases on its own.",
+chk_honey_garlic_salmon_f6,rcp_honey_garlic_salmon,faq,,FAQ: short on time,"Cut the salmon into cubes so it cooks in about 4 minutes, and use a microwave rice pouch.",
+chk_honey_garlic_salmon_f7,rcp_honey_garlic_salmon,faq,,FAQ: keep it juicy,Take the salmon off as soon as it flakes; it keeps cooking for a minute on the plate.,
+chk_honey_garlic_salmon_f8,rcp_honey_garlic_salmon,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_zucchini_potato_hash_f4,rcp_zucchini_potato_hash,faq,,FAQ: is it done,The potatoes are done when a fork slides in easily and the edges are golden. The egg whites should be fully set; cook 2 more minutes for firm yolks.,
+chk_zucchini_potato_hash_f5,rcp_zucchini_potato_hash,faq,,FAQ: sticking,"Use enough oil to coat the pan, and stir only every few minutes so a crust forms and lets go.",
+chk_zucchini_potato_hash_f6,rcp_zucchini_potato_hash,faq,,FAQ: short on time,Microwave the potato cubes for 4 minutes before they go in the pan; they only need to brown.,
+chk_zucchini_potato_hash_f7,rcp_zucchini_potato_hash,faq,,FAQ: keep it juicy,"Keep the lid on while the potatoes cook and add the zucchini later so it stays tender, not dry.",
+chk_zucchini_potato_hash_f8,rcp_zucchini_potato_hash,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_chickpea_coconut_curry_f4,rcp_chickpea_coconut_curry,faq,,FAQ: is it done,It is ready when the sauce has thickened a little and the kale is tender.,
+chk_chickpea_coconut_curry_f5,rcp_chickpea_coconut_curry,faq,,FAQ: sticking,Stir from the bottom now and then and keep the heat at a gentle simmer; add a splash of water if it catches.,
+chk_chickpea_coconut_curry_f6,rcp_chickpea_coconut_curry,faq,,FAQ: short on time,Use a microwave rice pouch and simmer for just 5 minutes; the canned chickpeas only need to heat through.,
+chk_chickpea_coconut_curry_f7,rcp_chickpea_coconut_curry,faq,,FAQ: keep it juicy and creamy,"If it gets too thick, stir in a little more coconut milk or water.",
+chk_chickpea_coconut_curry_f8,rcp_chickpea_coconut_curry,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_oyakodon_s1,rcp_oyakodon,step,1,Step 1,Start the rice. Slice the onion thinly and cut the chicken into bite-size pieces.,
+chk_oyakodon_s2,rcp_oyakodon,step,2,Step 2,"Simmer the onion with the soy sauce, sugar and 120 ml (1/2 cup) of water in a small skillet until soft.",240
+chk_oyakodon_s3,rcp_oyakodon,step,3,Step 3,"Add the chicken in one layer, cover and simmer until cooked through, turning once.",420
+chk_oyakodon_s4,rcp_oyakodon,step,4,Step 4,"Beat the eggs lightly and pour them over in a circle. Cover and cook until the eggs are just set, then slide everything over bowls of rice and top with scallions.",90
+chk_oyakodon_t2,rcp_oyakodon,tip,2,Tip,"While the onion simmers, beat the eggs in a bowl so step 4 is ready to pour.",
+chk_oyakodon_f1,rcp_oyakodon,faq,,FAQ: no dashi,"This version uses water with soy sauce and sugar. If you have dashi, use it instead of water for a deeper flavor.",
+chk_oyakodon_f2,rcp_oyakodon,faq,,FAQ: runny eggs,"Traditional oyakodon keeps the eggs soft. For fully set eggs, keep the lid on a minute longer.",
+chk_oyakodon_f3,rcp_oyakodon,faq,,FAQ: chicken breast instead,Breast works; slice it thin and take it off the heat as soon as it is cooked through so it stays tender.,
+chk_oyakodon_f4,rcp_oyakodon,faq,,FAQ: is it done,The chicken is done at 165 F (74 C) with no pink inside; the eggs are done when they are set to your liking.,
+chk_oyakodon_f5,rcp_oyakodon,faq,,FAQ: sticking,Keep enough simmering liquid in the pan; add a splash of water if it gets low.,
+chk_oyakodon_f6,rcp_oyakodon,faq,,FAQ: short on time,Use a microwave rice pouch and cut the chicken small so it cooks in about 5 minutes.,
+chk_oyakodon_f7,rcp_oyakodon,faq,,FAQ: keep it juicy,Thighs stay juicy; simmer gently with the lid on rather than boiling hard.,
+chk_oyakodon_f8,rcp_oyakodon,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_tamagoyaki_plate_s1,rcp_tamagoyaki_plate,step,1,Step 1,Start the rice. Beat the eggs with the sugar and half the soy sauce until smooth.,
+chk_tamagoyaki_plate_s2,rcp_tamagoyaki_plate,step,2,Step 2,"Wilt the spinach in a dry pan, squeeze out the water, and toss it with the sesame oil and the rest of the soy sauce.",120
+chk_tamagoyaki_plate_s3,rcp_tamagoyaki_plate,step,3,Step 3,"Oil the skillet lightly over medium-low heat. Pour in a thin layer of egg; when it is almost set, roll it to one side. Repeat with the rest of the egg, rolling each layer around the last.",360
+chk_tamagoyaki_plate_s4,rcp_tamagoyaki_plate,step,4,Step 4,"Rest the omelette for a minute, slice it, and serve with the spinach and rice.",60
+chk_tamagoyaki_plate_t1,rcp_tamagoyaki_plate,tip,1,Tip,"While the rice cooks, wash the spinach so step 2 is quick.",
+chk_tamagoyaki_plate_f1,rcp_tamagoyaki_plate,faq,,FAQ: no square pan,A small round skillet works. Fold the edges in to keep a log shape; the ends will just be rounder.,
+chk_tamagoyaki_plate_f2,rcp_tamagoyaki_plate,faq,,FAQ: omelette tearing,Lower the heat and wait until the top is almost set before rolling; a little more oil helps too.,
+chk_tamagoyaki_plate_f3,rcp_tamagoyaki_plate,faq,,FAQ: less sweet,"Halve the sugar or leave it out for a savory version, then add a pinch of salt.",
+chk_tamagoyaki_plate_f4,rcp_tamagoyaki_plate,faq,,FAQ: is it done,Each layer should be set but still soft; the rolled omelette is done when no liquid egg runs out when you slice it (eggs cooked to 160 F / 71 C).,
+chk_tamagoyaki_plate_f5,rcp_tamagoyaki_plate,faq,,FAQ: sticking,Wipe the pan with a little oil before every layer and keep the heat medium-low.,
+chk_tamagoyaki_plate_f6,rcp_tamagoyaki_plate,faq,,FAQ: short on time,Skip the rolling: cook it as a soft scramble with the same seasoning. Use a microwave rice pouch.,
+chk_tamagoyaki_plate_f7,rcp_tamagoyaki_plate,faq,,FAQ: keep it juicy,Low heat keeps the layers tender and moist; high heat makes them tough and dry.,
+chk_tamagoyaki_plate_f8,rcp_tamagoyaki_plate,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_japanese_curry_rice_s1,rcp_japanese_curry_rice,step,1,Step 1,"Start the rice. Cut the chicken, potato, carrot and onion into bite-size pieces.",
+chk_japanese_curry_rice_s2,rcp_japanese_curry_rice,step,2,Step 2,Heat the oil in a pot and brown the chicken and onion.,300
+chk_japanese_curry_rice_s3,rcp_japanese_curry_rice,step,3,Step 3,"Add the potato, carrot, curry sauce, coconut milk and 120 ml (1/2 cup) of water. Cover and simmer until the potato is tender.",900
+chk_japanese_curry_rice_s4,rcp_japanese_curry_rice,step,4,Step 4,Taste for salt and serve over the rice.,
+chk_japanese_curry_rice_t3,rcp_japanese_curry_rice,tip,3,Tip,"While the curry simmers, set the table; it needs only an occasional stir.",
+chk_japanese_curry_rice_f1,rcp_japanese_curry_rice,faq,,FAQ: curry roux blocks,"If you have Japanese curry roux, use 2 blocks instead of the curry sauce and coconut milk, and add water as the box says.",
+chk_japanese_curry_rice_f2,rcp_japanese_curry_rice,faq,,FAQ: too spicy,Add more coconut milk or a little honey to soften the heat.,
+chk_japanese_curry_rice_f3,rcp_japanese_curry_rice,faq,,FAQ: vegetarian,Leave out the chicken and add a can of drained chickpeas with the potatoes.,
+chk_japanese_curry_rice_f4,rcp_japanese_curry_rice,faq,,FAQ: is it done,It is done when the potato is fork-tender and the chicken reaches 165 F (74 C).,
+chk_japanese_curry_rice_f5,rcp_japanese_curry_rice,faq,,FAQ: sticking,Stir from the bottom every few minutes and keep it at a gentle simmer; add a splash of water if it thickens too much.,
+chk_japanese_curry_rice_f6,rcp_japanese_curry_rice,faq,,FAQ: short on time,"Cut the potato and carrot small so they cook in about 10 minutes, and use a microwave rice pouch.",
+chk_japanese_curry_rice_f7,rcp_japanese_curry_rice,faq,,FAQ: keep it juicy and saucy,Simmer with the lid on so the sauce does not reduce too far; add water if it gets thick.,
+chk_japanese_curry_rice_f8,rcp_japanese_curry_rice,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out. Curry often tastes even better the next day.",
+chk_black_bean_quesadillas_s1,rcp_black_bean_quesadillas,step,1,Step 1,Drain the beans and mash them lightly with a fork. Dice the pepper.,
+chk_black_bean_quesadillas_s2,rcp_black_bean_quesadillas,step,2,Step 2,"Spread beans on half of each tortilla, add pepper and cheese, and fold.",
+chk_black_bean_quesadillas_s3,rcp_black_bean_quesadillas,step,3,Step 3,Cook in a dry skillet over medium heat until golden on both sides and the cheese melts.,240
+chk_black_bean_quesadillas_s4,rcp_black_bean_quesadillas,step,4,Step 4,Cut into wedges and serve with pico de gallo and avocado.,
+chk_black_bean_quesadillas_t3,rcp_black_bean_quesadillas,tip,3,Tip,"While the first batch cooks, slice the avocado.",
+chk_black_bean_quesadillas_f1,rcp_black_bean_quesadillas,faq,,FAQ: no cheddar,"Any melting cheese works, such as mozzarella or pepper jack.",
+chk_black_bean_quesadillas_f2,rcp_black_bean_quesadillas,faq,,FAQ: falling apart,"Mash the beans so they hold together, and do not overfill; press the quesadilla gently with the spatula.",
+chk_black_bean_quesadillas_f3,rcp_black_bean_quesadillas,faq,,FAQ: add meat,Leftover chicken from another recipe is a good add; warm it first.,
+chk_black_bean_quesadillas_f4,rcp_black_bean_quesadillas,faq,,FAQ: is it done,It is done when both sides are golden and crisp and the cheese has melted.,
+chk_black_bean_quesadillas_f5,rcp_black_bean_quesadillas,faq,,FAQ: sticking,Use a dry or very lightly oiled skillet over medium heat and flip once the bottom is golden.,
+chk_black_bean_quesadillas_f6,rcp_black_bean_quesadillas,faq,,FAQ: short on time,"Cook two at once in a big skillet, or melt them in the microwave for a softer version.",
+chk_black_bean_quesadillas_f7,rcp_black_bean_quesadillas,faq,,FAQ: keep it juicy,Add a spoon of pico de gallo inside so the filling stays moist.,
+chk_black_bean_quesadillas_f8,rcp_black_bean_quesadillas,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_mushroom_chicken_pasta_s1,rcp_mushroom_chicken_pasta,step,1,Step 1,Boil salted water and cook the spaghetti until al dente. Save half a cup of pasta water.,600
+chk_mushroom_chicken_pasta_s2,rcp_mushroom_chicken_pasta,step,2,Step 2,Melt the butter in a skillet and brown the chicken pieces until cooked through. Move them to a plate.,360
+chk_mushroom_chicken_pasta_s3,rcp_mushroom_chicken_pasta,step,3,Step 3,"Brown the mushrooms in the same pan, add the garlic for 30 seconds, then the milk. Simmer until slightly thickened.",240
+chk_mushroom_chicken_pasta_s4,rcp_mushroom_chicken_pasta,step,4,Step 4,"Stir in the parmesan, then the pasta and chicken, adding pasta water until creamy.",
+chk_mushroom_chicken_pasta_t2,rcp_mushroom_chicken_pasta,tip,2,Tip,"While the chicken browns, slice the mushrooms and mince the garlic.",
+chk_mushroom_chicken_pasta_f1,rcp_mushroom_chicken_pasta,faq,,FAQ: sauce too thin,"Simmer a minute longer, or add a little more parmesan; it thickens as it cools.",
+chk_mushroom_chicken_pasta_f2,rcp_mushroom_chicken_pasta,faq,,FAQ: sauce split,Keep the heat low after adding milk and do not let it boil hard.,
+chk_mushroom_chicken_pasta_f3,rcp_mushroom_chicken_pasta,faq,,FAQ: no chicken,Leave it out and add more mushrooms or a can of chickpeas.,
+chk_mushroom_chicken_pasta_f4,rcp_mushroom_chicken_pasta,faq,,FAQ: is it done,The chicken is done at 165 F (74 C); the pasta is tender with a slight bite.,
+chk_mushroom_chicken_pasta_f5,rcp_mushroom_chicken_pasta,faq,,FAQ: sticking,"Stir the pasta in its first minute, and do not move the chicken until it browns and releases.",
+chk_mushroom_chicken_pasta_f6,rcp_mushroom_chicken_pasta,faq,,FAQ: short on time,Use pre-sliced mushrooms and cook the chicken while the water boils.,
+chk_mushroom_chicken_pasta_f7,rcp_mushroom_chicken_pasta,faq,,FAQ: keep it juicy and creamy,Take the chicken off as soon as it is done and add pasta water at the end for a silky sauce.,
+chk_mushroom_chicken_pasta_f8,rcp_mushroom_chicken_pasta,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_sesame_soy_noodles_s1,rcp_sesame_soy_noodles,step,1,Step 1,"Cook the spaghetti until just tender, then drain.",540
+chk_sesame_soy_noodles_s2,rcp_sesame_soy_noodles,step,2,Step 2,"Stir the soy sauce, sesame oil and honey together in a bowl.",
+chk_sesame_soy_noodles_s3,rcp_sesame_soy_noodles,step,3,Step 3,Stir-fry the carrot and zucchini in a hot pan for 2 minutes so they stay crisp.,120
+chk_sesame_soy_noodles_s4,rcp_sesame_soy_noodles,step,4,Step 4,"Toss in the noodles and sauce, and top with scallions and a fried egg if you like.",
+chk_sesame_soy_noodles_t1,rcp_sesame_soy_noodles,tip,1,Tip,"While the noodles boil, cut the vegetables into thin sticks.",
+chk_sesame_soy_noodles_f1,rcp_sesame_soy_noodles,faq,,FAQ: real noodles,Ramen or udon noodles work in place of spaghetti; cook them as the package says.,
+chk_sesame_soy_noodles_f2,rcp_sesame_soy_noodles,faq,,FAQ: too salty,Add a squeeze of lemon or a little more honey and a splash of water.,
+chk_sesame_soy_noodles_f3,rcp_sesame_soy_noodles,faq,,FAQ: eat cold,It is good cold too; toss with the sauce and chill for 20 minutes.,
+chk_sesame_soy_noodles_f4,rcp_sesame_soy_noodles,faq,,FAQ: is it done,It is ready when the noodles are tender and the vegetables are hot but still a little crisp.,
+chk_sesame_soy_noodles_f5,rcp_sesame_soy_noodles,faq,,FAQ: sticking,Rinse the cooked noodles briefly or toss them with a drop of sesame oil so they do not clump.,
+chk_sesame_soy_noodles_f6,rcp_sesame_soy_noodles,faq,,FAQ: short on time,Use a bag of pre-cut vegetables and boil the water with a lid on.,
+chk_sesame_soy_noodles_f7,rcp_sesame_soy_noodles,faq,,FAQ: keep it juicy and saucy,Save a spoon of noodle water and toss it in with the sauce.,
+chk_sesame_soy_noodles_f8,rcp_sesame_soy_noodles,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_shakshuka_s1,rcp_shakshuka,step,1,Step 1,Soften the onion and pepper in the olive oil.,360
+chk_shakshuka_s2,rcp_shakshuka,step,2,Step 2,"Stir in the paprika for 30 seconds, then the marinara. Simmer until slightly thick.",300
+chk_shakshuka_s3,rcp_shakshuka,step,3,Step 3,Make four wells and crack an egg into each. Cover and cook until the whites are set.,360
+chk_shakshuka_s4,rcp_shakshuka,step,4,Step 4,Top with parmesan if you like and serve straight from the pan.,
+chk_shakshuka_t1,rcp_shakshuka,tip,1,Tip,"While the vegetables soften, crack the eggs into a cup so step 3 is quick.",
+chk_shakshuka_f1,rcp_shakshuka,faq,,FAQ: no bread,Serve it over rice or with tortillas warmed in a dry pan.,
+chk_shakshuka_f2,rcp_shakshuka,faq,,FAQ: too spicy,Smoked paprika is mild; for less smoky flavor use half.,
+chk_shakshuka_f3,rcp_shakshuka,faq,,FAQ: firm yolks,Keep the lid on 2 to 3 minutes longer.,
+chk_shakshuka_f4,rcp_shakshuka,faq,,FAQ: is it done,It is done when the egg whites are fully set; cook longer for firm yolks (160 F / 71 C).,
+chk_shakshuka_f5,rcp_shakshuka,faq,,FAQ: sticking,Keep the sauce at a gentle simmer and stir before adding the eggs.,
+chk_shakshuka_f6,rcp_shakshuka,faq,,FAQ: short on time,Skip the pepper and simmer the sauce for just 2 minutes before adding the eggs.,
+chk_shakshuka_f7,rcp_shakshuka,faq,,FAQ: keep it juicy,Add a splash of water if the sauce thickens too much before the eggs are done.,
+chk_shakshuka_f8,rcp_shakshuka,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",
+chk_beef_green_bean_bowl_s1,rcp_beef_green_bean_bowl,step,1,Step 1,"Start the rice. Trim and cut the green beans, grate the ginger and mince the garlic.",
+chk_beef_green_bean_bowl_s2,rcp_beef_green_bean_bowl,step,2,Step 2,Cook the green beans in the oil until blistered in spots. Move them to a plate.,300
+chk_beef_green_bean_bowl_s3,rcp_beef_green_bean_bowl,step,3,Step 3,"Brown the beef, breaking it up, until no pink remains. Add the ginger and garlic for 30 seconds.",420
+chk_beef_green_bean_bowl_s4,rcp_beef_green_bean_bowl,step,4,Step 4,"Stir in the soy sauce and honey, return the beans, and serve over the rice.",60
+chk_beef_green_bean_bowl_t2,rcp_beef_green_bean_bowl,tip,2,Tip,"While the beans cook, mix the soy sauce and honey in a cup.",
+chk_beef_green_bean_bowl_f1,rcp_beef_green_bean_bowl,faq,,FAQ: no beef,Ground chicken or turkey works the same way; add a little more oil.,
+chk_beef_green_bean_bowl_f2,rcp_beef_green_bean_bowl,faq,,FAQ: too greasy,"Spoon off extra fat after browning the beef, before adding the sauce.",
+chk_beef_green_bean_bowl_f3,rcp_beef_green_bean_bowl,faq,,FAQ: frozen green beans,They work; cook them a little longer and pat them dry first.,
+chk_beef_green_bean_bowl_f4,rcp_beef_green_bean_bowl,faq,,FAQ: is it done,Ground beef is done at 160 F (71 C) with no pink left.,
+chk_beef_green_bean_bowl_f5,rcp_beef_green_bean_bowl,faq,,FAQ: sticking,Let the beef brown before breaking it up; a splash of water lifts the browned bits.,
+chk_beef_green_bean_bowl_f6,rcp_beef_green_bean_bowl,faq,,FAQ: short on time,Use frozen cut green beans and a microwave rice pouch.,
+chk_beef_green_bean_bowl_f7,rcp_beef_green_bean_bowl,faq,,FAQ: keep it juicy,Do not cook the beef dry; add the sauce as soon as the pink is gone.,
+chk_beef_green_bean_bowl_f8,rcp_beef_green_bean_bowl,faq,,FAQ: leftovers,"Cool it and refrigerate within 2 hours; eat within 3 to 4 days (USDA FoodKeeper, leftovers). Reheat until steaming hot, with a splash of water so it does not dry out.",

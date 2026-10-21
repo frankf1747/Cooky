@@ -1,15 +1,42 @@
 id,ingredient_id,package_size,unit,price_cents,store_label,region,price_date
-prd_chicken_breast_600g,ing_chicken_breast,600,g,799,PLACEHOLDER store,Los Angeles,2026-10-20
-prd_spinach_170g,ing_spinach,170,g,229,PLACEHOLDER store,Los Angeles,2026-10-20
-prd_garlic_3ct,ing_garlic,3,count,149,PLACEHOLDER store,Los Angeles,2026-10-20
-prd_lemon_1ct,ing_lemon,1,count,69,PLACEHOLDER store,Los Angeles,2026-10-20
-prd_egg_12ct,ing_egg,12,count,349,PLACEHOLDER store,Los Angeles,2026-10-20
-prd_onion_1ct,ing_onion,1,count,99,PLACEHOLDER store,Los Angeles,2026-10-20
-prd_rice_900g,ing_rice,900,g,299,PLACEHOLDER store,Los Angeles,2026-10-20
-prd_soy_sauce_296ml,ing_soy_sauce,296,ml,249,PLACEHOLDER store,Los Angeles,2026-10-20
-prd_olive_oil_500ml,ing_olive_oil,500,ml,699,PLACEHOLDER store,Los Angeles,2026-10-20
-prd_butter_454g,ing_butter,454,g,449,PLACEHOLDER store,Los Angeles,2026-10-20
-prd_parmesan_170g,ing_parmesan,170,g,499,PLACEHOLDER store,Los Angeles,2026-10-20
-prd_scallion_6ct,ing_scallion,6,count,129,PLACEHOLDER store,Los Angeles,2026-10-20
-prd_frozen_peas_454g,ing_frozen_peas,454,g,199,PLACEHOLDER store,Los Angeles,2026-10-20
-prd_pasta_454g,ing_pasta,454,g,149,PLACEHOLDER store,Los Angeles,2026-10-20
+prd_chicken_breast_454g,ing_chicken_breast,454,g,749,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_chicken_thigh_454g,ing_chicken_thigh,454,g,749,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_spinach_170g,ing_spinach,170,g,229,"Trader Joe's (team estimate; not listed online)",Los Angeles,2026-10-21
+prd_garlic_bulb_10ct,ing_garlic,10,count,50,"Trader Joe's (team estimate; not listed online)",Los Angeles,2026-10-21
+prd_lemon_bag_6ct,ing_lemon,6,count,349,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_egg_12ct,ing_egg,12,count,599,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_onion_1ct,ing_onion,1,count,99,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_rice_1361g,ing_rice,1361,g,399,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_soy_sauce_520ml,ing_soy_sauce,520,ml,399,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_olive_oil_1000ml,ing_olive_oil,1000,ml,1099,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_butter_454g,ing_butter,454,g,299,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_parmesan_227g,ing_parmesan,227,g,299,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_scallion_6ct,ing_scallion,6,count,129,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_frozen_peas_454g,ing_frozen_peas,454,g,199,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_pasta_454g,ing_pasta,454,g,99,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_green_beans_680g,ing_green_beans,680,g,249,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_ginger_113g,ing_ginger,113,g,349,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_avocado_oil_500ml,ing_avocado_oil,500,ml,799,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_honey_340g,ing_honey,340,g,399,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_tomato_454g,ing_tomato,454,g,379,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_sugar_907g,ing_sugar,907,g,449,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_marinara_680g,ing_marinara,680,g,199,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_bell_pepper_340g,ing_bell_pepper,340,g,399,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_flour_tortilla_680g,ing_flour_tortilla,680,g,229,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_ground_beef_454g,ing_ground_beef,454,g,649,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_cheddar_227g,ing_cheddar,227,g,499,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_salmon_454g,ing_salmon,454,g,1099,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_potato_1ct,ing_potato,1,count,99,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_chickpeas_439g,ing_chickpeas,439,g,119,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_black_beans_439g,ing_black_beans,439,g,99,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_coconut_milk_399ml,ing_coconut_milk,399,ml,189,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_yellow_curry_sauce_312g,ing_yellow_curry_sauce,312,g,349,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_smoked_paprika_74g,ing_smoked_paprika,74,g,249,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_sesame_oil_148ml,ing_sesame_oil,148,ml,349,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_carrot_907g,ing_carrot,907,g,199,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_milk_1893ml,ing_milk,1893,ml,599,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_zucchini_680g,ing_zucchini,680,g,249,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_mushroom_227g,ing_mushroom,227,g,269,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_kale_283g,ing_kale,283,g,299,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_avocado_1ct,ing_avocado,1,count,149,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21
+prd_pico_de_gallo_340g,ing_pico_de_gallo,340,g,299,Trader Joe's (traderjoes.com list price),Los Angeles,2026-10-21

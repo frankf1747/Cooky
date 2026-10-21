@@ -1,16 +1,146 @@
 recipe_id,ingredient_id,qty,unit,optional,note
 rcp_lemon_garlic_chicken,ing_chicken_breast,400,g,false,
 rcp_lemon_garlic_chicken,ing_spinach,150,g,false,
-rcp_lemon_garlic_chicken,ing_garlic,3,count,false,cloves from one bulb count as one
+rcp_lemon_garlic_chicken,ing_garlic,3,count,false,cloves
 rcp_lemon_garlic_chicken,ing_lemon,1,count,false,
-rcp_lemon_garlic_chicken,ing_olive_oil,30,ml,false,
+rcp_lemon_garlic_chicken,ing_olive_oil,30,ml,false,about 2 tablespoons
 rcp_spinach_frittata,ing_egg,6,count,false,
 rcp_spinach_frittata,ing_spinach,100,g,false,
 rcp_spinach_frittata,ing_onion,1,count,false,
 rcp_spinach_frittata,ing_parmesan,40,g,true,
-rcp_spinach_frittata,ing_butter,15,g,false,
-rcp_egg_fried_rice,ing_rice,300,g,false,day-old cooked rice works best
+rcp_spinach_frittata,ing_milk,30,ml,true,about 2 tablespoons
+rcp_spinach_frittata,ing_butter,15,g,false,about 1 tablespoon
+rcp_egg_fried_rice,ing_rice,150,g,false,uncooked; cook ahead and chill (about 2 cups cooked)
 rcp_egg_fried_rice,ing_egg,3,count,false,
 rcp_egg_fried_rice,ing_scallion,3,count,false,
 rcp_egg_fried_rice,ing_frozen_peas,100,g,true,
-rcp_egg_fried_rice,ing_soy_sauce,30,ml,false,
+rcp_egg_fried_rice,ing_carrot,60,g,true,one small carrot
+rcp_egg_fried_rice,ing_soy_sauce,30,ml,false,about 2 tablespoons
+rcp_egg_fried_rice,ing_avocado_oil,15,ml,false,about 1 tablespoon
+rcp_egg_fried_rice,ing_sesame_oil,5,ml,true,1 teaspoon
+rcp_ginger_soy_chicken,ing_chicken_thigh,400,g,false,
+rcp_ginger_soy_chicken,ing_green_beans,200,g,false,
+rcp_ginger_soy_chicken,ing_ginger,15,g,false,a thumb-sized piece
+rcp_ginger_soy_chicken,ing_garlic,2,count,false,cloves
+rcp_ginger_soy_chicken,ing_soy_sauce,30,ml,false,about 2 tablespoons
+rcp_ginger_soy_chicken,ing_honey,20,g,false,about 1 tablespoon
+rcp_ginger_soy_chicken,ing_avocado_oil,15,ml,false,about 1 tablespoon
+rcp_ginger_soy_chicken,ing_rice,150,g,false,uncooked
+rcp_garlic_butter_pasta,ing_pasta,200,g,false,
+rcp_garlic_butter_pasta,ing_butter,30,g,false,about 2 tablespoons
+rcp_garlic_butter_pasta,ing_garlic,4,count,false,cloves
+rcp_garlic_butter_pasta,ing_frozen_peas,150,g,false,
+rcp_garlic_butter_pasta,ing_parmesan,40,g,false,
+rcp_garlic_butter_pasta,ing_lemon,1,count,true,zest and a squeeze
+rcp_tomato_egg_stir_fry,ing_tomato,300,g,false,about 3 medium tomatoes
+rcp_tomato_egg_stir_fry,ing_egg,4,count,false,
+rcp_tomato_egg_stir_fry,ing_scallion,2,count,false,
+rcp_tomato_egg_stir_fry,ing_sugar,8,g,false,about 2 teaspoons
+rcp_tomato_egg_stir_fry,ing_avocado_oil,20,ml,false,about 1 1/2 tablespoons
+rcp_tomato_egg_stir_fry,ing_soy_sauce,10,ml,true,2 teaspoons
+rcp_tomato_egg_stir_fry,ing_rice,150,g,false,uncooked
+rcp_mushroom_marinara_pasta,ing_pasta,200,g,false,
+rcp_mushroom_marinara_pasta,ing_marinara,340,g,false,half a jar
+rcp_mushroom_marinara_pasta,ing_mushroom,200,g,false,
+rcp_mushroom_marinara_pasta,ing_spinach,80,g,true,
+rcp_mushroom_marinara_pasta,ing_garlic,2,count,false,cloves
+rcp_mushroom_marinara_pasta,ing_olive_oil,15,ml,false,about 1 tablespoon
+rcp_mushroom_marinara_pasta,ing_parmesan,20,g,true,
+rcp_chicken_fajita_bowl,ing_chicken_breast,350,g,false,
+rcp_chicken_fajita_bowl,ing_bell_pepper,250,g,false,about 2 peppers
+rcp_chicken_fajita_bowl,ing_onion,1,count,false,
+rcp_chicken_fajita_bowl,ing_smoked_paprika,4,g,false,about 2 teaspoons
+rcp_chicken_fajita_bowl,ing_black_beans,439,g,false,"one can, drained"
+rcp_chicken_fajita_bowl,ing_rice,150,g,false,uncooked
+rcp_chicken_fajita_bowl,ing_avocado_oil,20,ml,false,about 1 1/2 tablespoons
+rcp_chicken_fajita_bowl,ing_pico_de_gallo,120,g,true,
+rcp_chicken_fajita_bowl,ing_avocado,1,count,true,
+rcp_beef_tacos,ing_ground_beef,300,g,false,
+rcp_beef_tacos,ing_flour_tortilla,270,g,false,about 6 small tortillas
+rcp_beef_tacos,ing_onion,1,count,false,
+rcp_beef_tacos,ing_smoked_paprika,5,g,false,about 2 1/2 teaspoons
+rcp_beef_tacos,ing_cheddar,60,g,false,
+rcp_beef_tacos,ing_pico_de_gallo,120,g,false,
+rcp_beef_tacos,ing_avocado,1,count,true,
+rcp_honey_garlic_salmon,ing_salmon,340,g,false,two fillets
+rcp_honey_garlic_salmon,ing_honey,30,g,false,about 1 1/2 tablespoons
+rcp_honey_garlic_salmon,ing_soy_sauce,30,ml,false,about 2 tablespoons
+rcp_honey_garlic_salmon,ing_garlic,3,count,false,cloves
+rcp_honey_garlic_salmon,ing_green_beans,200,g,false,
+rcp_honey_garlic_salmon,ing_avocado_oil,10,ml,false,2 teaspoons
+rcp_honey_garlic_salmon,ing_rice,150,g,false,uncooked
+rcp_zucchini_potato_hash,ing_potato,2,count,false,
+rcp_zucchini_potato_hash,ing_zucchini,200,g,false,one medium zucchini
+rcp_zucchini_potato_hash,ing_onion,1,count,false,
+rcp_zucchini_potato_hash,ing_egg,4,count,false,
+rcp_zucchini_potato_hash,ing_smoked_paprika,3,g,false,about 1 1/2 teaspoons
+rcp_zucchini_potato_hash,ing_olive_oil,30,ml,false,about 2 tablespoons
+rcp_zucchini_potato_hash,ing_cheddar,40,g,true,
+rcp_chickpea_coconut_curry,ing_chickpeas,439,g,false,"one can, drained"
+rcp_chickpea_coconut_curry,ing_coconut_milk,399,ml,false,one can
+rcp_chickpea_coconut_curry,ing_yellow_curry_sauce,150,g,false,about half a jar
+rcp_chickpea_coconut_curry,ing_onion,1,count,false,
+rcp_chickpea_coconut_curry,ing_garlic,2,count,false,cloves
+rcp_chickpea_coconut_curry,ing_ginger,10,g,false,
+rcp_chickpea_coconut_curry,ing_kale,120,g,false,
+rcp_chickpea_coconut_curry,ing_avocado_oil,15,ml,false,about 1 tablespoon
+rcp_chickpea_coconut_curry,ing_rice,150,g,false,uncooked
+rcp_oyakodon,ing_chicken_thigh,250,g,false,bite-size pieces
+rcp_oyakodon,ing_egg,3,count,false,
+rcp_oyakodon,ing_onion,1,count,false,thinly sliced
+rcp_oyakodon,ing_soy_sauce,30,ml,false,about 2 tablespoons
+rcp_oyakodon,ing_sugar,10,g,false,about 2 teaspoons
+rcp_oyakodon,ing_rice,150,g,false,uncooked
+rcp_oyakodon,ing_scallion,2,count,true,
+rcp_tamagoyaki_plate,ing_egg,4,count,false,
+rcp_tamagoyaki_plate,ing_sugar,8,g,false,about 2 teaspoons
+rcp_tamagoyaki_plate,ing_soy_sauce,10,ml,false,"2 teaspoons, divided"
+rcp_tamagoyaki_plate,ing_spinach,120,g,false,
+rcp_tamagoyaki_plate,ing_sesame_oil,5,ml,false,1 teaspoon
+rcp_tamagoyaki_plate,ing_avocado_oil,10,ml,false,2 teaspoons
+rcp_tamagoyaki_plate,ing_rice,150,g,false,uncooked
+rcp_tamagoyaki_plate,ing_scallion,1,count,true,
+rcp_japanese_curry_rice,ing_chicken_thigh,300,g,false,bite-size pieces
+rcp_japanese_curry_rice,ing_potato,1,count,false,cubed
+rcp_japanese_curry_rice,ing_carrot,100,g,false,one carrot
+rcp_japanese_curry_rice,ing_onion,1,count,false,
+rcp_japanese_curry_rice,ing_yellow_curry_sauce,150,g,false,about half a jar
+rcp_japanese_curry_rice,ing_coconut_milk,200,ml,false,about half a can
+rcp_japanese_curry_rice,ing_avocado_oil,15,ml,false,about 1 tablespoon
+rcp_japanese_curry_rice,ing_rice,150,g,false,uncooked
+rcp_black_bean_quesadillas,ing_flour_tortilla,270,g,false,about 6 small tortillas
+rcp_black_bean_quesadillas,ing_black_beans,439,g,false,"one can, drained"
+rcp_black_bean_quesadillas,ing_cheddar,100,g,false,
+rcp_black_bean_quesadillas,ing_bell_pepper,120,g,false,"about 1 pepper, diced"
+rcp_black_bean_quesadillas,ing_pico_de_gallo,120,g,true,
+rcp_black_bean_quesadillas,ing_avocado,1,count,true,
+rcp_mushroom_chicken_pasta,ing_pasta,200,g,false,
+rcp_mushroom_chicken_pasta,ing_chicken_breast,250,g,false,bite-size pieces
+rcp_mushroom_chicken_pasta,ing_mushroom,150,g,false,sliced
+rcp_mushroom_chicken_pasta,ing_milk,200,ml,false,
+rcp_mushroom_chicken_pasta,ing_butter,20,g,false,
+rcp_mushroom_chicken_pasta,ing_parmesan,40,g,false,
+rcp_mushroom_chicken_pasta,ing_garlic,2,count,false,cloves
+rcp_sesame_soy_noodles,ing_pasta,200,g,false,spaghetti as noodles
+rcp_sesame_soy_noodles,ing_carrot,80,g,false,cut in thin sticks
+rcp_sesame_soy_noodles,ing_zucchini,150,g,false,cut in thin sticks
+rcp_sesame_soy_noodles,ing_scallion,2,count,false,
+rcp_sesame_soy_noodles,ing_soy_sauce,30,ml,false,about 2 tablespoons
+rcp_sesame_soy_noodles,ing_sesame_oil,10,ml,false,2 teaspoons
+rcp_sesame_soy_noodles,ing_honey,10,g,false,about 1/2 tablespoon
+rcp_sesame_soy_noodles,ing_egg,2,count,true,
+rcp_shakshuka,ing_marinara,340,g,false,half a jar
+rcp_shakshuka,ing_egg,4,count,false,
+rcp_shakshuka,ing_bell_pepper,150,g,false,diced
+rcp_shakshuka,ing_onion,1,count,false,diced
+rcp_shakshuka,ing_smoked_paprika,3,g,false,about 1 1/2 teaspoons
+rcp_shakshuka,ing_olive_oil,15,ml,false,about 1 tablespoon
+rcp_shakshuka,ing_parmesan,20,g,true,
+rcp_beef_green_bean_bowl,ing_ground_beef,300,g,false,
+rcp_beef_green_bean_bowl,ing_green_beans,200,g,false,cut in short pieces
+rcp_beef_green_bean_bowl,ing_ginger,10,g,false,
+rcp_beef_green_bean_bowl,ing_garlic,2,count,false,cloves
+rcp_beef_green_bean_bowl,ing_soy_sauce,30,ml,false,about 2 tablespoons
+rcp_beef_green_bean_bowl,ing_honey,15,g,false,about 1 tablespoon
+rcp_beef_green_bean_bowl,ing_avocado_oil,10,ml,false,2 teaspoons
+rcp_beef_green_bean_bowl,ing_rice,150,g,false,uncooked

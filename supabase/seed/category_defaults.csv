@@ -1,13 +1,13 @@
 category,fridge_days,freezer_days,pantry_days,source
-produce,5,240,,PLACEHOLDER: replace from USDA FoodKeeper
-meat,2,270,,PLACEHOLDER: replace from USDA FoodKeeper
-seafood,2,180,,PLACEHOLDER: replace from USDA FoodKeeper
-dairy,7,90,,PLACEHOLDER: replace from USDA FoodKeeper
-eggs,21,,,PLACEHOLDER: replace from USDA FoodKeeper
-bakery,7,90,4,PLACEHOLDER: replace from USDA FoodKeeper
-frozen,,180,,PLACEHOLDER: replace from USDA FoodKeeper
-pantry,,,365,PLACEHOLDER: replace from USDA FoodKeeper
-snacks,,,60,PLACEHOLDER: replace from USDA FoodKeeper
-beverages,7,,180,PLACEHOLDER: replace from USDA FoodKeeper
-prepared,4,90,,PLACEHOLDER: replace from USDA FoodKeeper
-other,7,,,PLACEHOLDER: replace from USDA FoodKeeper
+produce,3,240,,USDA FSIS FoodKeeper #291 (leafy greens) and #273 (freezer) (shorter end of range; retrieved 2026-10-21)
+meat,1,90,,"USDA FSIS FoodKeeper #117 (raw poultry) and #43 (ground beef, freezer) (shorter end of range; retrieved 2026-10-21)"
+seafood,1,60,,USDA FSIS FoodKeeper #146 (fatty fish) (shorter end of range; retrieved 2026-10-21)
+dairy,7,30,,"USDA FSIS FoodKeeper #2 (buttermilk) and #33 (yogurt, freezer) (shorter end of range; retrieved 2026-10-21)"
+eggs,21,,,USDA FSIS FoodKeeper #21 (eggs in shell) (shorter end of range; retrieved 2026-10-21)
+bakery,,,3,"USDA FSIS FoodKeeper #574 (bread, pantry) (shorter end of range; retrieved 2026-10-21)"
+frozen,,240,,USDA FSIS FoodKeeper #273 (frozen vegetables) (shorter end of range; retrieved 2026-10-21)
+pantry,,,365,"USDA FSIS FoodKeeper #373 (canned goods, high acid) (shorter end of range; retrieved 2026-10-21)"
+snacks,,,60,USDA FSIS FoodKeeper #392 (potato chips) (shorter end of range; retrieved 2026-10-21)
+beverages,,,21,USDA FSIS FoodKeeper #404 (fruit juice in cartons) (shorter end of range; retrieved 2026-10-21)
+prepared,3,60,,USDA FSIS FoodKeeper #173 (leftovers) (shorter end of range; retrieved 2026-10-21)
+other,3,,,USDA FSIS FoodKeeper #174 (cooked leftovers without meat) (shorter end of range; retrieved 2026-10-21)
