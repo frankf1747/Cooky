@@ -194,9 +194,9 @@ Proof names an instrument from §13.1. A Must without a proof is a bug in this d
 | ID | Priority | Requirement | Proof |
 |---|---|---|---|
 | FRG1 | Must | Fridge items: ingredient, generic (RCT10) or dish (cooked leftovers), quantity, unit, location (`fridge`, `freezer`, `pantry`), added date, `expiresOn`, expiry source (`table`, `user`), origin (`receipt`, `manual`, `cooked`, `check`), status (`active`, `used`, `tossed`). | `contract` |
-| FRG2 | Must | Every quantity change is an inventory event in an append-only ledger (`delta`, `reason`: `purchase`, `cook`, `toss`, `adjust`, `move`). One confirmed action writes one batch of events sharing a `batch_key` (the request's idempotency key, or the cook event id); `(user_id, batch_key, seq)` is unique, so a repeated batch writes nothing. The item's current quantity is updated in the same transaction. Quantities never go below zero; a deduction larger than stock returns `409 { code: "insufficient_stock" }` with the shortfall so the user corrects it. | `unit`, `journey` |
+| FRG2 | Must | Every quantity change is an inventory event in an append-only ledger (`delta`, `reason`: `purchase`, `cook`, `toss`, `adjust`, `move`). One confirmed action writes one batch of events sharing a `batch_key` (the request's idempotency key, or the cook event id); `(user_id, batch_key, seq)` is unique, so a repeated batch writes nothing. The item's current quantity is updated in the same transaction. Quantities never go below zero; a deduction larger than stock returns `409 { code: "insufficient_stock" }` with the shortfall so the user corrects it (the database function reports the exact locked `available`, `requested` and `shortBy`). New items' `addedOn` is the user's local date (profile timezone), not the server's. | `unit`, `journey` |
 | FRG3 | Must | `GET /api/fridge` returns items sorted by `expiresOn`, the expiring-soon set (within `limits.alertLeadDays`), and *Cook now*: recipes ranked by how much of their ingredients are in stock, weighted to use soon-expiring items first, with missing ingredients listed. No model call (cheap path). | `unit`, `smoke` |
-| FRG4 | Must | Manual add, edit (quantity, location, date), mark used, mark tossed. Moving an item to the freezer recomputes `expiresOn` from the freezer shelf life unless the user set the date. | `unit` |
+| FRG4 | Must | Manual add, edit (quantity, location, date), mark used, mark tossed. Moving an item to the freezer recomputes `expiresOn` from the freezer shelf life unless the user set the date. An edit is one atomic call to `edit_fridge_item` carrying the quantity the user saw (`expectedQty`); if the item changed since, it returns `409 { code: "stale_quantity" }` and changes nothing. | `unit` |
 | FRG5 | Must | Every shelf-life date is labelled in the UI as a typical guide with its source, never as safety advice. | `human:review` |
 | FRG6 | Should | Weekly fridge check: one screen to mark each item keep, used or tossed, so the record matches reality. | `journey` |
 | FRG7 | Should | Waste and savings stats: tossed items and their estimated cost over the last 30 days. | `unit` |
@@ -390,7 +390,7 @@ the human-readable index; the code wins.
 - **Errors:** `{ "error": string, "status": number, "code": string, "requestId": string, "resetAt"?: string }`.
   `400` invalid input · `401` not signed in · `403` not allowed (`not_pro`) · `404` unknown or
   not yours · `409` conflict (`stale_version`, `already_confirmed`, `already_pro`,
-  `insufficient_stock`) · `413` too large · `422` valid but impossible (`infeasible`,
+  `insufficient_stock`, `stale_quantity`, `item_not_active`) · `413` too large · `422` valid but impossible (`infeasible`,
   `no_alternative`, `not_a_recipe`, `not_a_receipt`, `ai_refused`) · `429` quota (`resetAt`) ·
   `501` not implemented (every stub) · `502` upstream failed (`model_error`, `plan_invalid`,
   `parse_failed`) · `503` temporarily unavailable (`ai_paused` when the team spend cap is hit).
@@ -451,15 +451,15 @@ DELETE /api/receipts/{id}                -> 204
 GET    /api/fridge                       -> 200 FridgeView { items: FridgeItem[], expiringSoon: string[], cookNow: CookNowEntry[] }
 POST   /api/fridge/items                 // { ingredientId, qty, unit, location, expiresOn?, idempotencyKey }
                                          -> 201 { itemId }
-PATCH  /api/fridge/items/{id}            // { qty?, location?, expiresOn?, status?: "used"|"tossed", idempotencyKey }
-                                         -> 200 FridgeItem | 404 | 409 insufficient_stock
+PATCH  /api/fridge/items/{id}            // { qty?, location?, expiresOn?, status?: "used"|"tossed", expectedQty?, idempotencyKey }
+                                         -> 200 FridgeItem | 400 | 404 | 409 stale_quantity, item_not_active
 POST   /api/fridge/check                 // { updates: [{ itemId, action: "keep"|"used"|"tossed", qty? }], idempotencyKey }
                                          -> 200 FridgeView
 
 POST   /api/cook/{recipeId}/ask [pro]    // { question, sessionId? }
                                          -> 200 { answer, citations: [{ chunkId, kind: "step"|"faq", label }], needsClarification, notCovered, safetyTopic, sessionId, run } | 404 | 429 | 502
 POST   /api/cook/{recipeId}/done         // { servings, planId? }
-                                         -> 200 { cookEventId, deductions: [{ itemId, ingredientId, qty, unit, shortBy|null }], leftovers: { servings, expiresOn } }
+                                         -> 200 { cookEventId, deductions: [{ itemId, ingredientId, qty, unit, shortBy|null }], missing?: [{ ingredientId, qty, unit }], leftovers: { servings, expiresOn } }
 POST   /api/cook/events/{id}/confirm     // { deductions: [...], leftoverServings?, rating?, feedback? }
                                          -> 200 { fridge: FridgeView, proposals: PreferenceProposal[], run|null }   // repeat: 200, original result
                                          | 409 insufficient_stock

@@ -75,7 +75,8 @@ that already exists.
    so a key can never collide across features:
    - `rct:<receiptId>` for a receipt confirm (Receipts)
    - the cook event id `cke_…` for a cook confirm (Recipes & Cook)
-   - `man:<idempotencyKey>` for manual add, edit and toss (Fridge)
+   - `man:<idempotencyKey>` for manual add (Fridge)
+   - `edt:<idempotencyKey>` for one item edit, move, mark used or toss (Fridge, `edit_fridge_item`)
 7. **Changing a shared shape** (`spec/contract.ts`), a table or a function another role calls
    is a pull request reviewed by Frank **and** the role on the other side of the handoff.
 
@@ -147,6 +148,10 @@ that already exists.
 - **Build for demo day (v1):**
   1. `fridge.applyBatch` (wraps the tested `apply_inventory_batch` database function), `view`,
      `addItem`, `updateItem` (edit, move to freezer with recomputed date, toss) (FRG1–FRG4).
+     `updateItem` calls the tested `edit_fridge_item` database function, which does the whole
+     edit in one locked step against `expectedQty`, key `edt:<idempotencyKey>` (see
+     docs/TECHNICAL.md, "Fridge writes"). `expectedQty` is optional in the contract only until
+     `updateItem` uses it; the database function requires it.
   2. The fridge page from the journey map: doors, shelves, days-left badges, the Use soon list,
      and Cook now plates opening a dish card (FRG3, FRG5).
   3. `cookNow` (ranked by stock coverage, soonest-expiring first), `expiringSoon`, and

@@ -416,6 +416,8 @@ export const FridgeItemPatch = z.object({
   location: Location.optional(),
   expiresOn: DateStr.optional(),
   status: z.enum(["used", "tossed"]).optional(),
+  /** The quantity the user saw; a different current quantity answers 409 stale_quantity (edit_fridge_item). */
+  expectedQty: Qty.optional(),
   idempotencyKey: z.string().min(8),
 });
 export const FridgeCheck = z.object({
@@ -508,6 +510,8 @@ export const CookDone = z.object({ servings: z.number().int().min(L.servingsMin)
 export const CookDoneResponse = z.object({
   cookEventId: id("cke"),
   deductions: z.array(Deduction),
+  /** Ingredients the recipe needs with no fridge item at all (a Deduction needs an item). */
+  missing: z.array(z.object({ ingredientId: id("ing"), qty: Qty, unit: Unit })).optional(),
   leftovers: z.object({ servings: z.number().int().nonnegative(), expiresOn: DateStr }),
 });
 export const CookConfirm = z.object({
