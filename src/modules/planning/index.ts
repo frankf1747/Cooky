@@ -8,10 +8,18 @@ import { runAi } from "@/platform/ai";
 import { reader, writer } from "@/platform/db";
 import { ApiError, badRequest, notFound, notImplemented, unprocessable } from "@/platform/errors";
 import { loadPlanningData } from "./data";
-import { findFeasibleSets } from "./feasible";
+import { findFeasibleSets, type RelaxHint } from "./feasible";
 import { PLANNER_SYSTEM, expiringSoon, plannerContent, validateChoice } from "./planner";
 import { buildShoppingList } from "./shopping";
 import { findByKey, insertDraft, listSummaries, markSaved, readPlan } from "./store";
+
+const DROP_REASON: Partial<Record<RelaxHint, string>> = {
+  maxMinutes: "it takes longer than your max minutes",
+  excludedIngredients: "it uses an ingredient you excluded",
+  allergens: "it contains an allergen you filter out",
+  equipment: "it needs equipment you don't have",
+  preferences: "it goes against one of your confirmed preferences",
+};
 
 /** PLN1–PLN6: code finds and prices feasible sets, the planner picks one, the draft is stored. */
 export async function createPlan(userId: string, input: z.infer<typeof PlanCreate>, requestId: string): Promise<{ plan: PlanDraft; run: RunInfo }> {
@@ -25,7 +33,15 @@ export async function createPlan(userId: string, input: z.infer<typeof PlanCreat
   const mustUse = input.mustUseItemIds ?? [];
   if (mustUse.some((id) => !data.fridge.some((f) => f.id === id))) throw notFound();
 
-  const result = findFeasibleSets({ ...data, servings: input.servings, budgetCents: input.budgetCents, maxMinutes: input.maxMinutes, meals: input.meals, mustUseItemIds: mustUse });
+  // Picked recipes (step 3): visible to this user, and no more of them than meals.
+  const picks = [...new Set(input.mustIncludeRecipeIds ?? [])];
+  if (picks.some((id) => !data.recipes.some((r) => r.id === id))) throw notFound();
+  if (picks.length > input.meals) throw badRequest("invalid_input", `You picked ${picks.length} recipes for ${input.meals} meals`);
+
+  const result = findFeasibleSets({
+    ...data, servings: input.servings, budgetCents: input.budgetCents, maxMinutes: input.maxMinutes, meals: input.meals,
+    mustUseItemIds: mustUse, mustIncludeRecipeIds: picks,
+  });
   if (!result.ok) {
     throw unprocessable("infeasible", "No set of recipes fits these constraints", { cheapestFeasibleCents: result.cheapestFeasibleCents, relax: result.relax });
   }
@@ -42,6 +58,7 @@ export async function createPlan(userId: string, input: z.infer<typeof PlanCreat
     expiring: expiringSoon(data.fridge, data.timezone, targets.limits.alertLeadDays).map((f) => ({ ...f, name: ingredientName.get(f.ingredientId) ?? f.ingredientId })),
     preferences: [...data.hardPreferences.map((p) => ({ ...p, kind: "hard" as const })), ...data.softPreferences.map((p) => ({ ...p, kind: "soft" as const }))],
     wishes: input.wishes,
+    picked: picks.filter((id) => !result.droppedPicks.some((d) => d.recipeId === id)),
   };
 
   let lastViolations: string[] = [];
@@ -97,6 +114,7 @@ export async function createPlan(userId: string, input: z.infer<typeof PlanCreat
     assumptions: [
       `Prices are typical package prices checked on ${data.priceAsOf}; taxes are not included.`,
       "Fridge stock is what you confirmed in Cooky; staples you listed are assumed on hand.",
+      ...result.droppedPicks.map((d) => `${data.recipes.find((r) => r.id === d.recipeId)!.title} was left out: ${DROP_REASON[d.because] ?? "it breaks one of your settings"}.`),
       ...choice.assumptions.filter((a) => a.trim()),
     ],
   };
@@ -111,6 +129,8 @@ export async function createPlan(userId: string, input: z.infer<typeof PlanCreat
 export type PlanFormData = {
   defaults: { servings: number; budgetCents: number; maxMinutes: number; meals: number };
   fridgeItems: { id: string; name: string; qty: number; unit: string; expiresOn: string | null }[];
+  /** Recipes the user can pick to always include (curated and their own). */
+  recipes: { id: string; title: string; minutes: number }[];
   recentPlans: z.infer<typeof PlanSummary>[];
 };
 
@@ -120,14 +140,16 @@ const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n
 export async function planFormData(userId: string): Promise<PlanFormData> {
   const db = await reader();
   const L = targets.limits;
-  const [profileRes, fridgeRes, recentPlans] = await Promise.all([
+  const [profileRes, fridgeRes, recipeRes, recentPlans] = await Promise.all([
     db.from("profiles").select("household_size, budget_cents_default, max_minutes_default").eq("user_id", userId).maybeSingle(),
     db.from("fridge_items").select("id, name, qty, unit, expires_on")
       .eq("user_id", userId).eq("status", "active").eq("kind", "ingredient").order("expires_on", { ascending: true }),
+    db.from("recipes").select("id, title, minutes").or(`owner_id.is.null,owner_id.eq.${userId}`).order("title", { ascending: true }),
     listSummaries(db, userId),
   ]);
   if (profileRes.error) throw new Error(`planning: loading profile failed: ${profileRes.error.message}`);
   if (fridgeRes.error) throw new Error(`planning: loading fridge failed: ${fridgeRes.error.message}`);
+  if (recipeRes.error) throw new Error(`planning: loading recipes failed: ${recipeRes.error.message}`);
   const p = profileRes.data as { household_size: number; budget_cents_default: number; max_minutes_default: number } | null;
   return {
     // No profile yet: the database defaults (2 people, $40, 30 minutes).
@@ -139,6 +161,7 @@ export async function planFormData(userId: string): Promise<PlanFormData> {
     },
     fridgeItems: ((fridgeRes.data ?? []) as { id: string; name: string; qty: number | string; unit: string; expires_on: string | null }[])
       .map((f) => ({ id: f.id, name: f.name, qty: Number(f.qty), unit: f.unit, expiresOn: f.expires_on })),
+    recipes: ((recipeRes.data ?? []) as { id: string; title: string; minutes: number }[]).map((r) => ({ id: r.id, title: r.title, minutes: Number(r.minutes) })),
     recentPlans: recentPlans.slice(0, 5),
   };
 }

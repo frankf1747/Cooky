@@ -15,7 +15,8 @@ user's hard constraints (budget, time, excluded ingredients, allergens) and pric
 3. Give each meal one or two short sentences saying why it was chosen.
 4. List in usedPreferenceIds only preference ids (prf_...) you actually followed, and in
    usedFridgeItemIds only fridge item ids (itm_...) that the chosen set uses.
-5. Put anything you assumed in assumptions (for example "you have basic pantry staples").
+5. Recipes listed in <picked_by_user> were chosen by the user: say so in their reason.
+6. Put anything you assumed in assumptions (for example "you have basic pantry staples").
 
 Rules:
 - Use only ids that appear in the data below. Never invent ids, prices, quantities or recipes.
@@ -33,6 +34,8 @@ export type PlannerContext = {
   expiring: (FridgeStock & { name: string })[];
   preferences: (HardPreference & { kind: "hard" | "soft" })[];
   wishes?: string;
+  /** Recipes the user picked themselves; every listed set already contains them. */
+  picked?: string[];
 };
 
 /** Untrusted text cannot close its own data block or open a new one. */
@@ -59,6 +62,7 @@ export function plannerContent(ctx: PlannerContext): ContentBlock[] {
     `<feasible_sets>\n${sets}\n</feasible_sets>`,
     `<request>\nservings: ${ctx.servings}\nbudget: ${formatUsd(ctx.budgetCents)}\nmax minutes per meal: ${ctx.maxMinutes}\nmeals: ${ctx.sets[0]?.recipeIds.length ?? 0}\n</request>`,
     `<recipes>\n${recipes}\n</recipes>`,
+    `<picked_by_user>\n${ctx.picked?.length ? ctx.picked.join(", ") : "none"}\n</picked_by_user>`,
     `<expiring_fridge_items>\n${expiring}\n</expiring_fridge_items>`,
     `<preferences>\n${prefs}\n</preferences>`,
     `<user_wishes>\n${ctx.wishes ? asData(ctx.wishes) : "none"}\n</user_wishes>`,

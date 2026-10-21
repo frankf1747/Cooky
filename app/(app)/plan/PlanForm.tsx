@@ -9,15 +9,18 @@ import { formatQty, planErrorMessage, type ApiErrorBody } from "./ui";
 
 type Limits = { servingsMin: number; servingsMax: number; mealsMin: number; mealsMax: number; wishesMaxChars: number };
 
+const CHIP_ON = "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900";
+const CHIP_OFF = "border-zinc-300 dark:border-zinc-700";
 const input = "rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900";
 
-export function PlanForm({ data, limits }: { data: PlanFormData; limits: Limits }) {
+export function PlanForm({ data, limits, preselected = [] }: { data: PlanFormData; limits: Limits; preselected?: string[] }) {
   const router = useRouter();
   const d = data.defaults;
   const [servings, setServings] = useState(d.servings);
   const [budget, setBudget] = useState((d.budgetCents / 100).toFixed(2));
   const [maxMinutes, setMaxMinutes] = useState(d.maxMinutes);
-  const [meals, setMeals] = useState(d.meals);
+  const [picked, setPicked] = useState<string[]>(preselected);
+  const [meals, setMeals] = useState(Math.min(limits.mealsMax, Math.max(d.meals, preselected.length)));
   const [wishes, setWishes] = useState("");
   const [mustUse, setMustUse] = useState<string[]>([]);
   // One key per distinct request: a retry of the same choices reuses it, so it can never create two plans.
@@ -46,6 +49,7 @@ export function PlanForm({ data, limits }: { data: PlanFormData; limits: Limits 
           servings, budgetCents, maxMinutes, meals,
           ...(wishes.trim() ? { wishes: wishes.trim() } : {}),
           ...(mustUse.length ? { mustUseItemIds: mustUse } : {}),
+          ...(picked.length ? { mustIncludeRecipeIds: picked } : {}),
           idempotencyKey: key,
         }),
       });
@@ -74,7 +78,7 @@ export function PlanForm({ data, limits }: { data: PlanFormData; limits: Limits 
           Dinners
           <select className={input} value={meals} onChange={(e) => changed(setMeals)(Number(e.target.value))} disabled={busy}>
             {Array.from({ length: limits.mealsMax - limits.mealsMin + 1 }, (_, i) => limits.mealsMin + i).map((n) => (
-              <option key={n} value={n}>{n}</option>
+              <option key={n} value={n} disabled={n < picked.length}>{n}</option>
             ))}
           </select>
         </label>
@@ -89,6 +93,35 @@ export function PlanForm({ data, limits }: { data: PlanFormData; limits: Limits 
       </div>
 
       <fieldset className="flex flex-col gap-2 text-sm">
+        <legend className="mb-1">
+          Dishes you want this week <span className="text-zinc-500">(optional · Cooky fills the other {Math.max(0, meals - picked.length)})</span>
+        </legend>
+        {data.recipes.length === 0 ? (
+          <p className="text-zinc-500">No recipes in the library yet.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {data.recipes.map((r) => {
+              const on = picked.includes(r.id);
+              const full = !on && picked.length >= meals;
+              return (
+                <label key={r.id} className={`relative flex items-center gap-2 rounded-full border px-3 py-1 ${on ? CHIP_ON : CHIP_OFF} ${full ? "cursor-not-allowed opacity-40" : "cursor-pointer"}`}>
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={on}
+                    disabled={busy || full}
+                    onChange={(e) => changed(setPicked)(e.target.checked ? [...picked, r.id] : picked.filter((x) => x !== r.id))}
+                  />
+                  {r.title} <span className="opacity-70">· {r.minutes} min</span>
+                </label>
+              );
+            })}
+          </div>
+        )}
+        {picked.length > 0 && picked.length >= meals && <p className="text-xs text-zinc-500">You picked a dish for every dinner. Add a dinner to let Cooky suggest one.</p>}
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-2 text-sm">
         <legend className="mb-1">Use up from your fridge <span className="text-zinc-500">(optional)</span></legend>
         {data.fridgeItems.length === 0 ? (
           <p className="text-zinc-500">
@@ -98,7 +131,7 @@ export function PlanForm({ data, limits }: { data: PlanFormData; limits: Limits 
         ) : (
           <div className="flex flex-wrap gap-2">
             {data.fridgeItems.map((f) => (
-              <label key={f.id} className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1 ${mustUse.includes(f.id) ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900" : "border-zinc-300 dark:border-zinc-700"}`}>
+              <label key={f.id} className={`relative flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1 ${mustUse.includes(f.id) ? CHIP_ON : CHIP_OFF}`}>
                 <input
                   type="checkbox"
                   className="sr-only"

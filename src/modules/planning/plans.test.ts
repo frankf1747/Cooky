@@ -150,6 +150,32 @@ describe("createPlan", () => {
   });
 });
 
+describe("createPlan with picked recipes (mustIncludeRecipeIds)", () => {
+  it("keeps the user's pick even when a cheaper plan exists, and tells the planner", async () => {
+    const { plan } = await planning.createPlan(U1, body({ mustIncludeRecipeIds: ["rcp_rice"] }), "req_1");
+    expect(plan.meals.map((m) => m.recipeId)).toContain("rcp_rice");
+    expect(JSON.stringify(transport.mock.calls[0][0])).toContain("<picked_by_user>\\nrcp_rice\\n</picked_by_user>");
+  });
+
+  it("a pick that breaks a hard constraint is left out and the plan says why", async () => {
+    const { plan } = await planning.createPlan(U1, body({ maxMinutes: 20, mustIncludeRecipeIds: ["rcp_chicken"] }), "req_1");
+    expect(plan.meals.map((m) => m.recipeId)).not.toContain("rcp_chicken");
+    expect(plan.assumptions).toContain("Chicken was left out: it takes longer than your max minutes.");
+  });
+
+  it("an unknown or foreign recipe pick is 404", async () => {
+    tables.recipes.push({ id: "rcp_theirs", owner_id: U2, title: "Theirs", base_servings: 2, minutes: 10, equipment: [] });
+    await expect(planning.createPlan(U1, body({ mustIncludeRecipeIds: ["rcp_theirs"] }), "req_1")).rejects.toMatchObject({ status: 404 });
+    await expect(planning.createPlan(U1, body({ mustIncludeRecipeIds: ["rcp_nope"] }), "req_2")).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("more picks than meals is 400", async () => {
+    await expect(planning.createPlan(U1, body({ meals: 2, mustIncludeRecipeIds: ["rcp_chicken", "rcp_omelette", "rcp_rice"] }), "req_1"))
+      .rejects.toMatchObject({ status: 400 });
+    expect(transport).not.toHaveBeenCalled();
+  });
+});
+
 describe("getPlan, listPlans, savePlan", () => {
   it("reads back the saved version, lists it, and saving is immutable and idempotent", async () => {
     const { plan } = await planning.createPlan(U1, body(), "req_1");

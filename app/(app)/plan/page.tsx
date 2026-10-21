@@ -7,11 +7,15 @@ import { formatUsd } from "@/platform/money";
 import { planFormData } from "@/modules/planning";
 import { PlanForm } from "./PlanForm";
 
-export default async function PlanPage() {
+export default async function PlanPage(props: PageProps<"/plan">) {
   const user = await getSessionUser();
   if (!user) redirect("/login");
   const data = await planFormData(user.id);
   const L = targets.limits;
+  // The library can link here as /plan?recipes=rcp_a,rcp_b; unknown ids are ignored.
+  const param = (await props.searchParams).recipes;
+  const preselected = (Array.isArray(param) ? param.join(",") : (param ?? ""))
+    .split(",").filter((id) => data.recipes.some((r) => r.id === id)).slice(0, L.mealsPerPlanMax);
 
   return (
     <section className="mx-auto w-full max-w-3xl p-6">
@@ -22,6 +26,7 @@ export default async function PlanPage() {
 
       <PlanForm
         data={data}
+        preselected={preselected}
         limits={{ servingsMin: L.servingsMin, servingsMax: L.servingsMax, mealsMin: L.mealsPerPlanMin, mealsMax: L.mealsPerPlanMax, wishesMaxChars: L.wishesMaxChars }}
       />
 
