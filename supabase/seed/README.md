@@ -1,4 +1,4 @@
-# Seed data (owner: Data & Proof)
+# Seed data (owner: Recipes & Cook; Data & Proof and Receipts contribute rows by pull request)
 
 The recipe library, ingredient catalog, prices and shelf life Cooky plans with. Edit these CSVs
 (in a spreadsheet is fine: export as CSV, UTF-8, keep the header row exactly as documented),
@@ -43,7 +43,10 @@ One row per package you can buy. `package_size` is in `unit`, which must equal t
 
 ### `recipes.csv`
 
-Columns: `id,title,base_servings,minutes,equipment,tags,source_url,source_label`
+Columns: `id,title,base_servings,minutes,equipment,tags,source_url,source_label,image_url`
+
+`image_url` is optional (https only) and shows on library cards. Tags drive the step-3 filters:
+use `quick`, `vegetarian`, `one-pan`, `high-protein` and cuisine names consistently.
 
 ### `recipe_ingredients.csv`
 
@@ -53,8 +56,9 @@ Quantities are for `base_servings`. `optional` is `true` or `false`.
 
 ### `recipe_chunks.csv`
 
-Columns: `id,recipe_id,kind,step_no,label,text`
+Columns: `id,recipe_id,kind,step_no,label,text,timer_seconds`
 
 The cooking assistant answers only from these. `kind` is `step` (with `step_no`, label
-`Step N`) or `faq` (no `step_no`, label like `FAQ: no wok`). Write FAQs for the substitutions
+`Step N`, and `timer_seconds` when the step is timed), `tip` (what to prep while step `step_no`
+runs, label `Tip`) or `faq` (no `step_no`, label like `FAQ: no wok`). Write FAQs for the substitutions
 and questions a beginner asks; say what does *not* work, too.

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  Chunk,
   CookAnswer,
   ErrorBody,
   FridgeView,
@@ -7,6 +8,7 @@ import {
   PlanDraft,
   ReceiptDraft,
   ReceiptExtraction,
+  RecipeSummary,
 } from "./contract";
 
 const plan = {
@@ -159,5 +161,34 @@ describe("contract schemas", () => {
       lines: [{ raw: "MILK", kind: "food", ingredientId: null, category: "dairy", name: "Milk", qty: 1, unit: "gal", packageCount: 1, priceCents: 499, confidence: "medium" }],
     });
     expect(out.success).toBe(true);
+  });
+});
+
+describe("journey-map fields (2026-10-21)", () => {
+  const plan = { servings: 2, budgetCents: 4000, maxMinutes: 30, meals: 3, idempotencyKey: "key-12345678" };
+
+  it("lets a plan request carry the recipes the user picked in the library", () => {
+    const parsed = PlanCreate.safeParse({ ...plan, mustIncludeRecipeIds: ["rcp_spinach_frittata"] });
+    expect(parsed.success && parsed.data.mustIncludeRecipeIds).toEqual(["rcp_spinach_frittata"]);
+  });
+
+  it("refuses more picked recipes than meals in the plan's upper limit", () => {
+    const tooMany = ["rcp_a", "rcp_b", "rcp_c", "rcp_d", "rcp_e", "rcp_f"];
+    expect(PlanCreate.safeParse({ ...plan, mustIncludeRecipeIds: tooMany }).success).toBe(false);
+  });
+
+  it("accepts a timed step and a prep tip as recipe chunks", () => {
+    const base = { id: "chk_x_s2", recipeId: "rcp_x", label: "Step 2", text: "Sear the chicken." };
+    expect(Chunk.safeParse({ ...base, kind: "step", stepNo: 2, timerSeconds: 480 }).success).toBe(true);
+    expect(Chunk.safeParse({ ...base, id: "chk_x_t2", kind: "tip", stepNo: 2, label: "Tip", timerSeconds: null }).success).toBe(true);
+    expect(Chunk.safeParse({ ...base, kind: "step", stepNo: 2, timerSeconds: 0 }).success).toBe(false);
+  });
+
+  it("gives recipe summaries an optional image", () => {
+    const r = { id: "rcp_x", title: "X", minutes: 20, baseServings: 2, tags: [], equipment: [], custom: false };
+    expect(RecipeSummary.safeParse({ ...r, imageUrl: null }).success).toBe(true);
+    const withImage = RecipeSummary.safeParse({ ...r, imageUrl: "https://example.com/x.jpg" });
+    expect(withImage.success && withImage.data.imageUrl).toBe("https://example.com/x.jpg");
+    expect(RecipeSummary.safeParse({ ...r, imageUrl: "not a url" }).success).toBe(false);
   });
 });

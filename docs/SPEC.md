@@ -163,7 +163,7 @@ Proof names an instrument from §13.1. A Must without a proof is a bug in this d
 
 | ID | Priority | Requirement | Proof |
 |---|---|---|---|
-| PLN1 | Must | Input: servings (`limits.servingsMin`–`servingsMax`), budget in cents, max minutes per meal, number of meals (`limits.mealsPerPlanMin`–`mealsPerPlanMax`), optional wishes text (≤ `limits.wishesMaxChars`), optional must-use fridge item ids, idempotency key. Defaults come from the profile. A repeat with the same idempotency key returns the original result. | `contract`, `unit` |
+| PLN1 | Must | Input: servings (`limits.servingsMin`–`servingsMax`), budget in cents, max minutes per meal, number of meals (`limits.mealsPerPlanMin`–`mealsPerPlanMax`), optional wishes text (≤ `limits.wishesMaxChars`), optional must-use fridge item ids, optional `mustIncludeRecipeIds` (recipes the user picked in the library; the planner fills the remaining meals and may not drop them unless they break a hard constraint), idempotency key. Defaults come from the profile. A repeat with the same idempotency key returns the original result. | `contract`, `unit` |
 | PLN2 | Must | Code filters recipes by hard constraints (excluded ingredients, allergen tags, equipment, minutes) and enumerates feasible sets of distinct recipes whose shopping cost fits the budget. Confirmed hard preferences count as hard constraints. | `eval:plan` |
 | PLN3 | Must | Shopping math, all in `src/modules/planning/shopping.ts`: scale each recipe by servings ÷ base servings; merge by ingredient id and unit; subtract confirmed fridge stock and staples; buy = max(0, need − have); packages = ceil(buy ÷ package size) using the cheapest product that covers it; cost = packages × package price in integer cents; leftover = have + packages × size − need. Example: need 700 g, have 200 g, 400 g packs at 500 cents → 2 packs, 1000 cents, 300 g left. | `eval:calc` |
 | PLN4 | Must | When no feasible set exists, return `422 { code: "infeasible" }` with the cheapest feasible total for the constraints if any, and which constraint to relax. Never show a plan that breaks a hard constraint. | `eval:plan` |
@@ -205,7 +205,7 @@ Proof names an instrument from §13.1. A Must without a proof is a bug in this d
 
 | ID | Priority | Requirement | Proof |
 |---|---|---|---|
-| CK1 | Must | Cook mode shows ingredients scaled to the chosen servings, then one step at a time. Available to Free users (steps only). | `journey` |
+| CK1 | Must | Cook mode shows ingredients scaled to the chosen servings, then one step at a time, with a timer for steps that carry `timer_seconds` and the step's prep `tip` chunk when there is one. Available to Free users (steps, timers and tips). | `journey` |
 | CK2 | Must | *Done* calls `POST /api/cook/{recipeId}/done` → proposed deductions per ingredient (from fridge items, oldest `expiresOn` first) and a proposed leftovers dish with expiry from the dish shelf-life default. Nothing is written. | `unit` |
 | CK3 | Must | `POST /api/cook/events/{id}/confirm` with edited deductions, optional leftovers servings, optional rating (1–5) and optional feedback text applies all events in one transaction. The cook event id is the idempotency key: a repeat returns the first result with `200`. For Pro users, feedback goes to `preference_proposer`; Free users' feedback is stored and the response has `proposals: []` and `run: null` (preference proposals are a Pro feature, `quotas.free` has none). | `unit`, `journey` |
 
@@ -520,9 +520,9 @@ consumption) are Postgres functions callable only by the server role. Account de
 | `profiles` | `user_id` PK, household_size, budget_cents_default, max_minutes_default, equipment[], excluded_ingredient_ids[], allergen_tags[], staple_ingredient_ids[], timezone, email_alerts, onboarded_at | RLS own |
 | `ingredients` | id, owner_id (null = catalog), name, aliases[], category, base_unit, allergen_tags[], shelf_life_days jsonb `{fridge,freezer,pantry}`, shelf_life_source, plausible_max_qty | trigram index on name + aliases; RLS: catalog readable by all, custom by owner |
 | `products` | id, ingredient_id, package_size, unit, price_cents, store_label, region, price_date | by ingredient_id |
-| `recipes` | id, owner_id (null = curated), title, base_servings, minutes, equipment[], tags[], source_url, source_label, imported_at | RLS: curated public, imported own |
+| `recipes` | id, owner_id (null = curated), title, base_servings, minutes, equipment[], tags[], source_url, source_label, image_url, imported_at | RLS: curated public, imported own |
 | `recipe_ingredients` | recipe_id, ingredient_id, qty, unit, optional, note | by recipe_id, by ingredient_id |
-| `recipe_chunks` | id, recipe_id, kind (`step`, `faq`), step_no, label, text, tsv | GIN on `tsv`; by recipe_id |
+| `recipe_chunks` | id, recipe_id, kind (`step`, `faq`, `tip`), step_no, label, text, timer_seconds, tsv | GIN on `tsv`; by recipe_id |
 | `plans` | id, user_id, status (`draft`, `saved`), current_version, idempotency_key | unique (user_id, idempotency_key) |
 | `plan_versions` | id, plan_id, version, inputs jsonb, meals jsonb, shopping jsonb, total_cents, price_as_of, run_id, checklist jsonb | unique (plan_id, version); immutable once saved |
 | `receipts` | id, user_id, status (`parsing`, `parsed`, `failed`, `confirmed`), plan_id, store, purchased_on, image_path (null after confirm), failure_reason, run_id, confirm_idempotency_key | by user, status |
@@ -712,11 +712,11 @@ Only what teammates need to start in parallel. Everything else waits.
 | S4 | Platform: `handler.ts`, auth, `db.ts` (reader + writer), `ai.ts` with `AI_MODE=fake` fixtures, quotas, units, money, ids, errors | a stub route answers through the wrapper with a request id | ✅ done |
 | S5 | Every v1 route file returns `501`; every module's `index.ts` exports typed stubs for the joins in §14.3 | `curl` shows `501` everywhere except `/api/health` | ✅ done |
 | S6 | App shell: auth pages, nav, one page per v1 feature with "not implemented" panels | a signed-in user can click through every page | ✅ done |
-| S7 | Deployed on Vercel with Supabase and Stripe test keys; Stripe webhook endpoint registered | the public URL serves `/api/health` | ⬜ Frank: needs the Supabase, Vercel and Stripe accounts (TECHNICAL, Build order step 1) |
+| S7 | Deployed on Vercel with Supabase and Stripe test keys; Stripe webhook endpoint registered | the public URL serves `/api/health` | ◐ Supabase hosted project live, schema pushed and seeded (2026-10-20); Vercel and Stripe still to do |
 | S8 | Team harness: `.claude/skills/cooky-module/SKILL.md`, `.claude/agents/contract-reviewer.md`, seed CSV templates with a `README.md` | a teammate's Claude Code follows the skill on a stub | ✅ done |
 | S9 | CI running checks 0–1 on push | a PR shows a green check | ✅ written; runs once the repo is on GitHub |
 
-**In parallel, no code needed (Data & Proof, Day 0 → Day 1 H3):** fill the seed CSVs from
+**In parallel, no code needed (Data & Proof with Recipes & Cook, Day 0 → Day 1 H3):** fill the seed CSVs from
 `supabase/seed/README.md`: recipes with steps and FAQs, ingredients with aliases, products and
 prices from one Los Angeles store with the date, shelf life per ingredient, category defaults
 with their source. Photograph real receipts (card digits covered). Write the smoke cases:
@@ -729,13 +729,13 @@ Sizes: `workload.smokeSets`.
 |---|---|---|---|
 | Day 1 H0–H2 | Skeleton lands; coders read §0 and their requirement IDs | everyone runs `main` locally and sees `501`s | Frank |
 | Day 1 H2–H5 | Accounts, onboarding, Stripe checkout and webhook | `scn:billing` success and cancel pass on the public URL | Frank |
-| | Seed load, fridge ledger, fridge page with manual add and expiry | items persist; `GET /api/fridge` sorts by expiry | Receipts & Fridge |
+| | Fridge ledger, fridge page with manual add and expiry | items persist; `GET /api/fridge` sorts by expiry | Fridge |
 | | Shopping math and feasible sets, no AI | `eval:calc` smoke set passes exactly | Plan & Shop |
-| | Recipe pages and cook-mode steps | recipes render with scaled ingredients | Recipes & Cook |
+| | Catalog grown past the placeholders; recipe library with search and filters; cook-mode steps | `check:seed` passes; the library lists every recipe | Recipes & Cook |
 | Day 1 H5–H8 | Planner call, plan page, save | a real plan with a correct list on the public URL | Plan & Shop |
-| | Receipt reader, review screen, confirm into the fridge | a real receipt stocks the fridge on the public URL | Receipts & Fridge |
+| | Camera and upload, receipt reader, review screen, confirm into the fridge | a real receipt stocks the fridge on the public URL | Receipts |
 | **Day 1 gate** | New account on the public URL: sign up → test payment → Pro → plan → save → read back; one receipt → fridge | shown live, not described | all |
-| Day 2 H0–H3 | Cook *Done* → deductions and leftovers confirm; *Cook now* and expiring-soon | the fridge changes only after confirm | Receipts & Fridge |
+| Day 2 H0–H3 | Cook *Done* → deductions and leftovers confirm; *Cook now* and expiring-soon | the fridge changes only after confirm | Fridge (+ Recipes & Cook) |
 | | Cooking assistant with citations | cook smoke set meets its targets | Recipes & Cook |
 | | Swap and preferences (only if the Day 1 gate passed) | a confirmed "too dry" changes the next plan | Plan & Shop |
 | Day 2 H3–H5 | **Feature freeze.** Smoke evals, `scn:billing`, `scn:authz`; fix blockers only; 10-minute classmate tests | results saved under `eval/runs/` | Data & Proof signs off |
@@ -750,14 +750,18 @@ teammates who own data, evaluation and the story.
 |---|---|
 | **Platform** (Frank) | `src/platform/**` (incl. `email.ts`), `src/ui/**`, `spec/contract.ts`, `supabase/migrations/**`, the seed loader script, `src/modules/{billing,alerts}/**`, `app/(marketing)/**`, `app/(auth)/**`, `app/(app)/{onboarding,settings,billing,alerts}/**`, `app/layout.tsx`, `app/api/{health,me,profile,billing,stripe,cron,alerts}/**`, `.claude/**`, `docs/{SPEC,DESIGN,TECHNICAL}.md`, `AGENTS.md`, deploy, CI |
 | **Plan & Shop** (coder) | `src/modules/{planning,preferences}/**`, `app/(app)/{plan,shop,preferences}/**`, `app/api/{plans,preferences}/**` |
-| **Receipts & Fridge** (coder) | `src/modules/{receipts,fridge}/**`, `app/(app)/{receipts,fridge}/**`, `app/api/{receipts,fridge,stats}/**` |
-| **Recipes & Cook** (third coder; if none, Frank after the Day 1 gate) | `src/modules/{recipes,cook}/**`, `app/(app)/{recipes,cook}/**`, `app/api/{recipes,ingredients,cook}/**` |
-| **Data & Proof** (non-coders) | seed data files in `supabase/seed/*.csv`, `eval/**` cases and results, `docs/PRD.md`, write-up, slides, classmate tests; signs off every other owner's checks |
+| **Recipes & Cook** (coder) | `src/modules/{recipes,cook}/**`, `app/(app)/{recipes,cook}/**`, `app/api/{recipes,ingredients,cook}/**`, catalog data `supabase/seed/*.csv` |
+| **Receipts** (coder) | `src/modules/receipts/**`, `app/(app)/receipts/**`, `app/api/receipts/**` |
+| **Fridge** (coder) | `src/modules/fridge/**`, `app/(app)/fridge/**`, `app/api/{fridge,stats}/**` |
+| **Data & Proof** (non-coders) | `eval/**` cases and results, `docs/PRD.md`, write-up, slides, classmate tests; seed rows by pull request to Recipes & Cook; signs off every other owner's checks |
+
+How data moves between these roles, the alignment rules and each role's growth options:
+[`ROLES.md`](ROLES.md).
 
 Doc changes outside your own files go through their owner, like code.
 
 Joins between owners are module functions declared as stubs in the skeleton:
-`fridge.proposeDeductions(userId, recipeId, servings)`, `fridge.applyBatch(userId, events, batchKey)`,
+`fridge.proposeDeductions(userId, recipeId, servings)`, `fridge.applyBatch(userId, events, batchKey)` (batch keys prefixed per sender: `rct:`, `cke_`, `man:`; see ROLES.md),
 `fridge.expiringSoon(userId)`, `recipes.retrieveChunks(recipeId, question)`,
 `planning.priceRecipes(userId, recipeIds, servings)`, `preferences.propose(userId, text, context)`,
 `fridge.cookNow(userId)`.
@@ -795,12 +799,12 @@ items for off-catalog food; a small model budget, so `claude-haiku-5-5` by defau
 | Question | Owner |
 |---|---|
 | Exact presentation date and time (`ASSUMED:` end of Day 2) | Frank |
-| Names for the ownership roles (§14.3), and whether there is a third coder for Recipes & Cook | Frank |
+| Names for the ownership roles (§14.3) | Frank |
 | Free vs Pro split (ACC4) and price (`costModel.proPriceUsd`), one-time vs subscription | Frank + team |
 | Vercel plan (function duration limits) and whether email confirmation is on for the demo | Platform |
 | Which store the price snapshot and receipts come from | Data & Proof |
 | Shelf-life source and licence (USDA FoodKeeper data or another) | Data & Proof |
-| Recipe list and cuisines for the seed library | Data & Proof |
+| Recipe list and cuisines for the seed library | Recipes & Cook |
 | Receipt image retention: delete on confirm and after a grace period for unconfirmed ones (current), or keep for user history | Frank |
 
 ## 17. Stretch goals

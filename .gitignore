@@ -20,6 +20,7 @@ next-env.d.ts
 .env*.local
 .env.*
 !.env.example
+!.env.hosted.example
 
 # vercel
 .vercel

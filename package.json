@@ -18,7 +18,9 @@
     "smoke": "tsx scripts/smoke.ts",
     "eval": "tsx scripts/eval.ts",
     "gate": "tsx scripts/gate.ts",
-    "dev:grant-pro": "tsx scripts/grant-pro.ts"
+    "dev:grant-pro": "tsx scripts/grant-pro.ts",
+    "dev:hosted": "node scripts/with-env.mjs .env.hosted next dev",
+    "seed:hosted": "node scripts/with-env.mjs .env.hosted tsx scripts/seed.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.137.0",

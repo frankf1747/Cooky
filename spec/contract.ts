@@ -168,6 +168,8 @@ export const RecipeSummary = z.object({
   tags: z.array(z.string()),
   equipment: z.array(z.string()),
   custom: z.boolean(),
+  /** https image for library cards; null until Recipes & Cook adds photos */
+  imageUrl: z.string().url().nullable(),
 });
 export type RecipeSummary = z.infer<typeof RecipeSummary>;
 
@@ -183,10 +185,13 @@ export const RecipeIngredient = z.object({
 export const Chunk = z.object({
   id: id("chk"),
   recipeId: id("rcp"),
-  kind: z.enum(["step", "faq"]),
+  /** step = an instruction; faq = a question and answer; tip = what to prep while a step runs */
+  kind: z.enum(["step", "faq", "tip"]),
   stepNo: z.number().int().positive().nullable(),
   label: z.string(),
   text: z.string(),
+  /** cook-mode timer for a step, in seconds; null when the step is not timed */
+  timerSeconds: z.number().int().positive().nullable(),
 });
 export type Chunk = z.infer<typeof Chunk>;
 
@@ -300,6 +305,8 @@ export const PlanCreate = z.object({
   meals: z.number().int().min(L.mealsPerPlanMin).max(L.mealsPerPlanMax),
   wishes: z.string().max(L.wishesMaxChars).optional(),
   mustUseItemIds: z.array(id("itm")).optional(),
+  /** recipes the user picked in the library (step 3); the planner fills the remaining meals */
+  mustIncludeRecipeIds: z.array(id("rcp")).max(L.mealsPerPlanMax).optional(),
   idempotencyKey: z.string().min(8),
 });
 export type PlanCreate = z.infer<typeof PlanCreate>;
@@ -485,7 +492,7 @@ export const CookAsk = z.object({
   question: z.string().min(1).max(L.cookQuestionMaxChars),
   sessionId: id("cks").optional(),
 });
-export const Citation = z.object({ chunkId: id("chk"), kind: z.enum(["step", "faq"]), label: z.string() });
+export const Citation = z.object({ chunkId: id("chk"), kind: z.enum(["step", "faq", "tip"]), label: z.string() });
 export const CookAnswer = z.object({
   answer: z.string(),
   citations: z.array(Citation),

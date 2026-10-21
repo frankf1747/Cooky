@@ -4,7 +4,7 @@
 export type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 /** public: anyone · user: signed in · pro: signed in with Pro · cron: CRON_SECRET · stripe: signed webhook */
 export type Auth = "public" | "user" | "pro" | "cron" | "stripe";
-export type Owner = "platform" | "recipes-cook" | "plan-shop" | "receipts-fridge";
+export type Owner = "platform" | "recipes-cook" | "plan-shop" | "receipts" | "fridge";
 
 export type RouteDef = {
   method: Method;
@@ -43,17 +43,17 @@ export const routes: RouteDef[] = [
   { method: "PATCH", path: "/api/preferences/[id]", auth: "user", owner: "plan-shop", v: 1, spec: "LRN3" },
   { method: "DELETE", path: "/api/preferences/[id]", auth: "user", owner: "plan-shop", v: 1, spec: "LRN3" },
 
-  { method: "POST", path: "/api/receipts", auth: "pro", owner: "receipts-fridge", v: 1, spec: "RCT1-RCT4" },
-  { method: "GET", path: "/api/receipts/[id]", auth: "user", owner: "receipts-fridge", v: 1, spec: "RCT2" },
-  { method: "DELETE", path: "/api/receipts/[id]", auth: "user", owner: "receipts-fridge", v: 1, spec: "RCT9" },
-  { method: "POST", path: "/api/receipts/[id]/retry", auth: "pro", owner: "receipts-fridge", v: 1, spec: "RCT7" },
-  { method: "POST", path: "/api/receipts/[id]/confirm", auth: "user", owner: "receipts-fridge", v: 1, spec: "RCT6" },
+  { method: "POST", path: "/api/receipts", auth: "pro", owner: "receipts", v: 1, spec: "RCT1-RCT4" },
+  { method: "GET", path: "/api/receipts/[id]", auth: "user", owner: "receipts", v: 1, spec: "RCT2" },
+  { method: "DELETE", path: "/api/receipts/[id]", auth: "user", owner: "receipts", v: 1, spec: "RCT9" },
+  { method: "POST", path: "/api/receipts/[id]/retry", auth: "pro", owner: "receipts", v: 1, spec: "RCT7" },
+  { method: "POST", path: "/api/receipts/[id]/confirm", auth: "user", owner: "receipts", v: 1, spec: "RCT6" },
 
-  { method: "GET", path: "/api/fridge", auth: "user", owner: "receipts-fridge", v: 1, spec: "FRG3" },
-  { method: "POST", path: "/api/fridge/items", auth: "user", owner: "receipts-fridge", v: 1, spec: "FRG4" },
-  { method: "PATCH", path: "/api/fridge/items/[id]", auth: "user", owner: "receipts-fridge", v: 1, spec: "FRG4" },
-  { method: "POST", path: "/api/fridge/check", auth: "user", owner: "receipts-fridge", v: 2, spec: "FRG6" },
-  { method: "GET", path: "/api/stats", auth: "user", owner: "receipts-fridge", v: 2, spec: "FRG7" },
+  { method: "GET", path: "/api/fridge", auth: "user", owner: "fridge", v: 1, spec: "FRG3" },
+  { method: "POST", path: "/api/fridge/items", auth: "user", owner: "fridge", v: 1, spec: "FRG4" },
+  { method: "PATCH", path: "/api/fridge/items/[id]", auth: "user", owner: "fridge", v: 1, spec: "FRG4" },
+  { method: "POST", path: "/api/fridge/check", auth: "user", owner: "fridge", v: 2, spec: "FRG6" },
+  { method: "GET", path: "/api/stats", auth: "user", owner: "fridge", v: 2, spec: "FRG7" },
 
   { method: "POST", path: "/api/cook/[recipeId]/ask", auth: "pro", owner: "recipes-cook", v: 1, spec: "ASK1-ASK5" },
   { method: "POST", path: "/api/cook/[recipeId]/done", auth: "user", owner: "recipes-cook", v: 1, spec: "CK2" },

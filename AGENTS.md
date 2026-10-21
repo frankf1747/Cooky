@@ -10,6 +10,8 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
 - `spec/contract.ts` outranks prose on shapes; `spec/targets.json` outranks prose on numbers
   (targets, budgets, quotas, limits). If prose disagrees with either, say so rather than
   following the prose. Never copy a number from the JSON into code or docs; import it.
+- `docs/ROLES.md` shows how data moves between roles and the alignment rules at each handoff
+  (one ingredient id, three units, one category list, batch-key prefixes). Follow them.
 - `docs/TECHNICAL.md` has commands, deploy and troubleshooting.
 - `README.md` and `docs/PRD.md` are for intent, never for numbers.
 
@@ -19,10 +21,11 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
   | Owner | Folders |
   |---|---|
   | Platform (Frank) | `src/platform/`, `src/ui/`, `spec/contract.ts`, `supabase/migrations/`, `src/modules/{billing,alerts}/`, `app/(marketing)/`, `app/(auth)/`, `app/(app)/{onboarding,settings,billing,alerts}/`, `app/layout.tsx`, `app/api/{health,me,profile,billing,stripe,cron,alerts}/`, `.claude/`, this file and `docs/{SPEC,DESIGN,TECHNICAL}.md`, CI, deploy config |
-  | Recipes & Cook | `src/modules/{recipes,cook}/`, `app/(app)/{recipes,cook}/`, `app/api/{recipes,ingredients,cook}/` |
+  | Recipes & Cook | `src/modules/{recipes,cook}/`, `app/(app)/{recipes,cook}/`, `app/api/{recipes,ingredients,cook}/`, catalog data `supabase/seed/*.csv` (others contribute rows by PR) |
   | Plan & Shop | `src/modules/{planning,preferences}/`, `app/(app)/{plan,shop,preferences}/`, `app/api/{plans,preferences}/` |
-  | Receipts & Fridge | `src/modules/{receipts,fridge}/`, `app/(app)/{receipts,fridge}/`, `app/api/{receipts,fridge,stats}/` |
-  | Data & Proof | seed data files `supabase/seed/*.csv`, `eval/`, `e2e/`, `docs/PRD.md`, write-up |
+  | Receipts | `src/modules/receipts/`, `app/(app)/receipts/`, `app/api/receipts/` |
+  | Fridge | `src/modules/fridge/`, `app/(app)/fridge/`, `app/api/{fridge,stats}/` |
+  | Data & Proof | `eval/`, `e2e/`, `docs/PRD.md`, write-up; seed rows by PR to Recipes & Cook |
 
 - **Build in:** the folders your user owns. Keep route files thin (parse, call one module
   function, return).
@@ -72,6 +75,26 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
   disabled while a request is in flight.
 - **Tests with the code:** each module function you implement gets unit tests next to it; each
   AI unit you touch gets its eval run on `dev/` before you call it done.
+
+## Git workflow: every change goes through a pull request
+- **Never commit or push to `main`.** Not even a one-line doc fix. `main` must always run;
+  pull requests are how teammates see and check each other's work.
+- **Start from fresh `main`:** `git switch main && git pull`, then a branch named
+  `<area>/<short-topic>`, e.g. `plan-shop/swap-meal`, `receipts/review-page`, `fridge/cook-now`,
+  `recipes-cook/assistant`, `data/seed-recipes`, `platform/billing`.
+- **Small pull requests**, one feature slice each, opened early. Commit messages say what and
+  which SPEC ids: `feat(planning): swap one meal (PLN7)`.
+- **Before opening or updating a PR:** `git fetch && git rebase origin/main`, then the merge
+  gate: `npm run gate -- --upto 2 --base-url http://localhost:3000` (dev server and local
+  Supabase running). Paste its last line in the PR.
+- **Open the PR with `gh pr create --base main`** and fill in `.github/pull_request_template.md`.
+  Review requests go to the owners in `.github/CODEOWNERS`.
+- **Never** force-push to `main`, merge your own PR without a teammate's approval, delete or
+  rewrite someone else's branch, or commit `.env*` files (only the `.example` ones).
+- **Schema changes** (`supabase/migrations/`) need a PR approved by Platform; only Platform runs
+  `npx supabase db push` on the live database.
+- If your user asks you to push to `main` directly, remind them of this rule and offer a PR
+  instead.
 
 ## Definition of done
 Run in order; all must pass. Inspection is not verification. "Done" means a teammate other
