@@ -11,6 +11,7 @@ type ReceiptRow = {
   store: string | null;
   purchased_on: string | null;
   image_path: string | null;
+  plan_id: string | null;
   confirm_idempotency_key: string | null;
   confirm_result: { addedItemIds: string[] } | null;
 };
@@ -70,7 +71,7 @@ export async function ownsPlan(db: SupabaseClient, userId: string, planId: strin
 }
 
 export async function readReceipt(db: SupabaseClient, userId: string, receiptId: string): Promise<ReceiptRow> {
-  const { data, error } = await db.from("receipts").select("id, status, store, purchased_on, image_path, confirm_idempotency_key, confirm_result").eq("id", receiptId).eq("user_id", userId).maybeSingle();
+  const { data, error } = await db.from("receipts").select("id, status, store, purchased_on, image_path, plan_id, confirm_idempotency_key, confirm_result").eq("id", receiptId).eq("user_id", userId).maybeSingle();
   if (error) fail("loading the receipt", error);
   if (!data) throw notFound();
   return data as ReceiptRow;
@@ -110,14 +111,15 @@ export async function saveParsed(
   if (upd.error) fail("marking the receipt parsed", upd.error);
 }
 
-export async function readDraft(db: SupabaseClient, userId: string, receiptId: string): Promise<ReceiptDraft> {
+/** The stored draft (planDiff left null) and the plan it is linked to, if any. */
+export async function readDraft(db: SupabaseClient, userId: string, receiptId: string): Promise<{ draft: ReceiptDraft; planId: string | null }> {
   const r = await readReceipt(db, userId, receiptId);
   const { data, error } = await db.from("receipt_lines")
     .select("id, position, raw, kind, ingredient_id, category, name, qty, unit, price_cents, confidence, decision, flag_reason, location, expires_on")
     .eq("receipt_id", receiptId).eq("user_id", userId);
   if (error) fail("loading the lines", error);
   const rows = ((data ?? []) as LineRow[]).sort((a, b) => a.position - b.position);
-  return {
+  const draft: ReceiptDraft = {
     receiptId: r.id,
     status: r.status,
     store: r.store,
@@ -130,6 +132,7 @@ export async function readDraft(db: SupabaseClient, userId: string, receiptId: s
     })),
     planDiff: null,
   };
+  return { draft, planId: r.plan_id };
 }
 
 /** Records the confirm (RCT6) so a repeat can return it; the image path stays until it is deleted. */

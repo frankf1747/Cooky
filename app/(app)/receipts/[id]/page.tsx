@@ -1,10 +1,12 @@
-// Owner: Receipts. Review one receipt (RCT2–RCT7, RCT10): check flagged lines, then add to the fridge.
+// Owner: Receipts. Review one receipt (RCT2–RCT7, RCT10): check flagged lines, then add to the fridge;
+// with a linked plan, what the plan wanted but the receipt lacks, and the reverse (RCT5).
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Category, type ReceiptDraft } from "@spec/contract";
 import { getSessionUser } from "@/platform/auth";
 import { ApiError } from "@/platform/errors";
-import { get } from "@/modules/receipts";
+import { getForReview, type PlanLabels } from "@/modules/receipts";
+import { PlanDiffPanel } from "./PlanDiffPanel";
 import { RetryButton } from "./RetryButton";
 import { ReviewForm } from "./ReviewForm";
 
@@ -14,8 +16,9 @@ export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">)
   if (!user) redirect("/login");
 
   let receipt: ReceiptDraft;
+  let plan: PlanLabels | null;
   try {
-    receipt = await get(user.id, id);
+    ({ receipt, plan } = await getForReview(user.id, id));
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) notFound();
     throw err;
@@ -27,6 +30,8 @@ export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">)
     <section className="mx-auto w-full max-w-3xl p-6">
       <Link href="/receipts/new" className="text-sm text-zinc-500 hover:underline">← Scan another receipt</Link>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight">{heading}</h1>
+
+      {receipt.planDiff && plan && <PlanDiffPanel diff={receipt.planDiff} plan={plan} lines={receipt.lines} />}
 
       {receipt.status === "parsed" && (
         <ReviewForm receiptId={receipt.receiptId} lines={receipt.lines} categories={Category.options} />

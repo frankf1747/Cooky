@@ -20,10 +20,13 @@ async function downsize(file: File, maxPx: number): Promise<Blob> {
   return new Promise((ok, bad) => canvas.toBlob((b) => (b ? ok(b) : bad(new Error("encode failed"))), "image/jpeg", 0.85));
 }
 
-export function ScanForm({ maxPx, maxMb, planId }: { maxPx: number; maxMb: number; planId: string | null }) {
+type PlanOption = { planId: string; label: string };
+
+export function ScanForm({ maxPx, maxMb, plans, initialPlanId }: { maxPx: number; maxMb: number; plans: PlanOption[]; initialPlanId: string | null }) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [planId, setPlanId] = useState(initialPlanId ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ReceiptError | null>(null);
 
@@ -81,7 +84,16 @@ export function ScanForm({ maxPx, maxMb, planId }: { maxPx: number; maxMb: numbe
         />
       </label>
 
-      {planId && <p className="text-sm text-zinc-500">Cooky will compare this receipt with your plan.</p>}
+      {plans.length > 0 && (
+        <label className="grid gap-1 text-sm">
+          <span className="font-medium">Compare with a plan</span>
+          <select value={planId} onChange={(e) => setPlanId(e.target.value)} disabled={busy} className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900">
+            <option value="">Don&apos;t compare</option>
+            {plans.map((p) => <option key={p.planId} value={p.planId}>{p.label}</option>)}
+          </select>
+          <span className="text-zinc-500">Cooky shows what the plan needed that isn&apos;t on the receipt.</span>
+        </label>
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         <button

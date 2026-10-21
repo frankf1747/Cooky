@@ -40,6 +40,25 @@ vi.mock("@/modules/fridge", () => ({
   applyBatch: (...a: Parameters<typeof applyBatch>) => applyBatch(...a),
   view: async () => ({ items: [], expiringSoon: [], cookNow: [] }),
 }));
+// Stand-in for planning.getPlan: the one plan U1 owns, with a shopping list; anything else is 404.
+let planBroken = false;
+vi.mock("@/modules/planning", async () => {
+  const { notFound } = await import("@/platform/errors");
+  const item = (ingredientId: string, buyQty: number, forRecipeIds: string[]) => ({
+    ingredientId, name: ingredientId, needQty: buyQty, unit: "g", haveQty: 0, buyQty, packages: buyQty ? 1 : 0,
+    packageSize: 100, packageCents: 100, costCents: 100, leftoverQty: 0, forRecipeIds,
+  });
+  return {
+    getPlan: async (userId: string, planId: string) => {
+      if (planBroken) throw new Error("planning: database down");
+      if (userId !== U1 || planId !== "pln_mine" || !tables.plans.some((p) => p.id === "pln_mine")) throw notFound();
+      return {
+        planId, meals: [],
+        shopping: { totalCents: 0, unpricedIngredientIds: [], items: [item("ing_chicken_breast", 600, ["rcp_chicken"]), item("ing_garlic", 3, ["rcp_chicken", "rcp_rice"])] },
+      };
+    },
+  };
+});
 const receipts = await import("./index");
 
 const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4]);
@@ -79,6 +98,7 @@ function seed() {
   batches.clear();
   applyBatch.mockClear();
   failRemove = false;
+  planBroken = false;
 }
 
 const fixture = async (): Promise<ModelReply> => ({ parsed: aiFixtures.receipt_reader({ system: "", text: "" }), stopReason: "end_turn", usage: { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 } });
@@ -391,5 +411,31 @@ describe("receipts.remove (RCT9)", () => {
     expect(tables.receipts).toHaveLength(0);
     expect(tables.receipt_lines).toHaveLength(0);
     await expect(receipts.get(U1, receipt.receiptId)).rejects.toMatchObject({ status: 404 });
+  });
+});
+
+describe("plan diff on the draft (RCT5)", () => {
+  it("a receipt linked to the user's plan shows what was not bought and what was not planned", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG, { planId: "pln_mine" }), "r");
+    // The fixture bought chicken and spinach; the plan wanted chicken and garlic.
+    expect(receipt.planDiff).toEqual({ missing: [{ ingredientId: "ing_garlic", forRecipeIds: ["rcp_chicken", "rcp_rice"] }], extra: ["ing_spinach"] });
+    expect((await receipts.get(U1, receipt.receiptId)).planDiff).toEqual(receipt.planDiff);
+  });
+
+  it("no linked plan → planDiff null", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    expect(receipt.planDiff).toBeNull();
+  });
+
+  it("a plan deleted after the scan → planDiff null, not an error", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG, { planId: "pln_mine" }), "r");
+    tables.plans = tables.plans.filter((p) => p.id !== "pln_mine");
+    expect((await receipts.get(U1, receipt.receiptId)).planDiff).toBeNull();
+  });
+
+  it("any other planning failure is loud", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG, { planId: "pln_mine" }), "r");
+    planBroken = true;
+    await expect(receipts.get(U1, receipt.receiptId)).rejects.toThrow("database down");
   });
 });
