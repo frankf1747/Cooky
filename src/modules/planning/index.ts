@@ -2,7 +2,10 @@
 // Shopping math lives in shopping.ts (create it) and is pure code: the model never does arithmetic.
 import type { z } from "zod";
 import type { ChecklistPatch, PlanCreate, PlanDraft, PlanSave, PlanSummary, PlanSwap, PreferenceProposal, RunInfo, ShoppingList } from "@spec/contract";
-import { notImplemented } from "@/platform/errors";
+import { badRequest, notFound, notImplemented } from "@/platform/errors";
+import { reader } from "@/platform/db";
+import { loadPlanningData } from "./data";
+import { buildShoppingList } from "./shopping";
 
 export async function createPlan(userId: string, input: z.infer<typeof PlanCreate>, requestId: string): Promise<{ plan: PlanDraft; run: RunInfo }> {
   void userId;
@@ -39,10 +42,19 @@ export async function savePlan(userId: string, planId: string, input: z.infer<ty
 
 /** Join: price recipes for a user's fridge and servings (also used by Cook now and rescue ranking). */
 export async function priceRecipes(userId: string, recipeIds: string[], servings: number): Promise<ShoppingList> {
-  void userId;
-  void recipeIds;
-  void servings;
-  throw notImplemented("planning.priceRecipes");
+  if (!Number.isInteger(servings) || servings <= 0) throw badRequest("invalid_input", "servings must be a positive integer");
+  const ids = [...new Set(recipeIds)];
+  const data = await loadPlanningData(await reader(), userId, ids);
+  // Unknown or foreign recipe → 404 (RLS hides other users' imports, so both look the same).
+  if (data.recipes.length !== ids.length) throw notFound();
+  return buildShoppingList({
+    servings,
+    recipes: data.recipes,
+    ingredients: data.ingredients,
+    products: data.products,
+    fridge: data.fridge,
+    stapleIngredientIds: data.profile.stapleIngredientIds,
+  });
 }
 
 // ---- v2
