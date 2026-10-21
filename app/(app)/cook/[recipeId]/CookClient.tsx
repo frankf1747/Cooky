@@ -69,17 +69,17 @@ function Timer({ seconds, onDone }: { seconds: number; onDone?: () => void }) {
   }, [running, left]);
   const pct = total ? (total - left) / total : 0;
   return (
-    <div className="mt-4 flex items-center gap-4 rounded-xl bg-white/5 p-3">
+    <div className="mt-4 flex items-center gap-4 rounded-2xl bg-green-50 p-3 dark:bg-green-950/40">
       <div
         className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full"
-        style={{ background: `conic-gradient(#86efac ${pct * 360}deg, rgba(255,255,255,0.15) 0deg)` }}
+        style={{ background: `conic-gradient(#16a34a ${pct * 360}deg, rgba(22,101,52,0.15) 0deg)` }}
       >
-        <span className="flex h-13 w-13 items-center justify-center rounded-full bg-zinc-900 text-sm font-semibold tabular-nums" aria-live="polite">
+        <span className="flex h-13 w-13 items-center justify-center rounded-full bg-white text-sm font-semibold tabular-nums text-green-900 dark:bg-zinc-900 dark:text-green-200" aria-live="polite">
           {left === 0 ? "Done" : formatTimer(left)}
         </span>
       </div>
       <div className="text-sm">
-        <p className="text-zinc-300">{running ? "Timer running… I'll cheer when it's done." : left === 0 ? "Ding! Time's up 🔔" : "Tap start when the step begins."}</p>
+        <p className="text-green-900 dark:text-green-200">{running ? "Timer running… I'll cheer when it's done." : left === 0 ? "Ding! Time's up 🔔" : "Tap start when the step begins."}</p>
         <div className="mt-2 flex gap-2">
           <button
             onClick={() => {
@@ -88,7 +88,7 @@ function Timer({ seconds, onDone }: { seconds: number; onDone?: () => void }) {
                 setRunning(true);
               } else setRunning((r) => !r);
             }}
-            className="rounded-md bg-green-300 px-3 py-1 text-sm font-medium text-zinc-900"
+            className="rounded-full bg-green-700 px-3 py-1 text-sm font-medium text-white transition active:scale-95"
           >
             {running ? "Pause" : left === 0 ? "Restart" : "Start timer"}
           </button>
@@ -97,7 +97,7 @@ function Timer({ seconds, onDone }: { seconds: number; onDone?: () => void }) {
               setTotal((t) => t + 60);
               setLeft((s) => s + 60);
             }}
-            className="rounded-md border border-white/30 px-2 py-1 text-sm"
+            className="rounded-full border border-green-300 bg-white px-3 py-1 text-sm text-green-800 transition active:scale-95 dark:bg-zinc-900 dark:text-green-200"
           >
             +1 min
           </button>
@@ -346,9 +346,8 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
       <FunStyles />
       <div className="flex items-center gap-3">
         <Link href={`/recipes/${recipe.id}`} aria-label="Back to the recipe" className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 dark:border-zinc-700">‹</Link>
-        <Mascot mood={mood} size={48} className={timerDone ? "cooky-wiggle shrink-0" : "cooky-float shrink-0"} />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate font-semibold">{dishEmoji(recipe.title)} {recipe.title}</h1>
+          <h1 className="truncate font-semibold">{recipe.title}</h1>
           <p className="text-xs text-green-700 dark:text-green-400">Dinner in about {minutesLeft} min</p>
         </div>
         <div className="flex gap-1" aria-label={`Step ${index + 1} of ${steps.length}`}>
@@ -356,7 +355,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
         </div>
       </div>
 
-      <details className="mt-3 rounded-2xl border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800">
+      <details className="mt-3 rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-900">
         <summary className="cursor-pointer">
           Ingredients for{" "}
           <select value={servings} onChange={(e) => setServings(Number(e.target.value))} onClick={(e) => e.stopPropagation()} aria-label="Servings" className="rounded border border-zinc-300 bg-transparent px-1 dark:border-zinc-700">
@@ -374,26 +373,30 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
       </details>
 
       {step ? (
-        <div key={step.id} className="cooky-slide mt-4 rounded-3xl bg-zinc-900 p-5 text-white shadow-lg">
-          <div className="flex justify-between text-xs font-semibold uppercase tracking-wide">
-            <span className="text-green-300">Step {index + 1} of {steps.length}</span>
-            {steps.length > 2 && index === Math.floor((steps.length - 1) / 2) && <span className="normal-case text-zinc-300">Halfway there</span>}
-            {index === steps.length - 1 && <span className="normal-case text-zinc-300">Last step</span>}
-          </div>
-          <p className="mt-1 text-sm text-zinc-300">{stepCheer(index, steps.length)}</p>
-          <p className="mt-2 text-lg font-semibold leading-snug">{step.text}</p>
+        <>
+        {/* Bao says the cheer for this step */}
+        <div className="mt-5 flex items-end gap-2">
+          <Mascot mood={mood} size={76} className={timerDone ? "cooky-wiggle shrink-0" : "cooky-float shrink-0"} />
+          <p key={`${step.id}-${timerDone}`} className="cooky-pop relative mb-4 rounded-3xl rounded-bl-sm bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900 shadow-sm ring-1 ring-amber-100 dark:bg-amber-950 dark:text-amber-100 dark:ring-amber-900">
+            {timerDone ? "Ding! Time's up 🔔 On to the next bit!" : stepCheer(index, steps.length)}
+          </p>
+        </div>
+        <div key={step.id} className="cooky-slide mt-1 rounded-3xl border-2 border-green-100 bg-white p-5 shadow-sm dark:border-green-900 dark:bg-zinc-900">
+          <span className="inline-block rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-800 dark:bg-green-950 dark:text-green-300">Step {index + 1} of {steps.length}</span>
+          <p className="mt-3 text-lg font-semibold leading-snug text-zinc-900 dark:text-zinc-100">{step.text}</p>
           {step.timerSeconds && <Timer key={step.id} seconds={step.timerSeconds} onDone={() => setTimerDone(true)} />}
           <div className="mt-4 grid grid-cols-2 gap-3">
             <button onClick={() => {
                 setTimerDone(false);
                 setIndex((i) => i - 1);
-              }} disabled={index === 0} className="rounded-full border border-white/30 py-2.5 text-sm disabled:opacity-40">Back</button>
+              }} disabled={index === 0} className="rounded-full border border-zinc-300 py-2.5 text-sm transition active:scale-95 disabled:opacity-40 dark:border-zinc-700">← Back</button>
             <button onClick={() => {
                 setTimerDone(false);
                 setIndex((i) => i + 1);
-              }} disabled={index === steps.length - 1} className="rounded-full bg-white transition active:scale-95 py-2.5 text-sm font-medium text-zinc-900 disabled:opacity-40">Next step</button>
+              }} disabled={index === steps.length - 1} className="rounded-full bg-green-700 py-2.5 text-sm font-medium text-white transition hover:bg-green-800 active:scale-95 disabled:opacity-40">Next step →</button>
           </div>
         </div>
+        </>
       ) : (
         <p className="mt-6 text-sm text-zinc-500">This recipe has no steps yet.</p>
       )}
@@ -408,7 +411,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
         )}
         {thread.map(({ q, a }, i) => (
           <div key={i} className="space-y-2">
-            <p className="cooky-pop ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-green-100 dark:bg-green-950 px-3 py-2 text-sm dark:bg-zinc-800">{q}</p>
+            <p className="cooky-pop ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-green-100 px-3 py-2 text-sm dark:bg-green-950">{q}</p>
             <CoachCard mood={a.notCovered ? "worried" : "happy"}>
               <p>{a.answer}</p>
               {a.citations.length > 0 && (
