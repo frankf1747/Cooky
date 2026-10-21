@@ -44,7 +44,8 @@ export async function runReceiptsEval(casesPath = CASES): Promise<number> {
   const db = systemWriter();
   const email = process.env.E2E_TEST_EMAIL;
   if (!email) throw new Error("eval receipts: set E2E_TEST_EMAIL to a signed-up account (see .env.example)");
-  const { data: users, error } = await db.auth.admin.listUsers();
+  // listUsers pages at 50 by default; the shared database can hold more accounts than that.
+  const { data: users, error } = await db.auth.admin.listUsers({ perPage: 1000 });
   if (error) throw new Error(`eval receipts: listing users failed: ${error.message}`);
   const userId = users.users.find((u) => u.email === email)?.id;
   if (!userId) throw new Error(`eval receipts: no account for E2E_TEST_EMAIL on ${process.env.NEXT_PUBLIC_SUPABASE_URL}`);
