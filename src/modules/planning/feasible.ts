@@ -91,6 +91,50 @@ function* combinations<T>(items: T[], k: number, start = 0, acc: T[] = []): Gene
 }
 
 /**
+ * Upper bound on the recipe combinations priced per request, so a growing library cannot make
+ * planning slow (C(12,5) = 792 today; C(40,5) would be 658,008). Pricing one set is cheap, so this
+ * keeps a request well under a second. `ASSUMED:` proposed for spec/targets.json `limits`.
+ */
+export const MAX_COMBINATIONS = 2000;
+
+function choose(n: number, k: number): number {
+  if (k < 0 || k > n) return 0;
+  let c = 1;
+  for (let i = 1; i <= k; i++) c = (c * (n - k + i)) / i;
+  return Math.round(c);
+}
+
+/**
+ * The recipes worth combining, at most as many as keep C(n, fill) within MAX_COMBINATIONS.
+ * Recipes with an unknown price can never be offered, so they go first. When the rest are too many,
+ * keep those that use a must-use fridge item, then the cheapest to cook on their own with the
+ * user's fridge (shared packages can make a pricier recipe cheaper in a set, so this is a
+ * heuristic: the ranking is exact among the recipes kept).
+ */
+function shortlist(input: FeasibleInput, others: PlanningRecipe[], fill: number, mustUse: FridgeStock[], stock: { ingredientId: string; qty: number; unit: Unit }[]) {
+  const alone = new Map(
+    others.map((r) => [r, buildShoppingList({
+      servings: input.servings, recipes: [r], ingredients: input.ingredients, products: input.products,
+      fridge: stock, stapleIngredientIds: input.profile.stapleIngredientIds,
+    })]),
+  );
+  const priced = others.filter((r) => alone.get(r)!.unpricedIngredientIds.length === 0);
+  if (choose(priced.length, fill) <= MAX_COMBINATIONS) return priced;
+
+  let keep = fill;
+  while (choose(keep + 1, fill) <= MAX_COMBINATIONS && keep + 1 <= priced.length) keep++;
+  const usesMustUse = (r: PlanningRecipe) =>
+    r.ingredients.some((i) => !i.optional && mustUse.some((f) => f.ingredientId === i.ingredientId && f.unit === i.unit));
+  const order = new Map(input.recipes.map((r, i) => [r.id, i]));
+  return [...priced]
+    .sort((a, b) =>
+      Number(usesMustUse(b)) - Number(usesMustUse(a)) ||
+      alone.get(a)!.totalCents - alone.get(b)!.totalCents ||
+      order.get(a.id)! - order.get(b.id)!)
+    .slice(0, keep);
+}
+
+/**
  * Every set of `meals` distinct recipes that contains all `picks` and fills the other meals from
  * `candidates`, covers the must-use items, and has every price known; priced.
  */
@@ -98,10 +142,10 @@ function pricedSets(input: FeasibleInput, candidates: PlanningRecipe[], picks: P
   const mustUse = input.fridge.filter((f) => input.mustUseItemIds.includes(f.id));
   const stock = input.fridge.map(({ ingredientId, qty, unit }) => ({ ingredientId, qty, unit }));
   const order = new Map(input.recipes.map((r, i) => [r.id, i]));
-  const others = candidates.filter((r) => !picks.includes(r));
   const fill = input.meals - picks.length;
   const out: Omit<FeasibleSet, "setId">[] = [];
   if (fill < 0) return out;
+  const others = shortlist(input, candidates.filter((r) => !picks.includes(r)), fill, mustUse, stock);
   for (const rest of combinations(others, fill)) {
     const combo = [...picks, ...rest].sort((a, b) => order.get(a.id)! - order.get(b.id)!);
     const used = new Set(combo.flatMap((r) => r.ingredients.filter((i) => !i.optional).map((i) => `${i.ingredientId}|${i.unit}`)));

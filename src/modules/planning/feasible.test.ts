@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findFeasibleSets, type FeasibleInput, type PlanningRecipe } from "./feasible";
+import { MAX_COMBINATIONS, findFeasibleSets, type FeasibleInput, type PlanningRecipe } from "./feasible";
 
 const ingredients = [
   { id: "ing_chicken", name: "Chicken", allergenTags: [] },
@@ -196,5 +196,51 @@ describe("findFeasibleSets with picked recipes (PLN1 mustIncludeRecipeIds)", () 
   it("duplicate picks count once", () => {
     const res = findFeasibleSets(input({ mustIncludeRecipeIds: ["rcp_tofu", "rcp_tofu"] }));
     expect(res.ok && res.sets.every((s) => s.recipeIds.filter((r) => r === "rcp_tofu").length === 1)).toBe(true);
+  });
+});
+
+describe("findFeasibleSets on a large library (combination cap)", () => {
+  // 40 recipes, each with its own ingredient at a price that rises with its number: C(40,5) = 658,008 sets uncapped.
+  const big = Array.from({ length: 40 }, (_, n) => n);
+  const bigInput = (over: Partial<FeasibleInput> = {}) => input({
+    meals: 5, budgetCents: 1_000_000,
+    recipes: big.map((n) => r(`rcp_big_${n}`, 20, [[`ing_big_${n}`, 100, "g"]])),
+    ingredients: big.map((n) => ({ id: `ing_big_${n}`, name: `Big ${n}`, allergenTags: [] })),
+    products: big.map((n) => ({ id: `prd_big_${n}`, ingredientId: `ing_big_${n}`, packageSize: 100, unit: "g" as const, priceCents: 100 + n * 10 })),
+    ...over,
+  });
+
+  it("stays fast and within the cap, and still finds the cheapest set", () => {
+    const t0 = performance.now();
+    const res = findFeasibleSets(bigInput());
+    const ms = performance.now() - t0;
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.sets.length).toBeLessThanOrEqual(MAX_COMBINATIONS);
+      expect(res.sets[0].recipeIds).toEqual(["rcp_big_0", "rcp_big_1", "rcp_big_2", "rcp_big_3", "rcp_big_4"]);
+    }
+    expect(ms).toBeLessThan(2000);
+  });
+
+  it("keeps a recipe that uses a must-use fridge item even when it is the priciest", () => {
+    const fridge = [{ id: "itm_last", ingredientId: "ing_big_39", qty: 50, unit: "g" as const, expiresOn: "2026-10-22" }];
+    const res = findFeasibleSets(bigInput({ fridge, mustUseItemIds: ["itm_last"] }));
+    expect(res.ok && res.sets.length > 0 && res.sets.every((s) => s.recipeIds.includes("rcp_big_39"))).toBe(true);
+  });
+
+  it("picks are always kept and only the other meals are capped", () => {
+    const res = findFeasibleSets(bigInput({ mustIncludeRecipeIds: ["rcp_big_38", "rcp_big_39"] }));
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.sets.every((s) => s.recipeIds.includes("rcp_big_38") && s.recipeIds.includes("rcp_big_39"))).toBe(true);
+      expect(res.sets[0].recipeIds).toEqual(["rcp_big_0", "rcp_big_1", "rcp_big_2", "rcp_big_38", "rcp_big_39"]);
+    }
+  });
+
+  it("an infeasible request on a large library still answers quickly with hints", () => {
+    const t0 = performance.now();
+    const res = findFeasibleSets(bigInput({ budgetCents: 100 }));
+    expect(res).toMatchObject({ ok: false, cheapestFeasibleCents: 600, relax: ["budgetCents"] });
+    expect(performance.now() - t0).toBeLessThan(2000);
   });
 });
