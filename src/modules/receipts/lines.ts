@@ -67,7 +67,9 @@ function convert(e: Extracted, ingredientId: string | null, catalog: LineCatalog
 }
 
 export function classifyLine(e: Extracted, catalog: LineCatalog, dates: LineDates): ClassifiedLine {
-  const base = { raw: e.raw, kind: e.kind, name: e.name, priceCents: e.priceCents, confidence: e.confidence };
+  // Integer cents ≥ 0 or unknown (never 0): a coupon's negative or a fractional read is not a price.
+  const priceCents = e.priceCents !== null && Number.isInteger(e.priceCents) && e.priceCents >= 0 ? e.priceCents : null;
+  const base = { raw: e.raw, kind: e.kind, name: e.name, priceCents, confidence: e.confidence };
   if (e.kind !== "food") {
     return { ...base, ingredientId: null, category: null, qty: null, unit: null, decision: "ignored", flagReason: null, location: null, expiresOn: null };
   }
@@ -75,6 +77,9 @@ export function classifyLine(e: Extracted, catalog: LineCatalog, dates: LineDate
     ({ ...base, ...rest, decision: "flagged", flagReason: reason });
 
   const ingredient = e.ingredientId ? catalog.ingredients.get(e.ingredientId) : undefined;
+  // A refund (negative quantity) or a nonsense package count has no amount code can stock.
+  const unusableAmount = (e.qty !== null && !(e.qty >= 0)) ||
+    (e.packageCount !== null && !(Number.isInteger(e.packageCount) && e.packageCount > 0));
 
   if (!ingredient) {
     // No catalog match: a generic item (RCT10), or flagged. An id the catalog lacks is a model
@@ -86,6 +91,7 @@ export function classifyLine(e: Extracted, catalog: LineCatalog, dates: LineDate
       : { qty: converted?.qty ?? e.packageCount ?? 1, unit: "count" as const };
     const where = category ? placement(category, {}, catalog.categoryDefaults.get(category), dates) : { location: null, expiresOn: null };
     const rest = { ingredientId: null, category, ...amount, ...where };
+    if (unusableAmount) return flagged("implausible_quantity", { ...rest, qty: null, unit: null });
     if (e.confidence !== "high") return flagged("low_confidence", rest);
     if (e.ingredientId !== null || category === null) return flagged("unknown_ingredient", rest);
     return { ...base, ...rest, decision: "generic", flagReason: null };
@@ -96,6 +102,7 @@ export function classifyLine(e: Extracted, catalog: LineCatalog, dates: LineDate
   const amount = converted && converted.unit === ingredient.baseUnit ? converted : null;
   const rest = { ingredientId: ingredient.id, category: ingredient.category, qty: amount?.qty ?? e.qty, unit: amount?.unit ?? null, ...where };
 
+  if (unusableAmount) return flagged("implausible_quantity", { ...rest, qty: null, unit: null });
   if (e.confidence !== "high") return flagged("low_confidence", rest);
   if (e.qty === null) return flagged("quantity_missing", { ...rest, qty: null });
   if (!amount) return flagged("unit_unconvertible", rest);

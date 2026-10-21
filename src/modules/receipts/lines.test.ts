@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { ReceiptExtraction } from "@spec/contract";
-import { classifyLine, defaultLocation, type LineCatalog } from "./lines";
+import { ReceiptLine, type ReceiptExtraction } from "@spec/contract";
+import { classifyLine as rawClassify, defaultLocation, type LineCatalog } from "./lines";
 
 type Extracted = ReceiptExtraction["lines"][number];
 
@@ -27,6 +27,14 @@ const catalog: LineCatalog = {
   ]),
 };
 const dates = { purchasedOn: "2026-10-20", today: "2026-10-21" };
+
+/** Every case also proves the output fits the contract (and so the receipt_lines checks). */
+function classifyLine(...args: Parameters<typeof rawClassify>) {
+  const out = rawClassify(...args);
+  const parsed = ReceiptLine.safeParse({ ...out, lineId: "rln_x" });
+  expect(parsed.success, parsed.success ? "" : JSON.stringify(parsed.error.issues)).toBe(true);
+  return out;
+}
 
 function line(over: Partial<Extracted>): Extracted {
   return {
@@ -78,6 +86,32 @@ describe("classifyLine: auto-accept rule (RCT4)", () => {
     for (const kind of ["non_food", "discount", "tax", "total", "other"] as const) {
       const r = classifyLine(line({ kind, raw: "TAX 0.83", priceCents: 83, ingredientId: "ing_egg", qty: 1, unit: "ea" }), catalog, dates);
       expect(r).toMatchObject({ decision: "ignored", flagReason: null, ingredientId: null, qty: null, unit: null, location: null, expiresOn: null, priceCents: 83 });
+    }
+  });
+});
+
+describe("classifyLine: values the contract and database reject", () => {
+  it("a coupon's negative price is not a price: ignored, priceCents null", () => {
+    expect(classifyLine(line({ kind: "discount", raw: "SC COUPON -1.00", priceCents: -100 }), catalog, dates))
+      .toMatchObject({ decision: "ignored", priceCents: null });
+  });
+
+  it("a refund (negative quantity) → flagged implausible_quantity with no amount or price", () => {
+    expect(classifyLine(line({ ingredientId: "ing_chicken_breast", qty: -1.32, unit: "lb", priceCents: -799 }), catalog, dates))
+      .toMatchObject({ decision: "flagged", flagReason: "implausible_quantity", qty: null, unit: null, priceCents: null });
+    expect(classifyLine(line({ name: "Chips", category: "snacks", qty: -1, unit: "ea" }), catalog, dates))
+      .toMatchObject({ decision: "flagged", flagReason: "implausible_quantity", qty: null, unit: null });
+  });
+
+  it("a fractional price read is unknown (null), never rounded or 0; the line is still auto", () => {
+    expect(classifyLine(line({ ingredientId: "ing_chicken_breast", qty: 1, unit: "lb", priceCents: 799.5 }), catalog, dates))
+      .toMatchObject({ decision: "auto", priceCents: null });
+  });
+
+  it("a package count that is not a positive whole number → flagged implausible_quantity", () => {
+    for (const packageCount of [0, -2, 1.5]) {
+      expect(classifyLine(line({ ingredientId: "ing_rice", qty: 16, unit: "oz", packageCount }), catalog, dates))
+        .toMatchObject({ decision: "flagged", flagReason: "implausible_quantity", qty: null });
     }
   });
 });
