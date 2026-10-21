@@ -147,6 +147,8 @@ that already exists.
 - **Build for demo day (v1):**
   1. `fridge.applyBatch` (wraps the tested `apply_inventory_batch` database function), `view`,
      `addItem`, `updateItem` (edit, move to freezer with recomputed date, toss) (FRG1–FRG4).
+     `updateItem` calls the tested `edit_fridge_item` database function, which does the whole
+     edit in one locked step against `expectedQty` (see docs/TECHNICAL.md, "Fridge writes").
   2. The fridge page from the journey map: doors, shelves, days-left badges, the Use soon list,
      and Cook now plates opening a dish card (FRG3, FRG5).
   3. `cookNow` (ranked by stock coverage, soonest-expiring first), `expiringSoon`, and

@@ -75,6 +75,26 @@ See SPEC §8.3. The three that break teammates most often: AI endpoints never wr
 every id in AI output is validated against the run's candidates; money is integer cents with
 `null` for unknown.
 
+### Fridge writes
+
+Two database functions change the fridge. Both run as one locked transaction, are idempotent
+by key, and can be called only from server code through `writer(userId).db.rpc(...)`.
+
+| Function | Use it for | Errors (message prefix, SQLSTATE) |
+|---|---|---|
+| `apply_inventory_batch(p_user, p_batch_key, p_events, p_today?)` | adding items and relative changes (receipt confirm `rct:<receiptId>`, cook confirm `cke_…`, manual add `man:<key>`) | `insufficient_stock:<itemId>` P0001, DETAIL `{"available","requested","shortBy"}` → 409 · `item_not_found:<itemId>` P0002 → 404 |
+| `edit_fridge_item(p_user, p_item, p_key, p_expected_qty, p_qty?, p_status?, p_location?, p_expires_on?, p_expiry_source?)` | one item: set a quantity, mark used or tossed, move, change the date | `stale_quantity:<itemId>` P0001, DETAIL `{"expected","actual"}` → 409 · `item_not_active:<itemId>` P0001 → 409 · `item_not_found:<itemId>` P0002 → 404 · `invalid_quantity` / `invalid_edit:<why>` 22023 → 400 |
+
+- A repeat with the same key returns the first result with `"replayed": true` and writes
+  nothing. Answer `200` (not `201`) for a replay.
+- `added_on` is the user's local date: pass `p_today`, or leave it out and the function uses the
+  profile's timezone.
+- `edit_fridge_item` dates: `p_expiry_source: "user"` always applies; `"table"` or `"category"`
+  (a date your code recomputed, e.g. after a move to the freezer) applies only when the stored
+  date was not set by the user. Pass a date and its source together.
+- Read the DETAIL with `error.details` from supabase-js and `JSON.parse` it. Tests:
+  `supabase/tests/fridge_edits.test.sql`.
+
 ## Local development
 
 Node 22 (`nvm use` reads `.nvmrc`; supabase-js needs Node 22's native WebSocket) and Docker.

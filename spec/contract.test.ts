@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   Chunk,
   CookAnswer,
+  CookDoneResponse,
   ErrorBody,
+  FridgeItemPatch,
   FridgeView,
   PlanCreate,
   PlanDraft,
@@ -190,5 +192,20 @@ describe("journey-map fields (2026-10-21)", () => {
     const withImage = RecipeSummary.safeParse({ ...r, imageUrl: "https://example.com/x.jpg" });
     expect(withImage.success && withImage.data.imageUrl).toBe("https://example.com/x.jpg");
     expect(RecipeSummary.safeParse({ ...r, imageUrl: "not a url" }).success).toBe(false);
+  });
+});
+
+describe("fridge transaction fields (2026-10-22)", () => {
+  it("lets an item edit carry the quantity the user saw", () => {
+    const parsed = FridgeItemPatch.safeParse({ qty: 100, expectedQty: 150, idempotencyKey: "key-12345678" });
+    expect(parsed.success && parsed.data.expectedQty).toBe(150);
+    expect(FridgeItemPatch.safeParse({ status: "used", expectedQty: -1, idempotencyKey: "key-12345678" }).success).toBe(false);
+  });
+
+  it("lets cook done list ingredients with no stock at all", () => {
+    const base = { cookEventId: "cke_1", deductions: [], leftovers: { servings: 0, expiresOn: "2026-10-24" } };
+    expect(CookDoneResponse.safeParse(base).success).toBe(true);
+    const parsed = CookDoneResponse.safeParse({ ...base, missing: [{ ingredientId: "ing_lemon", qty: 1, unit: "count" }] });
+    expect(parsed.success && parsed.data.missing).toEqual([{ ingredientId: "ing_lemon", qty: 1, unit: "count" }]);
   });
 });
