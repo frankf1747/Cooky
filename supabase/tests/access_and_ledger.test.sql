@@ -1,5 +1,7 @@
 -- Run: npx supabase test db
 -- Proves the SPEC §9 access rule, the atomic quota, and the idempotent fridge ledger.
+-- Server-role queries are scoped to the test users, so the suite passes on a local database
+-- that already holds real development data (other accounts' plans, fridge items).
 begin;
 create extension if not exists pgtap with schema extensions;
 select plan(21);
@@ -24,7 +26,7 @@ select results_eq($$ select used, allowed from public.consume_quota('11111111-11
 select lives_ok($$ select public.release_quota('11111111-1111-1111-1111-111111111111', 'plans', 'lifetime');
                    select public.release_quota('11111111-1111-1111-1111-111111111111', 'plans', 'lifetime') $$,
                 'releasing more than was used does not fail');
-select is((select count from public.usage_counters where feature = 'plans'), 0, 'a counter never goes below zero');
+select is((select count from public.usage_counters where user_id = '11111111-1111-1111-1111-111111111111' and feature = 'plans' and period = 'lifetime'), 0, 'a counter never goes below zero');
 
 -- ---- ledger (server role)
 select is(
@@ -36,19 +38,19 @@ select is(
   true, 'the same batch key replays the first result');
 select is((select count(*)::int from public.fridge_items where user_id = '11111111-1111-1111-1111-111111111111'), 1,
   'a replayed batch writes nothing');
-select is((select count(*)::int from public.inventory_events where batch_key = 'batch_one'), 1, 'one event per batch item');
+select is((select count(*)::int from public.inventory_events where user_id = '11111111-1111-1111-1111-111111111111' and batch_key = 'batch_one'), 1, 'one event per batch item');
 
 select throws_like(
   format($f$ select public.apply_inventory_batch('11111111-1111-1111-1111-111111111111', 'batch_two', %L::jsonb) $f$,
-    json_build_array(json_build_object('itemId', (select id from public.fridge_items limit 1), 'delta', -999, 'reason', 'cook'))::text),
+    json_build_array(json_build_object('itemId', (select id from public.fridge_items where user_id = '11111111-1111-1111-1111-111111111111' limit 1), 'delta', -999, 'reason', 'cook'))::text),
   'insufficient_stock%', 'a deduction larger than stock is refused');
-select is((select qty from public.fridge_items limit 1), 150::numeric, 'a refused batch changes nothing');
+select is((select qty from public.fridge_items where user_id = '11111111-1111-1111-1111-111111111111' limit 1), 150::numeric, 'a refused batch changes nothing');
 
 select is(
   (public.apply_inventory_batch('11111111-1111-1111-1111-111111111111', 'batch_three',
-    json_build_array(json_build_object('itemId', (select id from public.fridge_items limit 1), 'delta', -150, 'reason', 'cook'))::jsonb
+    json_build_array(json_build_object('itemId', (select id from public.fridge_items where user_id = '11111111-1111-1111-1111-111111111111' limit 1), 'delta', -150, 'reason', 'cook'))::jsonb
   )->>'events')::int, 1, 'a full deduction is applied');
-select is((select status from public.fridge_items limit 1), 'used', 'an item used up is marked used');
+select is((select status from public.fridge_items where user_id = '11111111-1111-1111-1111-111111111111' limit 1), 'used', 'an item used up is marked used');
 
 -- ---- client access (authenticated role)
 set local role authenticated;
