@@ -19,13 +19,14 @@ const failures: string[] = [];
 
 async function main() {
   const health = await fetch(`${base}/api/health`);
-  const body = (await health.json().catch(() => ({}))) as { status?: string; db?: string };
+  const body = (await health.json().catch(() => ({}))) as { status?: string; db?: string; stripeMode?: string };
   console.log(`GET /api/health -> ${health.status} ${JSON.stringify(body)}`);
   if (health.status !== 200 || body.status !== "ok") failures.push(`/api/health: ${health.status} ${body.status ?? ""} db=${body.db ?? "?"}`);
 
   for (const r of routes.filter((x) => x.v === 1 && x.auth !== "public")) {
     const res = await fetch(`${base}${fill(r.path)}`, { method: r.method, headers: { "content-type": "application/json" }, body: r.method === "GET" ? undefined : "{}" });
-    const expected = r.auth === "stripe" ? [400, 501] : [401];
+    // An unsigned webhook is refused (400); with no Stripe keys configured it says so (503).
+    const expected = r.auth === "stripe" ? (body.stripeMode === "test" ? [400] : [503]) : [401];
     const ok = expected.includes(res.status) && Boolean(res.headers.get("x-request-id"));
     console.log(`${ok ? "ok  " : "FAIL"} ${r.method} ${r.path} -> ${res.status} (expected ${expected.join(" or ")}, unauthenticated)`);
     if (!ok) failures.push(`${r.method} ${r.path}: ${res.status}`);
