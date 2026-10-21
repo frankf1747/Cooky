@@ -1,16 +1,9 @@
 // Owner: Recipes & Cook. Shown while cook mode loads.
-import { maru } from "../../recipes/font";
-import { FunStyles, ui } from "../../recipes/fun";
-import { Mascot } from "../../recipes/Mascot";
-
 export default function Loading() {
   return (
-    <div className={`${ui.page} ${maru.className}`}>
-      <FunStyles />
-      <section className="mx-auto flex w-full max-w-xl items-center gap-3 p-6" role="status">
-        <Mascot mood="thinking" size={56} className="cooky-float" />
-        <p className="font-bold">Bao is tying on an apron… getting the recipe ready</p>
-      </section>
-    </div>
+    <section className="mx-auto w-full max-w-xl p-6" aria-busy="true" aria-label="Loading cook mode">
+      <div className="h-7 w-56 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+      <div className="mt-6 h-40 animate-pulse rounded-lg bg-zinc-100 dark:bg-zinc-900" />
+    </section>
   );
 }

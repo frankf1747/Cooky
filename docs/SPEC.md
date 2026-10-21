@@ -780,22 +780,52 @@ Everything marked v2 in §0 is the post-demo roadmap and goes in the write-up's 
 What a user can do today, by journey step. "Merged" means on `main` with green CI, the merge gate
 passing and a reviewer's click-through; real Claude and real Stripe calls are not run yet (no
 `ANTHROPIC_API_KEY`, no Stripe test keys), so AI steps were checked in `AI_MODE=fake`.
-v1 API routes answering for real: 17½ of 29.
+v1 API routes answering for real: 23½ of 29 (updated after #24).
 
 | Step | Owner | On `main` | Still to do for v1 |
 |---|---|---|---|
 | 1 Set up | Platform | Onboarding and settings (household, budget, minutes, never-eat, staples, timezone); `/api/me`, `/api/profile`; login goes to onboarding until saved (ACC1–ACC4) | — |
 | 2 Unlock Pro | Platform | Checkout, signed webhook with `grant_pro()`, confirming page that polls (ACC5–ACC8); the eight billing scenarios as tests | Stripe test keys and price; `scn:billing` against real Stripe; Vercel deploy |
-| 3 Choose & plan | Recipes & Cook, Plan & Shop | Plans within budget from fridge, picked recipes, must-use items, save, honest infeasible hints, combination cap, past use-by warnings, optional extras (PLN1–PLN6, PLN8) | Recipe library pages and routes (RCP1–RCP3); swap (PLN7); a library past the 3 seed recipes |
+| 3 Choose & plan | Recipes & Cook, Plan & Shop | 20-recipe library with search and quick filters, recipe pages (RCP1–RCP3); plans within budget from fridge, picked recipes, must-use items, save, honest infeasible hints, combination cap, past use-by warnings, optional extras (PLN1–PLN6, PLN8) | Swap (PLN7); more recipes; dish images (placeholders now); filter data standard (§14.6) |
 | 4 Shop | Plan & Shop | Shopping list on the plan page (need, have, buy, packages, cost, leftover) | `/shop` page |
 | 5 Scan | Receipts | Scan page with plan picker, upload, read, retry (RCT1–RCT2, RCT7); eval runner | Receipt photos and answers in `eval/smoke/receipts/` (Data & Proof); a live run |
 | 6 Review | Receipts | Review page, confirm into the fridge as one batch, photo deleted, plan diff (RCT3–RCT6, RCT9–RCT10) | UI: lock the unit on catalog lines; show the recomputed date instead of rewriting it |
 | 7 Fridge | Fridge | View, manual add, mark used or tossed, expiring soon, Cook now (FRG1, FRG3, FRG5) | Item edits through `edit_fridge_item` (FRG4); dark-mode contrast; the fridge-door design |
-| 8 Cook | Recipes & Cook | Recipe steps, timers and tips in the seed data only | Cook page, `cook.ask` with citations (CK1, ASK1–ASK5) |
-| 9 Confirm & learn | Recipes & Cook, Plan & Shop | `fridge.proposeDeductions` | `cook.done` / `cook.confirm` (CK2–CK3); preferences (LRN1–LRN3) |
+| 8 Cook | Recipes & Cook | Cook mode one step at a time with timers and tips; assistant with citations and the safety notice (CK1, ASK1–ASK5), checked in fake AI mode | A live run with `ANTHROPIC_API_KEY`; prefix search |
+| 9 Confirm & learn | Recipes & Cook, Plan & Shop | Cook done and confirm: deductions and leftovers in one fridge batch (CK2–CK3) | Preferences (LRN1–LRN3); feedback is stored but proposals wait for `preferences.propose` |
 
 Proof (§13) has not started: no smoke cases yet, no `e2e/` journey, seed shelf-life sources are
-placeholders. Owners still unassigned: Recipes & Cook, Data & Proof.
+placeholders. Recipes & Cook is Jen (jenchen34); Data & Proof is still unassigned.
+
+### 14.6 Next phase: known gaps (2026-10-21)
+
+The team walks the journey step by step and builds from this list. UI: plain style and no emoji
+(AGENTS.md); the recipe and cook pages were moved off their custom theme, keeping all behaviour.
+
+- **Recipe catalog:** 20 recipes is too few to plan varied weeks; grow it under the data standard
+  below. Dish images: test image designs and prompts with AI before choosing; placeholders until
+  then.
+- **Recipe data standard for filtering** (audit 2026-10-21):
+  - Tags are free text. Agree a closed vocabulary: exactly one cuisine (every recipe has one as of
+    2026-10-21), meal (breakfast, lunch, dinner), and curated tags (rice-bowl, uses-leftovers vs
+    makes-leftovers).
+  - Derive instead of hand-tagging, or have `check:contract` reject disagreements: vegetarian and
+    pescatarian (from ingredient categories), quick (minutes), budget (computed cost per serving;
+    today's `budget` tag contradicts it), one-pan, high-protein (needs a threshold or nutrition).
+  - `minutes` must include every step (egg fried rice needs cooked, chilled rice).
+  - Equipment from a closed list, every vessel listed; "oven-safe skillet" vs "skillet" decides
+    whether a skillet owner can make the frittata.
+  - Allergens: `Profile.allergenTags` is free text, so "dairy" or "gluten" silently match nothing.
+    Closed list (egg, milk, wheat, gluten, soy, fish, shellfish, peanut, tree-nut, sesame) in the
+    contract; check store-sauce labels (yellow curry sauce, marinara); decide coconut.
+  - Vegan needs an animal-product flag per ingredient (honey, store sauces).
+  - `RecipesQuery` takes one `tag`; filters combine only on the page.
+- **Search:** ingredient and recipe search do not match word prefixes ("garl", "chick").
+- **Fridge:** item edits through `edit_fridge_item` (FRG4); dark-mode contrast on the fridge page.
+- **Receipts review UI:** lock the unit on catalog lines; show, not rewrite, the recomputed date.
+- **Keys and deploy:** `ANTHROPIC_API_KEY`, Stripe test keys, Vercel deploy; then live evals and
+  `scn:billing`.
+- **Proof:** smoke cases, receipt photos, `e2e/` journey; owner still unassigned.
 
 ## 15. Risks
 
@@ -822,11 +852,11 @@ items for off-catalog food; a small model budget, so `claude-haiku-5-5` by defau
 |---|---|
 | Exact presentation date and time (`ASSUMED:` end of Day 2) | Frank |
 | Names for the ownership roles (§14.3) | Frank |
-| Free vs Pro split (ACC4) and price (`costModel.proPriceUsd`), one-time vs subscription | Frank + team |
+| Free vs Pro split (ACC4) and price (`costModel.proPriceUsd`), one-time vs subscription. **Proposal 2026-10-21 (Frank):** the AI features alone are not a clear reason to pay; candidate Pro features are the full recipe library (Free gets a limited set), recipe search, and adding your own recipes. Not built; ACC4 stays as written until decided. | Frank + team |
 | Vercel plan (function duration limits) and whether email confirmation is on for the demo | Platform |
 | Which store the price snapshot and receipts come from | Data & Proof |
 | Shelf-life source and licence (USDA FoodKeeper data or another) | Data & Proof |
-| Recipe list and cuisines for the seed library | Recipes & Cook |
+| Recipe list and cuisines for the seed library; dish images (AI-generated: which design and prompt) | Recipes & Cook + Frank |
 | Receipt image retention: delete on confirm and after a grace period for unconfirmed ones (current), or keep for user history | Frank |
 
 ## 17. Stretch goals
