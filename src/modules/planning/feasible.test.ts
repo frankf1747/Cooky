@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { MAX_COMBINATIONS, findFeasibleSets, type FeasibleInput, type PlanningRecipe } from "./feasible";
+import targets from "@spec/targets.json";
+import { findFeasibleSets, type FeasibleInput, type PlanningRecipe } from "./feasible";
 
 const ingredients = [
   { id: "ing_chicken", name: "Chicken", allergenTags: [] },
@@ -216,7 +217,7 @@ describe("findFeasibleSets on a large library (combination cap)", () => {
     const ms = performance.now() - t0;
     expect(res.ok).toBe(true);
     if (res.ok) {
-      expect(res.sets.length).toBeLessThanOrEqual(MAX_COMBINATIONS);
+      expect(res.sets.length).toBeLessThanOrEqual(targets.limits.planCombinationsMax);
       expect(res.sets[0].recipeIds).toEqual(["rcp_big_0", "rcp_big_1", "rcp_big_2", "rcp_big_3", "rcp_big_4"]);
     }
     expect(ms).toBeLessThan(2000);
@@ -226,6 +227,29 @@ describe("findFeasibleSets on a large library (combination cap)", () => {
     const fridge = [{ id: "itm_last", ingredientId: "ing_big_39", qty: 50, unit: "g" as const, expiresOn: "2026-10-22" }];
     const res = findFeasibleSets(bigInput({ fridge, mustUseItemIds: ["itm_last"] }));
     expect(res.ok && res.sets.length > 0 && res.sets.every((s) => s.recipeIds.includes("rcp_big_39"))).toBe(true);
+  });
+
+  it("keeps a recipe for every must-use item, not just the cheapest users of one", () => {
+    // Frank's probe on #14: 20 cheap recipes share ing_a; only the priciest covers ing_big_39.
+    const recipes = big.map((n) => r(`rcp_big_${n}`, 20, n < 20 ? [[`ing_big_${n}`, 100, "g"], ["ing_a", 10, "g"]] : [[`ing_big_${n}`, 100, "g"]]));
+    const fridge = [
+      { id: "itm_a", ingredientId: "ing_a", qty: 50, unit: "g" as const, expiresOn: "2026-10-22" },
+      { id: "itm_b", ingredientId: "ing_big_39", qty: 50, unit: "g" as const, expiresOn: "2026-10-22" },
+    ];
+    const res = findFeasibleSets(bigInput({
+      recipes, fridge, mustUseItemIds: ["itm_a", "itm_b"],
+      ingredients: [...big.map((n) => ({ id: `ing_big_${n}`, name: `Big ${n}`, allergenTags: [] })), { id: "ing_a", name: "A", allergenTags: [] }],
+      products: [...big.map((n) => ({ id: `prd_big_${n}`, ingredientId: `ing_big_${n}`, packageSize: 100, unit: "g" as const, priceCents: 100 + n * 10 })),
+        { id: "prd_a", ingredientId: "ing_a", packageSize: 100, unit: "g" as const, priceCents: 100 }],
+    }));
+    expect(res.ok && res.sets.length > 0 && res.sets.every((s) => s.recipeIds.includes("rcp_big_39"))).toBe(true);
+  });
+
+  it("covers several must-use items that each have only one pricey recipe", () => {
+    const fridge = [37, 38, 39].map((n) => ({ id: `itm_${n}`, ingredientId: `ing_big_${n}`, qty: 50, unit: "g" as const, expiresOn: "2026-10-22" }));
+    const res = findFeasibleSets(bigInput({ fridge, mustUseItemIds: fridge.map((f) => f.id) }));
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.sets[0].recipeIds).toEqual(["rcp_big_0", "rcp_big_1", "rcp_big_37", "rcp_big_38", "rcp_big_39"]);
   });
 
   it("picks are always kept and only the other meals are capped", () => {

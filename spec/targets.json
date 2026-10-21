@@ -132,6 +132,7 @@
     "mealsPerPlanMin": 2,
     "mealsPerPlanMax": 5,
     "plannerFeasibleSetsShown": 8,
+    "planCombinationsMax": 2000,
     "alertLeadDays": 2,
     "alertCronUtc": "0 15 * * *",
     "entitlementPollIntervalMs": 2000,
