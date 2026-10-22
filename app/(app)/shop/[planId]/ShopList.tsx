@@ -2,7 +2,7 @@
 // Owner: Plan & Shop. Tick items in the store; each tick is saved on the plan so it follows you
 // across devices (PATCH /api/plans/{id}/checklist). A failed save puts the tick back and says so.
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ShoppingItem } from "@spec/contract";
 import { formatUsd } from "@/platform/money";
 import { formatQty } from "../../plan/ui";
@@ -33,25 +33,30 @@ export function ShopList({ planId, aisles, initialChecked, covered, titles, tota
   const leftCents = items.filter((i) => !checked.includes(i.ingredientId)).reduce((s, i) => s + (i.costCents ?? 0), 0);
   const unknownLeft = items.some((i) => !checked.includes(i.ingredientId) && i.costCents === null);
 
-  async function toggle(id: string, on: boolean) {
+  // Saves go one at a time, in tap order: the server updates the whole list per request, so two
+  // saves in flight at once would overwrite each other and lose a tick. The tick shows at once.
+  const queue = useRef<Promise<void>>(Promise.resolve());
+
+  function toggle(id: string, on: boolean) {
     if (saving.includes(id)) return;
     setError(null);
     setSaving((s) => [...s, id]);
-    setChecked((c) => (on ? [...c, id] : c.filter((x) => x !== id)));
-    try {
-      const res = await fetch(`/api/plans/${planId}/checklist`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ingredientId: id, checked: on }),
-      });
-      if (!res.ok) throw new Error(String(res.status));
-      setChecked(((await res.json()) as { checked: string[] }).checked);
-    } catch {
-      setChecked((c) => (on ? c.filter((x) => x !== id) : [...c, id]));
-      setError("That tick didn't save. Check your connection and tap it again.");
-    } finally {
-      setSaving((s) => s.filter((x) => x !== id));
-    }
+    setChecked((c) => (on ? [...new Set([...c, id])] : c.filter((x) => x !== id)));
+    queue.current = queue.current.then(async () => {
+      try {
+        const res = await fetch(`/api/plans/${planId}/checklist`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ ingredientId: id, checked: on }),
+        });
+        if (!res.ok) throw new Error(String(res.status));
+      } catch {
+        setChecked((c) => (on ? c.filter((x) => x !== id) : [...new Set([...c, id])]));
+        setError("That tick didn't save. Check your connection and tap it again.");
+      } finally {
+        setSaving((s) => s.filter((x) => x !== id));
+      }
+    });
   }
 
   if (items.length === 0) {
@@ -64,7 +69,7 @@ export function ShopList({ planId, aisles, initialChecked, covered, titles, tota
 
   return (
     <>
-      <div className="sticky top-0 z-10 flex items-baseline justify-between gap-4 border-b border-zinc-200 bg-[var(--background)] py-3 dark:border-zinc-800">
+      <div className="sticky top-14 z-10 flex items-baseline justify-between gap-4 border-b border-zinc-200 bg-[var(--background)] py-3 dark:border-zinc-800">
         <p className="text-sm">
           <span className="font-semibold">{inCart.length} of {items.length}</span> in your cart
         </p>
