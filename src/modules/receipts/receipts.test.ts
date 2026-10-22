@@ -157,15 +157,33 @@ describe("receipts.upload (RCT1, RCT2, RCT4)", () => {
     expect(blocks[0].text).toContain("<receipt_image>");
   });
 
-  it("an ingredient id outside the catalog is sent back for one repair, then accepted", async () => {
-    const good = aiFixtures.receipt_reader({ system: "", text: "" }) as { lines: { ingredientId: string | null }[] };
-    const bad = structuredClone(good);
-    bad.lines[0].ingredientId = "ing_secret";
-    transport.mockResolvedValueOnce(reply(bad)).mockResolvedValueOnce(reply(good));
+  it("an id outside the catalog fails nothing: no repair, that one line is flagged, the rest are kept (receipts exception)", async () => {
+    const out = aiFixtures.receipt_reader({ system: "", text: "" }) as { lines: { ingredientId: string | null }[] };
+    out.lines[0].ingredientId = "ing_secret"; // another user's custom ingredient
+    out.lines[1].ingredientId = "ing_made_up";
+    transport.mockResolvedValueOnce(reply(out));
     const { receipt, run } = await receipts.upload(U1, form(JPEG), "req_1");
-    expect(transport).toHaveBeenCalledTimes(2);
+    expect(transport).toHaveBeenCalledTimes(1);
     expect(run.terminated).toBe("done");
-    expect(receipt.lines[0].ingredientId).toBe("ing_chicken_breast");
+    expect(receipt.status).toBe("parsed");
+    expect(receipt.lines.map((l) => [l.name, l.decision, l.flagReason, l.ingredientId])).toEqual([
+      ["Chicken breast", "flagged", "unknown_ingredient", null],
+      ["Baby spinach", "flagged", "unknown_ingredient", null],
+      ["Pita chips", "generic", null, null],
+      ["Herb blend?", "flagged", "low_confidence", null],
+      ["Bag fee", "ignored", null, null],
+    ]);
+    // G1: nothing outside this user's catalog is ever stored.
+    expect(tables.receipt_lines.every((r) => r.ingredient_id === null || ["ing_chicken_breast", "ing_spinach"].includes(r.ingredient_id as string))).toBe(true);
+  });
+
+  it("an id on a non-food line is dropped; the line stays ignored", async () => {
+    const out = aiFixtures.receipt_reader({ system: "", text: "" }) as { lines: { ingredientId: string | null }[] };
+    out.lines[4].ingredientId = "ing_chicken_breast"; // "BAG FEE"
+    transport.mockResolvedValueOnce(reply(out));
+    const { receipt } = await receipts.upload(U1, form(JPEG), "req_1");
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect(receipt.lines[4]).toMatchObject({ name: "Bag fee", decision: "ignored", ingredientId: null });
   });
 
   it("links a plan the user owns; another user's plan is 404 and nothing is stored", async () => {
