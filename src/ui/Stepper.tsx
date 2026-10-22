@@ -45,7 +45,7 @@ export function Stepper({ label, icon, value, min, max, step = 1, format = Strin
         </button>
         <output aria-live="polite" className="flex min-w-0 flex-col items-center text-center">
           <span key={value} className="pop-in font-display text-[1.75rem] font-semibold leading-none tracking-[-0.02em] tabular-nums">{format(value)}</span>
-          {unit && <span className="mt-1 text-xs text-muted">{unit}</span>}
+          {unit && <span className="mt-1 whitespace-nowrap text-xs text-muted">{unit}</span>}
         </output>
         <button type="button" aria-label={more} onClick={() => onChange(up)} disabled={disabled || value >= max} className={btnIcon}>
           <Plus size={18} weight="bold" aria-hidden />

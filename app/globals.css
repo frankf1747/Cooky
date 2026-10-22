@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* `dark:` follows the scheme in force (data-theme), not only the device. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /*
   Cooky's look (docs/BRAND.md). Warm paper and deep ink; one cobalt accent for actions; four food
   colours that each mean one step of the week, used as quiet tints, never as decoration:
@@ -8,10 +11,11 @@
   Headlines are Fraunces, soft and doughy; everything you read or tap is Geist. Shapes come from
   the bun: pill controls, 16px cards, 24px feature panels, a dome for food. Pages never pick a
   colour by hand; they use these tokens through the classes in src/ui/styles.ts. Both colour
-  schemes share the token names, so `dark:` variants are rarely needed.
+  schemes share the token names, so `dark:` variants are rarely needed. Which scheme is in force is
+  <html data-theme>, chosen in Settings → Appearance (System follows the device).
 */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
   /* paper and ink */
   --background: #f5f0e6;
@@ -67,46 +71,47 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #16141b;
-    --surface: #201d26;
-    --sunken: #2a2631;
-    --foreground: #f2ece3;
-    --muted: #bcb4c0;
-    --subtle: #9a929f;
-    --line: #342f3c;
-    --line-strong: #4d4756;
+/* Dark: <html data-theme="dark">, set before the first paint from the person's choice in
+   Settings (or their device, when they leave it on System); see src/ui/theme.ts. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #16141b;
+  --surface: #201d26;
+  --sunken: #2a2631;
+  --foreground: #f2ece3;
+  --muted: #bcb4c0;
+  --subtle: #9a929f;
+  --line: #342f3c;
+  --line-strong: #4d4756;
 
-    --accent: #8ea2ff;
-    --accent-hover: #a7b6ff;
-    --accent-soft: #262d52;
-    --on-accent: #10132e;
+  --accent: #8ea2ff;
+  --accent-hover: #a7b6ff;
+  --accent-soft: #262d52;
+  --on-accent: #10132e;
 
-    --cobalt: #8ea2ff;
-    --cobalt-tint: #222a4d;
-    --cobalt-ink: #c6d0ff;
-    --cobalt-deep: #1f2b6e;
-    --paper: #ece4d4;
-    --crust: #edb054;
-    --crust-tint: #3b2e17;
-    --crust-ink: #f6d9a0;
-    --basil: #72bf88;
-    --basil-tint: #1f3527;
-    --basil-ink: #b9e4c5;
-    --tomato: #f27a55;
-    --tomato-tint: #43251c;
-    --tomato-ink: #ffc4ae;
-    --parchment: #2d2923;
-    --parchment-ink: #e3d9c7;
+  --cobalt: #8ea2ff;
+  --cobalt-tint: #222a4d;
+  --cobalt-ink: #c6d0ff;
+  --cobalt-deep: #1f2b6e;
+  --paper: #ece4d4;
+  --crust: #edb054;
+  --crust-tint: #3b2e17;
+  --crust-ink: #f6d9a0;
+  --basil: #72bf88;
+  --basil-tint: #1f3527;
+  --basil-ink: #b9e4c5;
+  --tomato: #f27a55;
+  --tomato-tint: #43251c;
+  --tomato-ink: #ffc4ae;
+  --parchment: #2d2923;
+  --parchment-ink: #e3d9c7;
 
-    --past: #3a2a0f;
-    --past-ink: #f5c26b;
-    --danger: #ff8a80;
-    --danger-tint: #3f1c1b;
+  --past: #3a2a0f;
+  --past-ink: #f5c26b;
+  --danger: #ff8a80;
+  --danger-tint: #3f1c1b;
 
-    --shadow-float: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 40px -16px rgb(0 0 0 / 0.7);
-  }
+  --shadow-float: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 40px -16px rgb(0 0 0 / 0.7);
 }
 
 @theme inline {
