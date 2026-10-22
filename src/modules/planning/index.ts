@@ -7,7 +7,7 @@ import targets from "@spec/targets.json";
 import { runAi } from "@/platform/ai";
 import { DEFAULT_TIMEZONE, localDate } from "@/platform/dates";
 import { reader, writer } from "@/platform/db";
-import { ApiError, badRequest, conflict, notFound, notImplemented, unprocessable } from "@/platform/errors";
+import { ApiError, badRequest, conflict, notFound, unprocessable } from "@/platform/errors";
 import { log } from "@/platform/log";
 import * as preferences from "@/modules/preferences";
 import { loadPlanningData, type PlanningData } from "./data";
@@ -15,7 +15,7 @@ import { findFeasibleSets, type DroppedPick, type FeasibleSet, type RelaxHint } 
 import { optionalExtras, pastUseBy, type PastUseBy } from "./notes";
 import { PLANNER_SYSTEM, expiringSoon, plannerContent, validateChoice } from "./planner";
 import { buildShoppingList } from "./shopping";
-import { findByKey, insertDraft, insertNextVersion, listSummaries, markSaved, readCurrent, readPlan } from "./store";
+import { findByKey, insertDraft, insertNextVersion, listSummaries, markSaved, readCurrent, readPlan, writeChecklist } from "./store";
 
 const DROP_REASON: Partial<Record<RelaxHint, string>> = {
   maxMinutes: "it takes longer than your max minutes",
@@ -271,10 +271,47 @@ export async function priceRecipes(userId: string, recipeIds: string[], servings
   });
 }
 
-// ---- v2
+/** PLN9: tick or untick an item on the plan's shopping list; returns every ticked ingredient id. */
 export async function setChecklist(userId: string, planId: string, input: z.infer<typeof ChecklistPatch>): Promise<{ checked: string[] }> {
-  void userId;
-  void planId;
-  void input;
-  throw notImplemented("planning.setChecklist (v2)");
+  const { plan, checked } = await readCurrent(await reader(), userId, planId);
+  if (!plan.shopping.items.some((i) => i.ingredientId === input.ingredientId)) {
+    throw badRequest("invalid_input", `${input.ingredientId} is not on this plan's shopping list`);
+  }
+  const next = input.checked ? [...new Set([...checked, input.ingredientId])] : checked.filter((id) => id !== input.ingredientId);
+  await writeChecklist(writer(userId), planId, plan.version, next);
+  return { checked: next };
+}
+
+/** Store-aisle order for the shopping page; anything else goes last. */
+const AISLES = ["produce", "bakery", "meat", "seafood", "dairy", "eggs", "frozen", "pantry", "prepared", "snacks", "beverages", "other"];
+
+export type ShoppingView = {
+  plan: PlanDraft;
+  checked: string[];
+  aisles: { category: string; items: PlanDraft["shopping"]["items"] }[];
+  covered: PlanDraft["shopping"]["items"];
+};
+
+/** The /shop page: the plan's list to buy grouped by aisle, what is already covered, and the ticks. */
+export async function shoppingView(userId: string, planId: string): Promise<ShoppingView> {
+  const db = await reader();
+  const { plan, checked } = await readCurrent(db, userId, planId);
+  const ids = plan.shopping.items.map((i) => i.ingredientId);
+  const res = ids.length ? await db.from("ingredients").select("id, category").in("id", ids) : { data: [], error: null };
+  if (res.error) throw new Error(`planning: loading ingredient categories failed: ${res.error.message}`);
+  const category = new Map(((res.data ?? []) as { id: string; category: string }[]).map((r) => [r.id, r.category]));
+
+  const toBuy = plan.shopping.items.filter((i) => i.packages > 0 || i.costCents === null);
+  const groups = new Map<string, PlanDraft["shopping"]["items"]>();
+  for (const i of toBuy) {
+    const c = category.get(i.ingredientId) ?? "other";
+    groups.set(c, [...(groups.get(c) ?? []), i]);
+  }
+  const rank = (c: string) => (AISLES.includes(c) ? AISLES.indexOf(c) : AISLES.length);
+  return {
+    plan,
+    checked: checked.filter((id) => toBuy.some((i) => i.ingredientId === id)),
+    aisles: [...groups.entries()].sort(([a], [b]) => rank(a) - rank(b)).map(([c, items]) => ({ category: c, items })),
+    covered: plan.shopping.items.filter((i) => !toBuy.includes(i)),
+  };
 }

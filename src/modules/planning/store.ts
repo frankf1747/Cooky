@@ -17,9 +17,10 @@ type VersionRow = {
   assumptions: string[];
   run_id: string | null;
   saved_at: string | null;
+  checklist?: string[];
 };
 
-const VERSION_COLS = "plan_id, version, inputs, meals, shopping, total_cents, price_as_of, assumptions, run_id, saved_at";
+const VERSION_COLS = "plan_id, version, inputs, meals, shopping, total_cents, price_as_of, assumptions, run_id, saved_at, checklist";
 
 function fail(what: string, error: { message: string } | null): never {
   throw new Error(`planning: ${what} failed: ${error?.message ?? "no row"}`);
@@ -137,10 +138,21 @@ export async function markSaved(db: SupabaseClient, w: { db: SupabaseClient; use
 }
 
 /** The plan's current version with the inputs it was made from (for swapMeal). 404 when not this user's. */
-export async function readCurrent(db: SupabaseClient, userId: string, planId: string): Promise<{ plan: PlanDraft; inputs: PlanCreate }> {
+export async function readCurrent(db: SupabaseClient, userId: string, planId: string): Promise<{ plan: PlanDraft; inputs: PlanCreate; checked: string[] }> {
   const plan = await ownPlan(db, userId, planId);
   const v = await currentVersion(db, userId, plan);
-  return { plan: toDraft(plan, v), inputs: v.inputs };
+  return { plan: toDraft(plan, v), inputs: v.inputs, checked: v.checklist ?? [] };
+}
+
+/**
+ * PLN9: the in-store ticks live on the plan's current version (checklist column), so they follow the
+ * user across devices. A swap starts a new version with a fresh list. Ticks are shopping state, not
+ * plan content: meals, list and prices of a saved version never change.
+ */
+export async function writeChecklist(w: { db: SupabaseClient; userId: string }, planId: string, version: number, checked: string[]): Promise<void> {
+  const res = await w.db.from("plan_versions").update({ checklist: checked })
+    .eq("user_id", w.userId).eq("plan_id", planId).eq("version", version);
+  if (res.error) fail(`saving the shopping checklist of ${planId}`, res.error);
 }
 
 /**

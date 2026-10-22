@@ -29,9 +29,9 @@ function seed() {
       { recipe_id: "rcp_rice", ingredient_id: "ing_egg", qty: 2, unit: "count", optional: false },
     ],
     ingredients: [
-      { id: "ing_chicken", name: "Chicken", allergen_tags: [] },
-      { id: "ing_egg", name: "Egg", allergen_tags: ["egg"] },
-      { id: "ing_rice", name: "Rice", allergen_tags: [] },
+      { id: "ing_chicken", name: "Chicken", allergen_tags: [], category: "meat" },
+      { id: "ing_egg", name: "Egg", allergen_tags: ["egg"], category: "eggs" },
+      { id: "ing_rice", name: "Rice", allergen_tags: [], category: "pantry" },
     ],
     products: [
       { id: "prd_chicken", ingredient_id: "ing_chicken", package_size: 500, unit: "g", price_cents: 800, price_date: "2026-10-20" },
@@ -277,5 +277,43 @@ describe("swapMeal (PLN7)", () => {
     const { plan } = await two();
     await expect(planning.swapMeal(U1, plan.planId, { mealIndex: 5, baseVersion: 1 }, "req_2")).rejects.toMatchObject({ status: 400 });
     await expect(planning.swapMeal(U2, plan.planId, { mealIndex: 0, baseVersion: 1 }, "req_3")).rejects.toMatchObject({ status: 404 });
+  });
+});
+
+describe("shopping page: shoppingView and setChecklist (PLN9)", () => {
+  // omelette + rice: eggs (eggs aisle) and rice (pantry); chicken in the fridge is not bought
+  const plan = async () => (await planning.createPlan(U1, body({ mustIncludeRecipeIds: ["rcp_omelette", "rcp_rice"] }), "req_1")).plan;
+
+  it("groups what to buy by aisle in store order, lists what is covered, nothing ticked yet", async () => {
+    const p = await plan();
+    const v = await planning.shoppingView(U1, p.planId);
+    expect(v.aisles.map((a) => [a.category, a.items.map((i) => i.ingredientId)])).toEqual([["eggs", ["ing_egg"]], ["pantry", ["ing_rice"]]]);
+    expect(v.checked).toEqual([]);
+    expect(v.plan.planId).toBe(p.planId);
+  });
+
+  it("ticks persist on the plan, untick removes, and a repeat tick is harmless", async () => {
+    const p = await plan();
+    expect(await planning.setChecklist(U1, p.planId, { ingredientId: "ing_egg", checked: true })).toEqual({ checked: ["ing_egg"] });
+    expect(await planning.setChecklist(U1, p.planId, { ingredientId: "ing_egg", checked: true })).toEqual({ checked: ["ing_egg"] });
+    await planning.setChecklist(U1, p.planId, { ingredientId: "ing_rice", checked: true });
+    expect((await planning.shoppingView(U1, p.planId)).checked).toEqual(["ing_egg", "ing_rice"]);
+    expect(await planning.setChecklist(U1, p.planId, { ingredientId: "ing_egg", checked: false })).toEqual({ checked: ["ing_rice"] });
+    // the plan itself is unchanged
+    expect(await planning.getPlan(U1, p.planId)).toEqual(p);
+  });
+
+  it("an ingredient not on the list is 400; another user's plan is 404", async () => {
+    const p = await plan();
+    await expect(planning.setChecklist(U1, p.planId, { ingredientId: "ing_lobster", checked: true })).rejects.toMatchObject({ status: 400 });
+    await expect(planning.setChecklist(U2, p.planId, { ingredientId: "ing_egg", checked: true })).rejects.toMatchObject({ status: 404 });
+    await expect(planning.shoppingView(U2, p.planId)).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("a swap starts the new version with a fresh list", async () => {
+    const p = (await planning.createPlan(U1, body(), "req_1")).plan; // chicken + omelette
+    await planning.setChecklist(U1, p.planId, { ingredientId: "ing_egg", checked: true });
+    await planning.swapMeal(U1, p.planId, { mealIndex: 0, baseVersion: 1 }, "req_2");
+    expect((await planning.shoppingView(U1, p.planId)).checked).toEqual([]);
   });
 });

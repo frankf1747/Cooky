@@ -74,8 +74,11 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
         ))}
       </div>
 
-      <div id="shopping" className="mt-10 flex scroll-mt-20 items-baseline justify-between">
-        <h2 className="text-lg font-semibold">Shopping list</h2>
+      <div id="shopping" className="mt-10 flex scroll-mt-20 flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h2 className="text-lg font-semibold">
+          Shopping list
+          {toBuy.length > 0 && <Link href={`/shop/${plan.planId}`} className="ml-3 text-sm font-normal underline">Open in the store</Link>}
+        </h2>
         <p className={`text-sm ${over ? "text-red-700 dark:text-red-300" : "text-zinc-600 dark:text-zinc-400"}`}>
           <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{formatUsd(plan.totalCents)}</span> of {formatUsd(plan.budgetCents)} budget
           {unpriced > 0 && ` · ${unpriced} item${unpriced > 1 ? "s" : ""} without a price`}
