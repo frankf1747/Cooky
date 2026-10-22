@@ -45,7 +45,7 @@ export function VirtualFridge({ cookNow, items, expiringSoon, today, onAddByHand
   const crisper = [...items].sort((a, b) => Number(soon.has(b.id)) - Number(soon.has(a.id))).slice(0, CRISPER_MAX);
 
   return (
-    <div className="-mx-4 overflow-hidden px-10 pb-3 pt-1 sm:mx-0 sm:px-16">
+    <div className="-mx-4 overflow-hidden px-12 pb-3 pt-1 sm:mx-0 sm:px-16">
       <div className="relative mx-auto w-full max-w-[34rem]">
         {/* the cabinet */}
         <div className="relative rounded-[34px] bg-cobalt-deep p-2.5 shadow-float sm:p-3">
@@ -182,7 +182,7 @@ function Door({ side, open, children }: { side: "left" | "right"; open: boolean;
   const left = side === "left";
   return (
     <div
-      className={`relative h-full w-1/2 transition-transform duration-[950ms] ease-[cubic-bezier(.3,.75,.2,1)] [transform-style:preserve-3d] ${left ? "origin-left" : "origin-right delay-[80ms]"} ${open ? (left ? "[transform:rotateY(-112deg)]" : "[transform:rotateY(112deg)]") : ""}`}
+      className={`relative h-full w-1/2 transition-transform duration-[950ms] ease-[cubic-bezier(.3,.75,.2,1)] [transform-style:preserve-3d] ${left ? "origin-left" : "origin-right delay-[80ms]"} ${open ? (left ? "[transform:rotateY(-100deg)]" : "[transform:rotateY(100deg)]") : ""}`}
     >
       {/* front */}
       <div className={`absolute inset-0 bg-cobalt-deep [backface-visibility:hidden] ${left ? "rounded-l-[34px] rounded-r-md border-r border-on-brand/15" : "rounded-l-md rounded-r-[34px] border-l border-on-brand/15"}`}>
