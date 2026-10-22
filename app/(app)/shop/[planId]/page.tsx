@@ -1,13 +1,8 @@
-import { NotImplemented } from "@/ui/NotImplemented";
+// Owner: Plan & Shop. The shopping list lives on the plan page for now (PLN3); this address
+// takes you there instead of showing an empty page.
+import { redirect } from "next/navigation";
 
-export default function ShopPlanidPage() {
-  return (
-    <NotImplemented
-      title="Shopping list"
-      owner="Plan & Shop"
-      spec="PLN9"
-      v={2}
-      purpose="Tick items off in the store."
-    />
-  );
+export default async function ShopPage(props: PageProps<"/shop/[planId]">) {
+  const { planId } = await props.params;
+  redirect(`/plan/${planId}#shopping`);
 }

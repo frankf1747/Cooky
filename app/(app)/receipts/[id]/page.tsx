@@ -8,6 +8,7 @@ import { ApiError } from "@/platform/errors";
 import { getForReview, type PlanLabels } from "@/modules/receipts";
 import { PlanDiffPanel } from "./PlanDiffPanel";
 import { ReviewForm } from "./ReviewForm";
+import { Page } from "@/ui/Page";
 
 export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">) {
   const { id } = await props.params;
@@ -26,9 +27,11 @@ export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">)
   const heading = [receipt.store, receipt.purchasedOn].filter(Boolean).join(" · ") || "Your receipt";
 
   return (
-    <section className="mx-auto w-full max-w-3xl p-6">
-      <Link href="/receipts/new" className="text-sm text-zinc-500 hover:underline">← Scan another receipt</Link>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight">{heading}</h1>
+    <Page
+      back={{ href: "/receipts/new", label: "Scan another receipt" }}
+      title={heading}
+      description={receipt.status === "parsed" ? "Check the lines below, then add them to your fridge. Nothing changes until you do." : undefined}
+    >
 
       {receipt.planDiff && plan && <PlanDiffPanel diff={receipt.planDiff} plan={plan} lines={receipt.lines} />}
 
@@ -59,6 +62,6 @@ export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">)
           These items are already in your fridge. <Link href="/fridge" className="font-medium underline">Open the fridge</Link>
         </p>
       )}
-    </section>
+    </Page>
   );
 }

@@ -6,6 +6,7 @@ import type { Recipe } from "@spec/contract";
 import { getSessionUser } from "@/platform/auth";
 import { ApiError } from "@/platform/errors";
 import * as recipes from "@/modules/recipes";
+import { Page } from "@/ui/Page";
 import { RecipeImage } from "../RecipeImage";
 import { formatTimer } from "../ui";
 import { PrepChecklist } from "./PrepChecklist";
@@ -26,29 +27,24 @@ export default async function RecipePage(props: PageProps<"/recipes/[id]">) {
   const tipFor = new Map(recipe.steps.filter((s) => s.kind === "tip").map((t) => [t.stepNo, t]));
 
   return (
-    <section className="mx-auto w-full max-w-3xl p-6">
-      <Link href="/recipes" className="text-sm text-zinc-500 hover:underline">All recipes</Link>
-
-      <div className="mt-3 flex flex-wrap items-start gap-5">
+    <Page
+      back={{ href: "/recipes", label: "All recipes" }}
+      title={recipe.title}
+      description={`${recipe.minutes} min, serves ${recipe.baseServings}, ${recipe.equipment.join(", ") || "no special equipment"}`}
+      actions={<>
+        <Link href={`/cook/${recipe.id}`} className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300">Start cooking</Link>
+        <Link href={`/plan?recipes=${recipe.id}`} className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900">Add to a plan</Link>
+      </>}
+    >
+      <div className="flex flex-wrap items-start gap-5">
         <RecipeImage imageUrl={recipe.imageUrl} title={recipe.title} className="h-32 w-44 shrink-0" />
-        <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{recipe.title}</h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            {recipe.minutes} min · serves {recipe.baseServings} · {recipe.equipment.join(", ") || "no special equipment"}
+        {recipe.tags.length > 0 && (
+          <p className="flex flex-1 flex-wrap content-start gap-1.5">
+            {recipe.tags.map((t) => (
+              <span key={t} className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{t}</span>
+            ))}
           </p>
-          {recipe.tags.length > 0 && (
-            <p className="mt-2 flex flex-wrap gap-1.5">
-              {recipe.tags.map((t) => (
-                <span key={t} className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{t}</span>
-              ))}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-5 flex flex-wrap gap-3">
-        <Link href={`/cook/${recipe.id}`} className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900">Start cooking</Link>
-        <Link href={`/plan?recipes=${recipe.id}`} className="rounded-md border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-700">Add to a plan</Link>
+        )}
       </div>
 
       <h2 className="mt-8 text-lg font-semibold">Ingredients <span className="text-sm font-normal text-zinc-500">for {recipe.baseServings}</span></h2>
@@ -89,6 +85,6 @@ export default async function RecipePage(props: PageProps<"/recipes/[id]">) {
       <p className="mt-8 text-xs text-zinc-500">
         Source: {recipe.sourceUrl ? <a href={recipe.sourceUrl} className="underline" rel="noopener noreferrer" target="_blank">{recipe.sourceLabel}</a> : recipe.sourceLabel}
       </p>
-    </section>
+    </Page>
   );
 }
