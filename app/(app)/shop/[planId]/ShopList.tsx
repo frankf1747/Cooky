@@ -64,7 +64,7 @@ export function ShopList({ planId, aisles, initialChecked, covered, titles, tota
 
   return (
     <>
-      <div className="sticky top-0 z-10 mt-4 flex items-baseline justify-between gap-4 border-b border-zinc-200 bg-[var(--background)] py-3 dark:border-zinc-800">
+      <div className="sticky top-0 z-10 flex items-baseline justify-between gap-4 border-b border-zinc-200 bg-[var(--background)] py-3 dark:border-zinc-800">
         <p className="text-sm">
           <span className="font-semibold">{inCart.length} of {items.length}</span> in your cart
         </p>

@@ -69,7 +69,7 @@ export function PreferencesClient({ initial, titles }: { initial: Preference[]; 
   return (
     <>
       {items.length === 0 ? (
-        <div className="mt-6 rounded-lg border border-dashed border-zinc-300 p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
+        <div className="rounded-lg border border-dashed border-zinc-300 p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
           <p>No preferences yet.</p>
           <p className="mt-1">
             After you cook, tell Cooky how it was (for example &ldquo;a bit dry&rdquo;) and choose <span className="font-medium">Always</span> to keep it.
@@ -77,7 +77,7 @@ export function PreferencesClient({ initial, titles }: { initial: Preference[]; 
           </p>
         </div>
       ) : (
-        <ul className="mt-6 divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+        <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
           {items.map((p) => (
             <li key={p.id} className={`p-4 ${p.active ? "" : "opacity-60"}`}>
               <div className="flex flex-wrap items-start justify-between gap-3">

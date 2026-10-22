@@ -6,6 +6,7 @@ import { getSessionUser } from "@/platform/auth";
 import { formatUsd } from "@/platform/money";
 import { planFormData } from "@/modules/planning";
 import { Page } from "@/ui/Page";
+import { btnSecondary } from "@/ui/styles";
 import { PlanForm } from "./PlanForm";
 
 export default async function PlanPage(props: PageProps<"/plan">) {
@@ -23,6 +24,7 @@ export default async function PlanPage(props: PageProps<"/plan">) {
       title="Plan dinners"
       description="Cooky picks dinners around your fridge, budget and time, then gives you one shopping list in real package sizes."
       width="narrow"
+      actions={<Link href="/preferences" className={btnSecondary}>Your preferences</Link>}
     >
 
       <PlanForm
