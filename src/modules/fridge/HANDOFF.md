@@ -36,4 +36,6 @@ Final verification: `npm run check` passed (lint, typecheck, static); contract c
 - The original shared POST route still always returns 201 for manual add, including a retry; SPEC expects 200 on replay. The route was kept unchanged per the module workflow. Coordinate a replay-aware response adapter with Platform; the existing add result shape has only itemId. No repeated addition is written.
 - `proposeDeductions` cannot represent a completely missing ingredient because the current Deduction requires an itemId. Cook already owns the missing-ingredient review and correction flow.
 - FRG6 weekly check and FRG7 waste statistics remain explicit 501 (v2 per SPEC §0).
-- A teammate must verify on a deployment before merging. No commit, push, deployment or merge was performed for this change.
+- A teammate must verify on a deployment before merging. Changes are committed and pushed on the Fridge feature branch for a draft PR; no deployment or merge into main was performed.
+
+Latest main UI integration: preserved the shared Page layout and compact inventory rows from Platform, added the editor/conflict guards to those rows, and imported shared field/button styles. Post-integration checks: 41 test files / 405 tests passed; contract remains 39 routes.

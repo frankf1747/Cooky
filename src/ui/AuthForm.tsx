@@ -31,7 +31,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     let next = "/onboarding";
     if (mode === "login") {
       const me = await fetch("/api/me").then((r) => (r.ok ? r.json() : null)).catch(() => null);
-      next = me?.onboarded === false ? "/onboarding" : "/fridge";
+      next = me?.onboarded === false ? "/onboarding" : "/home";
     }
     router.push(next);
     router.refresh();

@@ -209,7 +209,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
   // ---------------------------------------------------------------- confirm & learn
   if (done) {
     return (
-      <section className="mx-auto w-full max-w-xl p-6">
+      <section className="mx-auto w-full max-w-2xl px-4 pb-24 pt-6 sm:px-6 sm:pb-12">
         <h1 className="text-2xl font-semibold tracking-tight">{confirmed ? "Logged" : "Done cooking"}</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           {confirmed ? `${recipe.title} is done and your fridge is up to date.` : "Check what you used. Your fridge only changes when you confirm."}
@@ -335,7 +335,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
   // ---------------------------------------------------------------- cook
   const tip = step ? tips.get(step.stepNo) : undefined;
   return (
-    <section className="mx-auto w-full max-w-xl p-6">
+    <section className="mx-auto w-full max-w-2xl px-4 pb-24 pt-6 sm:px-6 sm:pb-12">
       <Link href={`/recipes/${recipe.id}`} className="text-sm text-zinc-500 hover:underline">Back to the recipe</Link>
       <div className="mt-2 flex items-start justify-between gap-3">
         <div className="min-w-0">

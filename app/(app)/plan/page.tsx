@@ -5,6 +5,7 @@ import targets from "@spec/targets.json";
 import { getSessionUser } from "@/platform/auth";
 import { formatUsd } from "@/platform/money";
 import { planFormData } from "@/modules/planning";
+import { Page } from "@/ui/Page";
 import { PlanForm } from "./PlanForm";
 
 export default async function PlanPage(props: PageProps<"/plan">) {
@@ -18,11 +19,11 @@ export default async function PlanPage(props: PageProps<"/plan">) {
     .split(",").filter((id) => data.recipes.some((r) => r.id === id)).slice(0, L.mealsPerPlanMax);
 
   return (
-    <section className="mx-auto w-full max-w-3xl p-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Plan meals</h1>
-      <p className="mt-1 text-sm text-zinc-500">
-        Cooky picks dinners around your fridge, budget and time, then gives you one shopping list in real package sizes.
-      </p>
+    <Page
+      title="Plan dinners"
+      description="Cooky picks dinners around your fridge, budget and time, then gives you one shopping list in real package sizes."
+      width="narrow"
+    >
 
       <PlanForm
         data={data}
@@ -30,7 +31,7 @@ export default async function PlanPage(props: PageProps<"/plan">) {
         limits={{ servingsMin: L.servingsMin, servingsMax: L.servingsMax, mealsMin: L.mealsPerPlanMin, mealsMax: L.mealsPerPlanMax, wishesMaxChars: L.wishesMaxChars }}
       />
 
-      <h2 className="mt-10 text-lg font-semibold">Recent plans</h2>
+      <h2 className="mt-12 text-lg font-semibold">Recent plans</h2>
       {data.recentPlans.length === 0 ? (
         <p className="mt-2 text-sm text-zinc-500">No plans yet. Your first one will show up here.</p>
       ) : (
@@ -53,6 +54,6 @@ export default async function PlanPage(props: PageProps<"/plan">) {
           ))}
         </ul>
       )}
-    </section>
+    </Page>
   );
 }

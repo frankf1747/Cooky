@@ -1,42 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
+import { fakeDb as makeFake } from "./fake-db";
 
-// A tiny in-memory stand-in for the Supabase query builder: eq, in, or(is.null / eq), maybeSingle.
-// It does NOT apply RLS, so these tests prove the code filters by the session user itself.
+// The shared in-memory fake (./fake-db) does NOT apply RLS, so these tests prove the code filters
+// by the session user itself.
 type Row = Record<string, unknown>;
 const U1 = "11111111-1111-1111-1111-111111111111";
 const U2 = "22222222-2222-2222-2222-222222222222";
 
 let tables: Record<string, Row[]> = {};
 let failTable: string | null = null;
-
-function query(table: string) {
-  const preds: ((r: Row) => boolean)[] = [];
-  const q = {
-    select: () => q,
-    eq: (c: string, v: unknown) => (preds.push((r) => r[c] === v), q),
-    in: (c: string, vs: unknown[]) => (preds.push((r) => vs.includes(r[c])), q),
-    or: (expr: string) => {
-      const alts = expr.split(",").map((part) => {
-        const [c, op, ...rest] = part.split(".");
-        const v = rest.join(".");
-        return (r: Row) => (op === "is" && v === "null" ? r[c] == null : op === "eq" ? r[c] === v : false);
-      });
-      preds.push((r) => alts.some((a) => a(r)));
-      return q;
-    },
-    result: () =>
-      failTable === table
-        ? { data: null, error: { message: `boom in ${table}` } }
-        : { data: (tables[table] ?? []).filter((r) => preds.every((p) => p(r))), error: null },
-    maybeSingle: async () => {
-      const res = q.result();
-      return res.error ? res : { data: res.data?.[0] ?? null, error: null };
-    },
-    then: (ok: (v: unknown) => unknown, bad?: (e: unknown) => unknown) => Promise.resolve(q.result()).then(ok, bad),
-  };
-  return q;
-}
-const fakeDb = { from: query };
+// One stable object for the mock; each call goes to a fake rebuilt over the current tables.
+const fakeDb = { from: (t: string) => makeFake(tables, { fail: failTable ? [failTable] : [] }).from(t) };
 vi.mock("@/platform/db", () => ({
   reader: async () => fakeDb,
   writer: () => {

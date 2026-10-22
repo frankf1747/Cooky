@@ -10,6 +10,7 @@ export function fakeDb(tables: Record<string, Row[]>, opts: { unique?: Record<st
     const preds: ((r: Row) => boolean)[] = [];
     let op: { kind: "select" } | { kind: "insert"; rows: Row[] } | { kind: "update"; patch: Row } | { kind: "delete" } = { kind: "select" };
     let order: { col: string; asc: boolean } | null = null;
+    let limit: number | null = null;
     const rowsOf = () => (tables[table] ??= []);
 
     const run = (): Res => {
@@ -28,7 +29,7 @@ export function fakeDb(tables: Record<string, Row[]>, opts: { unique?: Record<st
       const hit = rowsOf().filter((r) => preds.every((p) => p(r)));
       if (op.kind === "update") {
         for (const r of hit) Object.assign(r, op.patch);
-        return { data: null, error: null };
+        return { data: hit.map((r) => structuredClone(r)), error: null };
       }
       if (op.kind === "delete") {
         tables[table] = rowsOf().filter((r) => !hit.includes(r));
@@ -39,7 +40,7 @@ export function fakeDb(tables: Record<string, Row[]>, opts: { unique?: Record<st
         const { col, asc } = order;
         out.sort((a, b) => String(a[col]).localeCompare(String(b[col])) * (asc ? 1 : -1));
       }
-      return { data: out, error: null };
+      return { data: limit === null ? out : out.slice(0, limit), error: null };
     };
 
     const q = {
@@ -60,6 +61,7 @@ export function fakeDb(tables: Record<string, Row[]>, opts: { unique?: Record<st
         return q;
       },
       order: (col: string, o?: { ascending?: boolean }) => ((order = { col, asc: o?.ascending ?? true }), q),
+      limit: (n: number) => ((limit = n), q),
       maybeSingle: async (): Promise<Res> => {
         const res = run();
         return res.error ? res : { data: (res.data as Row[])[0] ?? null, error: null };

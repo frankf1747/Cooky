@@ -14,6 +14,8 @@ export type PlanningData = {
   hardPreferences: HardPreference[];
   /** Confirmed soft preferences: context for the planner, never filters. */
   softPreferences: HardPreference[];
+  /** Proposals answered "Just this time" since the user's last plan: context for the next plan only (LRN2). */
+  oneTimeNotes: string[];
   /** The user's timezone, for "today" when deciding what expires soon. */
   timezone: string;
   /** Latest price date among the products loaded, or null when none. */
@@ -45,7 +47,7 @@ export async function loadPlanningData(db: SupabaseClient, userId: string, recip
     .or(`owner_id.is.null,owner_id.eq.${userId}`);
   if (recipeIds) recipeQuery = recipeQuery.in("id", recipeIds);
 
-  const [recipeRes, fridgeRes, profileRes, prefRes] = await Promise.all([
+  const [recipeRes, fridgeRes, profileRes, prefRes, lastPlanRes, onceRes] = await Promise.all([
     recipeQuery,
     db.from("fridge_items").select("id, ingredient_id, qty, unit, expires_on")
       .eq("user_id", userId).eq("status", "active").eq("kind", "ingredient"),
@@ -53,7 +55,12 @@ export async function loadPlanningData(db: SupabaseClient, userId: string, recip
       .eq("user_id", userId).maybeSingle(),
     db.from("preferences").select("id, kind, category, value, scope_recipe_id")
       .eq("user_id", userId).eq("active", true),
+    db.from("plans").select("created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(1),
+    db.from("preference_proposals").select("value, created_at").eq("user_id", userId).eq("status", "once"),
   ]);
+  const lastPlanAt = rows<{ created_at: string }>(lastPlanRes, "last plan")[0]?.created_at ?? "";
+  const oneTimeNotes = rows<{ value: string; created_at: string }>(onceRes, "one-time preferences")
+    .filter((p) => p.created_at > lastPlanAt).map((p) => p.value);
   const recipeRows = rows<RecipeRow>(recipeRes, "recipes");
   const fridgeRows = rows<FridgeRow>(fridgeRes, "fridge items");
   if (profileRes.error) throw new Error(`planning: loading profile failed: ${profileRes.error.message}`);
@@ -102,6 +109,7 @@ export async function loadPlanningData(db: SupabaseClient, userId: string, recip
     softPreferences: prefRows
       .filter((p) => p.kind === "soft")
       .map((p) => ({ id: p.id, category: p.category, value: p.value, scopeRecipeId: p.scope_recipe_id })),
+    oneTimeNotes,
     timezone: profile?.timezone ?? "America/Los_Angeles",
     priceAsOf: prodRows.map((p) => p.price_date).sort().at(-1) ?? null,
   };

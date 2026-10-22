@@ -6,6 +6,8 @@ import { getSessionUser } from "@/platform/auth";
 import { ApiError } from "@/platform/errors";
 import { formatUsd } from "@/platform/money";
 import { getPlan, planNotes } from "@/modules/planning";
+import { Page } from "@/ui/Page";
+import { btnSecondary } from "@/ui/styles";
 import { formatQty } from "../ui";
 import { SaveButton } from "./SaveButton";
 
@@ -30,37 +32,32 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
   const titles = new Map(plan.meals.map((m) => [m.recipeId, m.title]));
 
   return (
-    <section className="mx-auto w-full max-w-3xl p-6">
-      <Link href="/plan" className="text-sm text-zinc-500 hover:underline">← Plans</Link>
-      <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {plan.meals.length} dinners for {plan.servings}
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Version {plan.version} · prices as of {plan.priceAsOf}
-          </p>
-        </div>
-        {plan.status === "saved" ? (
-          <span className="rounded-full bg-green-100 px-3 py-1 text-sm text-green-800 dark:bg-green-950 dark:text-green-300">Saved</span>
-        ) : (
-          <SaveButton planId={plan.planId} version={plan.version} />
-        )}
-      </div>
-
-      <div className="mt-6 grid gap-3">
+    <Page
+      back={{ href: "/plan", label: "All plans" }}
+      title={`${plan.meals.length} dinners for ${plan.servings}`}
+      description={<>Prices as of {plan.priceAsOf}. {plan.status === "saved" ? "Saved: this is your plan for the week." : "Save the plan to keep it and shop from its list."}</>}
+      actions={plan.status === "saved" ? (
+        <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">Saved</span>
+      ) : (
+        <SaveButton planId={plan.planId} version={plan.version} />
+      )}
+    >
+      <div className="grid gap-3">
         {plan.meals.map((m, i) => (
           <article key={m.recipeId} className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-            <div className="flex items-baseline justify-between gap-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
               <h2 className="font-semibold">
                 <span className="mr-2 text-zinc-400">{i + 1}.</span>
                 <Link href={`/recipes/${m.recipeId}`} className="hover:underline">{m.title}</Link>
               </h2>
-              {m.usesFridgeItemIds.length > 0 && (
-                <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200">
-                  uses {m.usesFridgeItemIds.length} from your fridge
-                </span>
-              )}
+              <span className="flex shrink-0 items-center gap-3">
+                {m.usesFridgeItemIds.length > 0 && (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+                    uses {m.usesFridgeItemIds.length} from your fridge
+                  </span>
+                )}
+                <Link href={`/cook/${m.recipeId}`} className="text-sm font-medium hover:underline">Cook</Link>
+              </span>
             </div>
             <ul className="mt-2 list-disc pl-5 text-sm text-zinc-600 dark:text-zinc-400">
               {m.reasons.map((r, j) => <li key={j}>{r}</li>)}
@@ -74,7 +71,7 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
         ))}
       </div>
 
-      <div className="mt-8 flex items-baseline justify-between">
+      <div id="shopping" className="mt-10 flex scroll-mt-20 items-baseline justify-between">
         <h2 className="text-lg font-semibold">Shopping list</h2>
         <p className={`text-sm ${over ? "text-red-700 dark:text-red-300" : "text-zinc-600 dark:text-zinc-400"}`}>
           <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{formatUsd(plan.totalCents)}</span> of {formatUsd(plan.budgetCents)} budget
@@ -89,7 +86,7 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
       ) : (
         <div className="mt-3 overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
           <table className="w-full text-sm">
-            <thead className="bg-zinc-50 text-left text-xs uppercase tracking-wide text-zinc-500 dark:bg-zinc-900">
+            <thead className="bg-zinc-50 text-left text-xs font-medium text-zinc-500 dark:bg-zinc-900">
               <tr>
                 <th className="px-3 py-2">Item</th>
                 <th className="px-3 py-2">Buy</th>
@@ -124,6 +121,13 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
         </p>
       )}
 
+      {plan.status === "saved" && toBuy.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-800">
+          <p className="text-zinc-600 dark:text-zinc-400">Back from the store? Scan the receipt to stock your fridge and see anything you missed.</p>
+          <Link href={`/receipts/new?planId=${plan.planId}`} className={btnSecondary}>Scan the receipt</Link>
+        </div>
+      )}
+
       {notes.extras.items.length > 0 && (
         <div className="mt-8">
           <div className="flex items-baseline justify-between gap-4">
@@ -150,12 +154,12 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
 
       {plan.assumptions.length > 0 && (
         <div className="mt-6 text-xs text-zinc-500">
-          <p className="font-medium uppercase tracking-wide">Assumptions</p>
+          <p className="font-medium">Assumptions</p>
           <ul className="mt-1 list-disc pl-5">
             {plan.assumptions.map((a, i) => <li key={i}>{a}</li>)}
           </ul>
         </div>
       )}
-    </section>
+    </Page>
   );
 }

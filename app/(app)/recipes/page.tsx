@@ -7,6 +7,7 @@ import { formatUsd } from "@/platform/money";
 import * as recipes from "@/modules/recipes";
 import type { LibraryCard } from "@/modules/recipes";
 import { RecipeImage } from "./RecipeImage";
+import { Page } from "@/ui/Page";
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
@@ -55,16 +56,13 @@ export default async function RecipesPage(props: PageProps<"/recipes">) {
   };
 
   return (
-    <section className="mx-auto w-full max-w-5xl p-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Recipes</h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{cards.length} dinners, each with a shopping list in real package sizes.</p>
-        </div>
-        <Link href="/plan" className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900">Plan my week</Link>
-      </div>
-
-      <form method="get" className="mt-6">
+    <Page
+      title="Recipes"
+      description={`${cards.length} dinners for one or two. Open one to cook it, or add it to a plan.`}
+      width="wide"
+      actions={<Link href="/plan" className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300">Plan dinners</Link>}
+    >
+      <form method="get">
         {active.size > 0 && <input type="hidden" name="chips" value={[...active].join(",")} />}
         <label className="sr-only" htmlFor="recipe-search">Search recipes</label>
         <input
@@ -118,6 +116,6 @@ export default async function RecipesPage(props: PageProps<"/recipes">) {
           ))}
         </ul>
       )}
-    </section>
+    </Page>
   );
 }
