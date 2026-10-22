@@ -176,6 +176,18 @@ describe("createPlan with picked recipes (mustIncludeRecipeIds)", () => {
   });
 });
 
+describe("createPlan with \"Just this time\" notes (LRN2)", () => {
+  it("a note answered once reaches the next plan only", async () => {
+    tables.preference_proposals = [{ id: "prp_1", user_id: U1, status: "once", value: "saucier dishes", created_at: "2026-10-21T10:00:00Z" }];
+    await planning.createPlan(U1, body({ idempotencyKey: "key-first-plan" }), "req_1");
+    expect(JSON.stringify(transport.mock.calls[0][0])).toContain("<this_time_only>\\nsaucier dishes\\n</this_time_only>");
+
+    tables.plans[0].created_at = "2026-10-21T11:00:00Z"; // the plan that used it
+    await planning.createPlan(U1, body({ idempotencyKey: "key-second-plan" }), "req_2");
+    expect(JSON.stringify(transport.mock.calls[1][0])).toContain("<this_time_only>\\nnone\\n</this_time_only>");
+  });
+});
+
 describe("getPlan, listPlans, savePlan", () => {
   it("reads back the saved version, lists it, and saving is immutable and idempotent", async () => {
     const { plan } = await planning.createPlan(U1, body(), "req_1");
