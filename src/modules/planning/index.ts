@@ -60,6 +60,7 @@ export async function createPlan(userId: string, input: z.infer<typeof PlanCreat
     expiring: expiringSoon(data.fridge, data.timezone, targets.limits.alertLeadDays).map((f) => ({ ...f, name: ingredientName.get(f.ingredientId) ?? f.ingredientId })),
     preferences: [...data.hardPreferences.map((p) => ({ ...p, kind: "hard" as const })), ...data.softPreferences.map((p) => ({ ...p, kind: "soft" as const }))],
     wishes: input.wishes,
+    oneTimeNotes: data.oneTimeNotes,
     picked: picks.filter((id) => !result.droppedPicks.some((d) => d.recipeId === id)),
   };
 
