@@ -11,6 +11,7 @@ import { CurrencyDollar, ForkKnife, Shuffle, Timer, Users, X } from "@phosphor-i
 import { formatUsd } from "@/platform/money";
 import type { PlanFormData } from "@/modules/planning";
 import { BaoSays } from "@/ui/Bao";
+import { BUDGET_MAX_CENTS, BUDGET_MIN_CENTS, BUDGET_STEP_CENTS, minuteChoices as timesFor, usd } from "@/ui/basics";
 import { DishArt } from "@/ui/DishArt";
 import { Stepper } from "@/ui/Stepper";
 import { planPicks, usePlanPicks } from "@/ui/planPicks";
@@ -21,15 +22,6 @@ type Limits = { servingsMin: number; servingsMax: number; mealsMin: number; meal
 
 /** How many fridge foods show before "Show all". */
 const FRIDGE_SHOWN = 6;
-/** The budget steps by $5, from $5 up to $300 a week. */
-const BUDGET_STEP_CENTS = 500;
-const BUDGET_MIN_CENTS = 500;
-const BUDGET_MAX_CENTS = 30000;
-/** Cooking times on offer, in minutes per dish. */
-const MINUTE_CHOICES = [15, 20, 30, 45, 60];
-
-/** $40, or $37.50 when there are cents. */
-const usd = (cents: number) => (cents % 100 ? formatUsd(cents) : `$${cents / 100}`);
 
 /** One numbered part of the form: a Fraunces heading with its step number, a note, the fields. */
 function Group({ n, title, note, children }: { n: number; title: string; note?: React.ReactNode; children: React.ReactNode }) {
@@ -59,7 +51,7 @@ export function PlanForm({ data, limits, preselected = [] }: { data: PlanFormDat
   const [meals, setMeals] = useState(Math.min(limits.mealsMax, Math.max(d.meals, preselected.length)));
   // Never fewer dishes than picked ones.
   const dishes = Math.min(limits.mealsMax, Math.max(meals, picked.length));
-  const minuteChoices = [...new Set([...MINUTE_CHOICES, d.maxMinutes])].sort((a, b) => a - b);
+  const minuteChoices = timesFor(d.maxMinutes);
   const [wishes, setWishes] = useState("");
   const [mustUse, setMustUse] = useState<string[]>([]);
   const [allFridge, setAllFridge] = useState(false);

@@ -93,6 +93,12 @@ Paper and ink carry every page. Colour is a signpost, never decoration.
 | `past` (amber) | Past its typical date, and nothing else |
 | `danger` | Errors |
 | `cobalt-deep` + `on-brand` | The brand moments: the fridge, the raised Fridge tab, sign-in, the landing page |
+| `paper` + `on-paper` | A sheet of paper on the cobalt ground (the note on the fridge door, Bao's sign-in bubble); paper in both schemes |
+
+Both schemes share these names. Which one is in force is `<html data-theme>`: Settings →
+Appearance offers System (follow the device), Light and Dark, saved on the device and applied
+before the first paint (`src/ui/theme.ts`). Use the `dark:` variant only for art that has no
+token, never for a colour a token could carry.
 
 The only fixed hex colours live in the art: Bao (`src/ui/Bao.tsx`), the dish illustrations
 (`src/ui/DishArt.tsx`) and the app icon. Food and the character look the same at night.
