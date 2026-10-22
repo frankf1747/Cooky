@@ -1,5 +1,9 @@
-// Placeholder panel for a page whose feature is not built yet. It is the progress bar:
-// when every panel is gone, v1 is done.
+// Placeholder for a page whose feature is not built yet. It says so plainly and offers the
+// nearest working page. When every placeholder is gone, v1 is done.
+import Link from "next/link";
+import { Page } from "./Page";
+import { btnSecondary } from "./styles";
+
 type Props = {
   title: string;
   owner: string;
@@ -7,19 +11,21 @@ type Props = {
   /** what the finished page lets the user do, one sentence */
   purpose: string;
   v?: 1 | 2;
+  /** the nearest page that works today */
+  back?: { href: string; label: string };
 };
 
-export function NotImplemented({ title, owner, spec, purpose, v = 1 }: Props) {
+export function NotImplemented({ title, owner, spec, purpose, v = 1, back = { href: "/home", label: "Back to this week" } }: Props) {
   return (
-    <section className="mx-auto w-full max-w-3xl p-6">
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-      <div className="mt-4 rounded-xl border-2 border-dashed border-zinc-300 p-6 dark:border-zinc-700">
-        <p className="text-sm font-medium uppercase tracking-wide text-zinc-500">Not implemented {v === 2 ? "· after demo day (v2)" : "· v1"}</p>
-        <p className="mt-2 text-zinc-700 dark:text-zinc-300">{purpose}</p>
-        <p className="mt-4 text-sm text-zinc-500">
-          Owner: <span className="font-medium">{owner}</span> · Requirements: <code>{spec}</code> in docs/SPEC.md
-        </p>
+    <Page title={title} width="narrow">
+      <div className="rounded-lg border border-dashed border-zinc-300 p-6 dark:border-zinc-700">
+        <p className="font-medium">Coming soon</p>
+        <p className="mt-1 text-zinc-600 dark:text-zinc-400">{purpose}</p>
+        <Link href={back.href} className={`${btnSecondary} mt-4`}>{back.label}</Link>
       </div>
-    </section>
+      <p className="mt-4 text-xs text-zinc-500">
+        For the team: {owner} owns this page ({spec}{v === 2 ? ", after demo day" : ""}).
+      </p>
+    </Page>
   );
 }
