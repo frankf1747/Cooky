@@ -14,7 +14,7 @@ import type { CookNowEntry, FridgeItem } from "@spec/contract";
 import { Bao } from "@/ui/Bao";
 import { DishArt } from "@/ui/DishArt";
 import { PICKS_MAX, planPicks, usePlanPicks } from "@/ui/planPicks";
-import { btnPrimary, btnSecondary, btnSecondarySm, btnText, tag, tagNeutral, tagPast } from "@/ui/styles";
+import { btnIcon, btnPrimary, btnSecondary, btnText, tag, tagNeutral, tagPast } from "@/ui/styles";
 
 /** How many plates fit on each shelf. */
 const READY_MAX = 6;
@@ -114,9 +114,15 @@ export function VirtualFridge({ cookNow, items, expiringSoon, today, onAddByHand
           <span className="h-2.5 w-7 rounded-b-lg bg-cobalt-deep" />
         </div>
         <div className="mt-3 flex justify-center">
-          <button type="button" onClick={() => setOpen((o) => !o)} className={btnSecondarySm}>
-            {open ? <DoorIcon size={18} aria-hidden /> : <DoorOpen size={18} aria-hidden />}
-            {open ? "Close the fridge" : "Open the fridge"}
+          {/* icon only: a shut door closes it, an open door opens it; the name says which */}
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            aria-label={open ? "Close the fridge" : "Open the fridge"}
+            title={open ? "Close the fridge" : "Open the fridge"}
+            className={btnIcon}
+          >
+            {open ? <DoorIcon size={20} aria-hidden /> : <DoorOpen size={20} aria-hidden />}
           </button>
         </div>
       </div>
