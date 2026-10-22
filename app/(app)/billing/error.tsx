@@ -1,6 +1,7 @@
 "use client";
 // Owner: Platform. The billing page could not load: say so and offer a retry (never made-up defaults).
 import { useState } from "react";
+import { btnPrimary } from "@/ui/styles";
 
 export default function BillingError({ retry }: { error: unknown; retry: () => void }) {
   const [retrying, setRetrying] = useState(false);
@@ -9,7 +10,7 @@ export default function BillingError({ retry }: { error: unknown; retry: () => v
       <h1 className="text-2xl font-semibold tracking-tight">Couldn&apos;t load Cooky Pro</h1>
       <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Something went wrong on our side. Nothing was changed.</p>
       <button disabled={retrying} onClick={() => { setRetrying(true); retry(); }}
-        className="mt-4 rounded-md bg-zinc-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900">
+        className={`mt-4 ${btnPrimary}`}>
         {retrying ? "Retrying…" : "Try again"}
       </button>
     </section>

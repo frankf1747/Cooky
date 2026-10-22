@@ -76,14 +76,21 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
   Never write "safe to eat" or certify a dish allergen-free.
 - **UI states:** every screen you build has loading, empty, error and retry states; retry is
   disabled while a request is in flight.
-- **Plain UI, no emoji (MVP, decided 2026-10-21):** no emoji or pictographic symbols anywhere a
-  user can see them (labels, buttons, messages, empty states, seed text). Use the app's plain
-  style (zinc palette with `dark:` variants, as on the plan, receipts and settings pages); no
-  per-feature themes, mascots or custom fonts. Build every page on `src/ui/Page.tsx` (title,
-  one-line description, main action, back link) and the shared classes in `src/ui/styles.ts`;
-  sections are linked from the nav in `src/ui/AppNav.tsx` (Platform). Make features work first;
-  visual design comes later. Recipe images are placeholders (`app/(app)/recipes/RecipeImage.tsx`) until dish visuals
-  are chosen.
+- **One look, phone first, no emoji (decided 2026-10-21, palette 2026-10-22):** no emoji or
+  pictographic symbols anywhere a user can see them (labels, buttons, messages, empty states,
+  seed text); icons come only from `@phosphor-icons/react`, one family, through the shared UI.
+  Colours are the tokens in `app/globals.css` (paper and ink, one sky-blue accent, a sakura
+  "attention" tint) and pages never pick a colour by hand: use the classes in
+  `src/ui/styles.ts` (`btnPrimary`, `btnSecondary`, `btnSecondarySm`, `btnText`, `field`,
+  `panel`, `chip`/`chipOn`/`chipOff`/`chipRow`, `tag`, `alert`), zinc only for neutral text and
+  borders, amber only for past-date warnings. Shapes: 8px corners, pill chips, no shadows.
+  Build every page on `src/ui/Page.tsx` (title, one-line description, main action, back link);
+  sections are linked from the nav in `src/ui/AppNav.tsx` (Platform). Design for a 375px phone
+  first: controls 44px tall, text fields 16px, the main action full width, chip rows scroll
+  sideways (`chipRow`), nothing wider than the screen. No per-feature themes or custom fonts.
+  Bao (`src/ui/Bao.tsx`) is the cooking assistant's face and appears only on the cook screen.
+  Recipe images are placeholders (`app/(app)/recipes/RecipeImage.tsx`) until dish visuals are
+  chosen.
 - **Tests with the code:** each module function you implement gets unit tests next to it; each
   AI unit you touch gets its eval run on `dev/` before you call it done.
 

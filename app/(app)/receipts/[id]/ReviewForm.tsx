@@ -6,11 +6,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Category, Location, ReceiptLine, Unit } from "@spec/contract";
 import { formatUsd } from "@/platform/money";
+import { alert, btnPrimary, btnText, panel } from "@/ui/styles";
 import { FLAG_TEXT, confirmBody, receiptErrorMessage, toEdit, type ApiErrorBody, type EditLine, type ReceiptError } from "../ui";
+
+/** Compact controls for a receipt line; several share one row. */
+const field = "min-w-0 rounded-lg border border-zinc-300 bg-surface px-2 py-1.5 text-sm dark:border-zinc-700";
 
 const UNITS: Unit[] = ["g", "ml", "count"];
 const LOCATIONS: Location[] = ["fridge", "freezer", "pantry"];
-const field = "rounded-md border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900";
 
 export function ReviewForm({ receiptId, lines, categories }: { receiptId: string; lines: ReceiptLine[]; categories: readonly Category[] }) {
   const router = useRouter();
@@ -63,7 +66,7 @@ export function ReviewForm({ receiptId, lines, categories }: { receiptId: string
     const e = edits[l.lineId];
     const editableName = !l.ingredientId;
     return (
-      <li key={l.lineId} className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
+      <li key={l.lineId} className={`p-3 ${panel}`}>
         <div className="flex items-start gap-3">
           <input
             type="checkbox"
@@ -115,7 +118,7 @@ export function ReviewForm({ receiptId, lines, categories }: { receiptId: string
                 <input type="date" value={e.expiresOn} onChange={(ev) => change(l.lineId, { expiresOn: ev.target.value })} disabled={busy} className={field} />
               </label>
             </div>
-            {problems[l.lineId] && <p role="alert" className="mt-1 text-sm text-red-700 dark:text-red-300">{problems[l.lineId]}</p>}
+            {problems[l.lineId] && <p role="alert" className={`mt-1 ${alert}`}>{problems[l.lineId]}</p>}
           </div>
         </div>
       </li>
@@ -126,7 +129,7 @@ export function ReviewForm({ receiptId, lines, categories }: { receiptId: string
     return (
       <div className="mt-6">
         <p className="text-zinc-600 dark:text-zinc-400">Cooky found no food on this receipt, so there is nothing to add.</p>
-        <Link href="/receipts/new" className="mt-2 inline-block font-medium underline">Scan another receipt</Link>
+        <Link href="/receipts/new" className={`mt-2 inline-block ${btnText}`}>Scan another receipt</Link>
         {ignored.length > 0 && <IgnoredLines lines={ignored} />}
       </div>
     );
@@ -155,11 +158,11 @@ export function ReviewForm({ receiptId, lines, categories }: { receiptId: string
 
       {ignored.length > 0 && <IgnoredLines lines={ignored} />}
 
-      <div className="flex flex-col items-start gap-2">
-        <button onClick={confirm} disabled={busy || ticked === 0} className="rounded-md bg-zinc-900 px-5 py-2 text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900">
+      <div className="flex flex-col items-stretch gap-2 sm:items-start">
+        <button onClick={confirm} disabled={busy || ticked === 0} className={btnPrimary}>
           {busy ? "Adding…" : error?.retry ? "Try again" : `Add ${ticked} ${ticked === 1 ? "item" : "items"} to the fridge`}
         </button>
-        {error && <p role="alert" className="text-sm text-red-700 dark:text-red-300">{error.message}</p>}
+        {error && <p role="alert" className={alert}>{error.message}</p>}
       </div>
     </div>
   );

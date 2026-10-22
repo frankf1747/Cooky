@@ -10,7 +10,7 @@ import * as account from "@/modules/account";
 import * as fridge from "@/modules/fridge";
 import * as planning from "@/modules/planning";
 import { Page } from "@/ui/Page";
-import { btnPrimary, btnSecondary } from "@/ui/styles";
+import { btnPrimary, btnSecondary, btnText, panel } from "@/ui/styles";
 
 function daysBetween(from: string, to: string): number {
   return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
@@ -27,10 +27,10 @@ type StepState = "done" | "next" | "later";
 
 function Step({ n, title, state, children, action }: { n: number; title: string; state: StepState; children: ReactNode; action?: ReactNode }) {
   return (
-    <li className={`flex gap-4 rounded-lg border p-4 sm:p-5 ${state === "next" ? "border-zinc-900 dark:border-zinc-100" : "border-zinc-200 dark:border-zinc-800"}`}>
+    <li className={`flex gap-4 rounded-lg border bg-surface p-4 sm:p-5 ${state === "next" ? "border-accent ring-1 ring-accent" : "border-zinc-200 dark:border-zinc-800"}`}>
       <span
         aria-hidden
-        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${state === "done" ? "bg-emerald-700 text-white" : state === "next" ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900" : "border border-zinc-300 text-zinc-500 dark:border-zinc-700"}`}
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${state === "done" ? "bg-emerald-700 text-white" : state === "next" ? "bg-accent text-on-accent" : "border border-zinc-300 text-zinc-500 dark:border-zinc-700"}`}
       >
         {state === "done" ? (
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 7.5 6 10.5 11 4" /></svg>
@@ -46,7 +46,7 @@ function Step({ n, title, state, children, action }: { n: number; title: string;
           </h2>
         </div>
         <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{children}</div>
-        {action && <div className="mt-3 flex flex-wrap gap-2">{action}</div>}
+        {action && <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">{action}</div>}
       </div>
     </li>
   );
@@ -91,7 +91,7 @@ export default async function HomePage() {
         <ol className="space-y-3">
           <Step n={1} title="Plan your dinners" state={planState}
             action={saved
-              ? <><Link className={btnSecondary} href={`/plan/${saved.planId}`}>Open this week&apos;s plan</Link><Link className={btnSecondary} href="/plan">Make a new plan</Link></>
+              ? <><Link className={btnSecondary} href={`/plan/${saved.planId}`}>Open this week&apos;s plan</Link><Link className={`text-sm ${btnText}`} href="/plan">Make a new plan</Link></>
               : <Link className={btnPrimary} href="/plan">{latest ? "Finish planning" : "Plan dinners"}</Link>}
           >
             {saved
@@ -129,10 +129,10 @@ export default async function HomePage() {
         </ol>
 
         <aside className="space-y-6">
-          <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+          <div className={`p-4 ${panel}`}>
             <div className="flex items-baseline justify-between gap-3">
               <h2 className="font-semibold">Use soon</h2>
-              <Link href="/fridge" className="text-sm text-zinc-600 hover:underline dark:text-zinc-400">Fridge</Link>
+              <Link href="/fridge" className={`text-sm ${btnText}`}>Fridge</Link>
             </div>
             {expiring.length === 0 ? (
               <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{stocked ? "Nothing is close to its typical use-by date." : "Your fridge is empty."}</p>
@@ -141,7 +141,7 @@ export default async function HomePage() {
                 {expiring.slice(0, 6).map((i) => (
                   <li key={i.id} className="flex items-baseline justify-between gap-3 py-2">
                     <span className="min-w-0 truncate">{i.name}</span>
-                    <span className={`shrink-0 text-xs ${i.days < 0 ? "text-amber-700 dark:text-amber-400" : "text-zinc-500"}`}>{freshnessLabel(i.days)}</span>
+                    <span className={`shrink-0 text-xs ${i.days < 0 ? "text-amber-700 dark:text-amber-400" : "text-attention-ink"}`}>{freshnessLabel(i.days)}</span>
                   </li>
                 ))}
               </ul>
@@ -149,12 +149,12 @@ export default async function HomePage() {
             <p className="mt-3 text-xs text-zinc-500">Dates are a typical storage guide, not a safety check.</p>
           </div>
 
-          <div className="rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-800">
+          <div className={`p-4 text-sm ${panel}`}>
             <h2 className="font-semibold">Your plan</h2>
             <p className="mt-1 text-zinc-600 dark:text-zinc-400">
               {me.plan === "pro" ? "Cooky Pro: AI plans, receipt scanning and cooking help are on." : "Free: one AI plan, the recipe library and your fridge."}
             </p>
-            <Link href={me.plan === "pro" ? "/settings" : "/billing"} className="mt-2 inline-block font-medium hover:underline">
+            <Link href={me.plan === "pro" ? "/settings" : "/billing"} className={`mt-2 inline-block ${btnText}`}>
               {me.plan === "pro" ? "Settings" : "Unlock Pro"}
             </Link>
           </div>

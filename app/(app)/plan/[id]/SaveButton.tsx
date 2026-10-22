@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatUsd } from "@/platform/money";
+import { alert, btnPrimary } from "@/ui/styles";
 import { planErrorMessage, type ApiErrorBody } from "../ui";
 
 export function SaveButton({ planId, version }: { planId: string; version: number }) {
@@ -29,11 +30,11 @@ export function SaveButton({ planId, version }: { planId: string; version: numbe
   }
 
   return (
-    <div className="flex flex-col items-start gap-2">
-      <button onClick={save} disabled={busy} className="rounded-md bg-zinc-900 px-5 py-2 text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900">
+    <div className="flex flex-col items-stretch gap-2">
+      <button onClick={save} disabled={busy} className={btnPrimary}>
         {busy ? "Saving…" : error?.retry ? "Try saving again" : "Save this plan"}
       </button>
-      {error && <p role="alert" className="text-sm text-red-700 dark:text-red-300">{error.message}</p>}
+      {error && <p role="alert" className={alert}>{error.message}</p>}
     </div>
   );
 }
