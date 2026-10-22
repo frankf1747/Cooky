@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { browserClient } from "@/platform/db-browser";
+import { PASSWORD_MIN_CHARS } from "./password";
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
@@ -46,7 +47,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         </label>
         <label className="flex flex-col gap-1 text-sm">
           Password
-          <input className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900" type="password" required minLength={8} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900" type="password" required minLength={PASSWORD_MIN_CHARS} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
         {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
         {notice && <p className="text-sm text-green-700">{notice}</p>}
@@ -56,7 +57,10 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       </form>
       <p className="mt-4 text-sm text-zinc-500">
         {mode === "login" ? (
-          <>New here? <Link className="underline" href="/signup">Create an account</Link></>
+          <>
+            New here? <Link className="underline" href="/signup">Create an account</Link>
+            <span className="mt-2 block"><Link className="underline" href="/forgot-password">Forgot your password?</Link></span>
+          </>
         ) : (
           <>Already have an account? <Link className="underline" href="/login">Log in</Link></>
         )}
