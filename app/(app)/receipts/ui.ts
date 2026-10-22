@@ -1,5 +1,9 @@
 // Owner: Receipts. Helpers shared by the receipt pages (safe on server and client).
 import type { Category, Location, ReceiptConfirm, ReceiptLine, Unit } from "@spec/contract";
+import type { ReviewShelf } from "@/modules/receipts";
+import { typicalExpiry } from "@/modules/receipts/lines";
+
+export type { ReviewShelf };
 
 export type ApiErrorBody = { error?: string; code?: string; status?: number; resetAt?: string };
 export type ReceiptError = { message: string; retry: boolean; manualAdd?: boolean };
@@ -62,9 +66,32 @@ export type EditLine = {
   unit: Unit | null;
   location: Location | null;
   expiresOn: string;
+  /** Catalog lines use the catalog's unit; the server rejects any other. */
+  unitLocked: boolean;
+  /** Once the user types a date it is theirs; until then it follows location and category. */
+  dateTouched: boolean;
 };
 
-export function toEdit(l: ReceiptLine): EditLine {
+const NO_SHELF: ReviewShelf = { baseDate: "1970-01-01", ingredients: {}, categories: {} };
+
+function typicalDate(e: Pick<EditLine, "ingredientId" | "category" | "location">, shelf: ReviewShelf): string {
+  if (!e.location) return "";
+  const own = e.ingredientId ? shelf.ingredients[e.ingredientId]?.shelfLifeDays ?? {} : {};
+  const fallback = e.category ? shelf.categories[e.category] : undefined;
+  return typicalExpiry(e.location, own, fallback, { purchasedOn: shelf.baseDate, today: shelf.baseDate }).expiresOn ?? "";
+}
+
+/** One edit to a line: the unit stays locked on catalog lines; an untouched date is recomputed. */
+export function applyChange(e: EditLine, patch: Partial<EditLine>, shelf: ReviewShelf): EditLine {
+  const next = { ...e, ...patch };
+  if (e.unitLocked) next.unit = e.unit;
+  if (patch.expiresOn !== undefined) next.dateTouched = true;
+  else if (!next.dateTouched && (patch.location !== undefined || patch.category !== undefined)) next.expiresOn = typicalDate(next, shelf);
+  return next;
+}
+
+export function toEdit(l: ReceiptLine, shelf: ReviewShelf = NO_SHELF): EditLine {
+  const base = l.ingredientId ? shelf.ingredients[l.ingredientId]?.baseUnit ?? null : null;
   return {
     lineId: l.lineId,
     // Auto and generic lines are ticked; flagged lines wait for the user (the core tension, RCT4).
@@ -73,9 +100,12 @@ export function toEdit(l: ReceiptLine): EditLine {
     name: l.name,
     category: l.category,
     qty: l.qty === null ? "" : String(l.qty),
-    unit: l.unit,
+    unit: base ?? l.unit,
     location: l.location,
-    expiresOn: l.expiresOn ?? "",
+    // Confirm recomputes an untouched date from the current catalog, so start from that same date.
+    expiresOn: shelf !== NO_SHELF && l.location ? typicalDate(l, shelf) : (l.expiresOn ?? ""),
+    unitLocked: base !== null,
+    dateTouched: false,
   };
 }
 

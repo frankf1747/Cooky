@@ -2,7 +2,7 @@
 // The draft never changes the fridge; confirm() sends BatchEvent[] to fridge.applyBatch() with
 // batch key `rct:<receiptId>`. Lines map to catalog ingredient ids, base units and categories.
 import type { z } from "zod";
-import type { BatchEvent, FridgeView, ReceiptConfirm, ReceiptDraft, RunInfo } from "@spec/contract";
+import type { BatchEvent, Category, FridgeView, ReceiptConfirm, ReceiptDraft, RunInfo } from "@spec/contract";
 import * as fridge from "@/modules/fridge";
 import * as planning from "@/modules/planning";
 import { reader, writer } from "@/platform/db";
@@ -12,7 +12,7 @@ import { newId } from "@/platform/ids";
 import { log } from "@/platform/log";
 import { extractReceipt, type Extracted } from "./extract";
 import { parseUpload, removeImage } from "./image";
-import { typicalExpiry } from "./lines";
+import { typicalExpiry, type CatalogIngredient } from "./lines";
 import { planDiff } from "./plan-diff";
 import type { ImageMediaType } from "./reader";
 import { clearImagePath, deleteReceipt, insertReceipt, loadCatalog, markConfirmed, markFailed, ownsPlan, readDraft, readReceipt, saveParsed } from "./store";
@@ -81,10 +81,32 @@ export async function get(userId: string, receiptId: string): Promise<ReceiptDra
   return (await draftWithDiff(userId, receiptId)).draft;
 }
 
-/** For the review page: the draft plus names for the plan diff's ids. */
-export async function getForReview(userId: string, receiptId: string): Promise<{ receipt: ReceiptDraft; plan: PlanLabels | null }> {
-  const { draft, labels } = await draftWithDiff(userId, receiptId);
-  return { receipt: draft, plan: labels };
+export type ReviewShelf = {
+  baseDate: string;
+  ingredients: Record<string, { baseUnit: CatalogIngredient["baseUnit"]; shelfLifeDays: CatalogIngredient["shelfLifeDays"] }>;
+  categories: Partial<Record<Category, CatalogIngredient["shelfLifeDays"]>>;
+};
+
+/**
+ * For the review page: the draft, names for the plan diff's ids, and the units and shelf lives
+ * of this receipt's catalog items, so the page shows the same typical dates confirm will store.
+ */
+export async function getForReview(userId: string, receiptId: string): Promise<{ receipt: ReceiptDraft; plan: PlanLabels | null; shelf: ReviewShelf }> {
+  const [{ draft, labels }, catalog, today] = await Promise.all([
+    draftWithDiff(userId, receiptId),
+    loadCatalog(await reader(), userId),
+    localToday(userId),
+  ]);
+  const ids = new Set(draft.lines.flatMap((l) => (l.ingredientId ? [l.ingredientId] : [])));
+  const shelf: ReviewShelf = {
+    baseDate: draft.purchasedOn ?? today,
+    ingredients: Object.fromEntries([...ids].flatMap((id) => {
+      const i = catalog.ingredients.get(id);
+      return i ? [[id, { baseUnit: i.baseUnit, shelfLifeDays: i.shelfLifeDays }]] : [];
+    })),
+    categories: Object.fromEntries(catalog.categoryDefaults),
+  };
+  return { receipt: draft, plan: labels, shelf };
 }
 
 /**
@@ -151,7 +173,9 @@ export async function confirm(userId: string, receiptId: string, input: z.infer<
 
     // An untouched date follows the chosen location's typical shelf life; a typed date is the user's.
     const typical = typicalExpiry(line.location, ingredient?.shelfLifeDays ?? {}, catalog.categoryDefaults.get(category), dates);
-    const userDate = line.expiresOn !== d.expiresOn;
+    // The review page recomputes an untouched date when the location or category changes, so a
+    // date equal to the typical one for the chosen location is typical too.
+    const userDate = line.expiresOn !== d.expiresOn && line.expiresOn !== typical.expiresOn;
     events.push({
       itemId: null,
       delta: line.qty,

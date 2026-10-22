@@ -78,7 +78,7 @@ export function ScanForm({ maxPx, maxMb, plans, initialPlanId }: { maxPx: number
             <span className="font-display text-lg font-semibold tracking-tight">Tap to take a photo</span>
           </>
         )}
-        <span className="text-sm text-zinc-500">{file ? "Tap to choose a different photo" : "Or choose one. JPEG, PNG or WebP."}</span>
+        <span className="text-sm text-zinc-700 dark:text-zinc-300">{file ? "Tap to choose a different photo" : "Or choose one. JPEG, PNG or WebP."}</span>
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp,image/*"

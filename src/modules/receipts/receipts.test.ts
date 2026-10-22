@@ -358,6 +358,15 @@ describe("receipts.confirm (RCT6, RCT9)", () => {
     expect(spinach).toMatchObject({ location: "fridge", expiresOn: "2026-10-23", expirySource: "user" });
   });
 
+  it("a date the review page recomputed for the new location is stored as typical, not as the user's", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    const body = confirmInput(receipt);
+    body.lines[0].location = "freezer";
+    body.lines[0].expiresOn = "2027-07-17"; // what the page shows after the move
+    await receipts.confirm(U1, receipt.receiptId, body);
+    expect(applyBatch.mock.calls[0][1][0].newItem).toMatchObject({ location: "freezer", expiresOn: "2027-07-17", expirySource: "table" });
+  });
+
   it("the same key again returns the original result and adds nothing (a double tap)", async () => {
     const { receipt } = await receipts.upload(U1, form(JPEG), "r");
     const first = await receipts.confirm(U1, receipt.receiptId, confirmInput(receipt));
@@ -463,5 +472,20 @@ describe("plan diff on the draft (RCT5)", () => {
     const { receipt } = await receipts.upload(U1, form(JPEG, { planId: "pln_mine" }), "r");
     planBroken = true;
     await expect(receipts.get(U1, receipt.receiptId)).rejects.toThrow("database down");
+  });
+});
+
+describe("receipts.getForReview: what the review page needs for units and dates", () => {
+  it("returns each catalog item's base unit and shelf life, the category defaults and the base date", async () => {
+    const { receipt } = await receipts.upload(U1, form(JPEG), "r");
+    const { shelf } = await receipts.getForReview(U1, receipt.receiptId);
+    expect(shelf).toEqual({
+      baseDate: "2026-10-20", // no legible purchase date: the user's local today
+      ingredients: {
+        ing_chicken_breast: { baseUnit: "g", shelfLifeDays: { fridge: 2, freezer: 270 } },
+        ing_spinach: { baseUnit: "g", shelfLifeDays: { fridge: 5 } },
+      },
+      categories: expect.objectContaining({ snacks: { pantry: 60 }, pantry: { pantry: 365 } }),
+    });
   });
 });
