@@ -1,6 +1,7 @@
 // Owner: Platform. The frame for the signed-out pages (log in, sign up, reset a password): a
-// brand panel that says what Cooky does, and the form. Side by side on wide screens, stacked on
-// phones, where the panel shrinks to the wordmark and the promise so the form stays in reach.
+// brand panel with Bao and the promise, and the form. Side by side on wide screens, stacked on
+// phones, where the panel shrinks to the wordmark, a small Bao and the promise so the form stays
+// in reach.
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { CalendarCheck, CookingPot, Receipt } from "@phosphor-icons/react/ssr";
@@ -11,13 +12,17 @@ const LOOP = [
   { icon: CookingPot, text: "Cook before anything goes off, one step at a time." },
 ];
 
-export function AuthShell({ title, lead, children, footer }: { title: string; lead?: ReactNode; children: ReactNode; footer?: ReactNode }) {
+export function AuthShell({ title, lead, mascot, children, footer }: { title: string; lead?: ReactNode; mascot?: ReactNode; children: ReactNode; footer?: ReactNode }) {
   return (
     <main className="flex flex-1 flex-col lg:grid lg:min-h-[100dvh] lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-      <aside className="bg-accent-soft px-4 pb-8 pt-10 sm:px-6 lg:flex lg:flex-col lg:justify-between lg:px-14 lg:py-12">
-        <Link href="/" className="text-lg font-semibold tracking-tight">Cooky</Link>
-        <div className="mt-5 lg:mt-0">
-          <p className="max-w-md text-[26px] font-semibold leading-tight tracking-tight sm:text-3xl lg:text-4xl">
+      <aside className="bg-tile-sky px-4 pb-7 pt-8 sm:px-6 lg:flex lg:flex-col lg:justify-between lg:px-14 lg:py-12">
+        <div className="flex items-start justify-between gap-4">
+          <Link href="/" className="font-display text-xl font-bold tracking-tight">Cooky</Link>
+          <div className="lg:hidden">{mascot}</div>
+        </div>
+        <div className="mt-4 lg:mt-0">
+          <div className="hidden lg:block">{mascot}</div>
+          <p className="mt-6 max-w-md font-display text-[28px] font-semibold leading-[1.05] tracking-tight sm:text-3xl lg:text-5xl">
             Cook what you have. Buy only what you need.
           </p>
           <ul className="mt-8 hidden max-w-md space-y-4 lg:block">
@@ -34,7 +39,7 @@ export function AuthShell({ title, lead, children, footer }: { title: string; le
 
       <section className="flex flex-1 flex-col px-4 py-8 sm:px-6 lg:justify-center lg:px-14">
         <div className="mx-auto w-full max-w-sm">
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="font-display text-[26px] font-semibold tracking-tight sm:text-3xl">{title}</h1>
           {lead && <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{lead}</p>}
           <div className="mt-6">{children}</div>
           {footer && <div className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">{footer}</div>}

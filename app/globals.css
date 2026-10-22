@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 /*
-  Cooky's look: paper and ink, one sky-blue accent for actions and the current place, and a
-  sakura tint only where something asks for attention (a food to use, a Pro feature). The
-  palette comes from the Recipes & Cook v1 design (#24); the shapes are plain: 8px corners,
-  pill chips, no shadows. Both colour schemes share the same tokens, so pages never pick a
-  colour by hand; they use the classes in src/ui/styles.ts.
+  Cooky's look: paper and ink, one sky-blue accent for actions, and five colour tiles that each
+  mean one thing (plan = sky, shop = butter, scan = tangerine, cook = mint, use soon = sakura).
+  Bao, the bun, is the voice of the app. Headlines use the display face, body text Geist. Shapes
+  are pill buttons, 16px cards and blob-masked food. Both colour schemes share the same tokens,
+  so pages never pick a colour by hand; they use the classes in src/ui/styles.ts.
 */
 :root {
   color-scheme: light dark;
-  --background: #f7f9fc;
+  --background: #fbf8f3;
   --foreground: #262a3a;
   --surface: #ffffff;
   --accent: #4a6eab;
@@ -18,6 +18,13 @@
   --on-accent: #ffffff;
   --attention: #ffe4ea;
   --attention-ink: #9a3b55;
+  --tile-sky: #cde7f3;
+  --tile-sakura: #ffd3dc;
+  --tile-butter: #ffe9a8;
+  --tile-mint: #cdeed6;
+  --tile-tangerine: #ffd4b8;
+  --bao-body: #fff1dc;
+  --bao-line: #e9cfa6;
 }
 
 @theme inline {
@@ -30,21 +37,34 @@
   --color-on-accent: var(--on-accent);
   --color-attention: var(--attention);
   --color-attention-ink: var(--attention-ink);
+  --color-tile-sky: var(--tile-sky);
+  --color-tile-sakura: var(--tile-sakura);
+  --color-tile-butter: var(--tile-butter);
+  --color-tile-mint: var(--tile-mint);
+  --color-tile-tangerine: var(--tile-tangerine);
   --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-display);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #121420;
-    --foreground: #e6e8f0;
-    --surface: #1a1d2b;
+    --background: #14161f;
+    --foreground: #e8e6e0;
+    --surface: #1c1f2b;
     --accent: #8fb0e8;
     --accent-hover: #a5c0ee;
-    --accent-soft: #223249;
+    --accent-soft: #243550;
     --on-accent: #121420;
-    --attention: #3a2431;
+    --attention: #3f2634;
     --attention-ink: #f4b8c6;
+    --tile-sky: #203b50;
+    --tile-sakura: #4a2634;
+    --tile-butter: #4b3d14;
+    --tile-mint: #1f4030;
+    --tile-tangerine: #4c2f1c;
+    --bao-body: #ffeccf;
+    --bao-line: #d9b985;
   }
 }
 
@@ -69,9 +89,56 @@ body {
   display: none;
 }
 
+/* Food photos sit in a soft blob, not a rectangle. Two shapes so a grid does not look stamped. */
+.blob {
+  border-radius: 46% 54% 52% 48% / 52% 44% 56% 48%;
+}
+.blob-2 {
+  border-radius: 55% 45% 48% 52% / 46% 56% 44% 54%;
+}
+
+/*
+  Motion. Small and physical: Bao breathes and blinks, things pop in, a tick wiggles. Each one is
+  a class so a page can opt in; all of them stop under reduced motion.
+*/
+@keyframes bao-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes bao-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+@keyframes bao-wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-7deg); }
+  75% { transform: rotate(7deg); }
+}
+@keyframes pop-in {
+  0% { transform: scale(0.94); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes rise-in {
+  0% { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes tick-pop {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.bao-bob { animation: bao-bob 3.2s ease-in-out infinite; }
+.bao-blink { transform-origin: center; transform-box: fill-box; animation: bao-blink 4.5s ease-in-out infinite; }
+.bao-wiggle { transform-origin: 50% 80%; animation: bao-wiggle 0.5s ease-in-out 2; }
+/* "backwards", not "both": if an animation never runs (print, a paused tab), the content still shows. */
+.pop-in { animation: pop-in 0.25s ease-out backwards; }
+.rise-in { animation: rise-in 0.3s ease-out backwards; }
+.tick-pop { animation: tick-pop 0.3s ease-out; }
+
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }

@@ -5,6 +5,7 @@ import { useCallback, useRef, useState, type FormEvent } from 'react';
 import { Category, FridgeView, type FridgeItem, type Location } from '@spec/contract';
 import { filterInventory, summarizeInventory, previewExpiry, referenceDays } from '@/modules/fridge/presentation';
 import type { IngredientRow, CategoryRow } from '@/modules/fridge/data';
+import { BaoSays } from '@/ui/Bao';
 import { Page } from '@/ui/Page';
 import { alert, btnPrimary as primaryClass, btnSecondarySm as buttonClass, chip, chipOff, chipOn, chipRow, field as inputClass, tag } from '@/ui/styles';
 
@@ -79,10 +80,10 @@ export default function FridgeClient({ initial, ingredients, categories, today }
     </>}
   >
     {error && <div role="alert" className={`mb-4 ${alert}`}><p>{error}</p><div className="mt-2 flex items-center gap-3"><button className={buttonClass} disabled={loading || busy} onClick={() => void load()}>Try again</button><span className="text-xs">If a save failed, repeating the same action is safe.</span></div></div>}
-    {notice && <p role="status" className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">{notice}</p>}
+    {notice && <p role="status" className="pop-in mb-4 rounded-xl bg-tile-mint p-3 text-sm">{notice}</p>}
 
-    {adding && <section aria-labelledby="add-heading" className="mb-8 rounded-lg border border-zinc-200 bg-surface p-4 sm:p-5 dark:border-zinc-800">
-      <h2 id="add-heading" className="font-semibold">Add food</h2>
+    {adding && <section aria-labelledby="add-heading" className="mb-8 rounded-2xl border border-zinc-200 bg-surface p-4 sm:p-5 dark:border-zinc-800">
+      <h2 id="add-heading" className="font-display text-xl font-semibold tracking-tight">Add food</h2>
       <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">Pick an ingredient from the list so recipes can use it, or choose &ldquo;Other&rdquo; for anything else.</p>
       <form onSubmit={add} className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <label className="block text-sm sm:col-span-2">Ingredient<select className={`${inputClass} mt-1`} value={form.ingredientId} onChange={e => { const chosen = ingredients.find(i => i.id === e.target.value); setForm({ ...form, ingredientId: e.target.value, unit: chosen?.base_unit ?? 'count' }); }}>
@@ -115,8 +116,8 @@ export default function FridgeClient({ initial, ingredients, categories, today }
 
     <section aria-label="Food on hand" className="mt-4">
       {loading && <p role="status" className="py-6 text-sm text-zinc-500">Loading your fridge…</p>}
-      {!loading && data && shown.length === 0 && <div className="rounded-lg border border-dashed border-zinc-300 px-6 py-10 text-center dark:border-zinc-700"><p className="font-medium">{filtered ? 'No food matches these filters' : 'Your fridge is empty'}</p><p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{filtered ? 'Clear a filter or try another name.' : 'Scan a shopping receipt, or add food by hand.'}</p>{filtered ? <button type="button" className={`${buttonClass} mt-4`} onClick={clearFilters}>Clear filters</button> : <div className="mt-4 flex justify-center gap-2"><Link href="/receipts/new" className={primaryClass}>Scan a receipt</Link>{!adding && <button type="button" className={buttonClass} onClick={() => setAdding(true)}>Add food</button>}</div>}</div>}
-      {shown.length > 0 && <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 bg-surface dark:divide-zinc-800 dark:border-zinc-800">
+      {!loading && data && shown.length === 0 && <div className="py-4"><BaoSays mood={filtered ? 'thinking' : 'sleepy'} pose="hold" prop="basket">{filtered ? 'Nothing matches those filters. Clear one, or try another name.' : 'The fridge is empty. Echoes, even. Scan a receipt or add food by hand and I will keep track of it.'}</BaoSays>{filtered ? <button type="button" className={`${buttonClass} mt-4`} onClick={clearFilters}>Clear filters</button> : <div className="mt-4 flex gap-2"><Link href="/receipts/new" className={primaryClass}>Scan a receipt</Link>{!adding && <button type="button" className={buttonClass} onClick={() => setAdding(true)}>Add food</button>}</div>}</div>}
+      {shown.length > 0 && <ul className="divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-surface dark:divide-zinc-800 dark:border-zinc-800">
         {shown.map(item => {
           const days = item.expiresOn ? referenceDays(item.expiresOn, today) : null;
           const needsAttention = data?.expiringSoon.includes(item.id);
@@ -140,9 +141,9 @@ export default function FridgeClient({ initial, ingredients, categories, today }
     </section>
 
     {data && data.cookNow.length > 0 && <section aria-labelledby="cook-heading" className="mt-10">
-      <div className="flex flex-wrap items-baseline justify-between gap-2"><h2 id="cook-heading" className="text-lg font-semibold">What you can cook</h2><Link href="/recipes?chips=fridge" className="text-sm font-medium hover:underline">All matching recipes</Link></div>
+      <div className="flex flex-wrap items-baseline justify-between gap-2"><h2 id="cook-heading" className="font-display text-xl font-semibold tracking-tight">What you can cook</h2><Link href="/recipes?chips=fridge" className="text-sm font-medium hover:underline">All matching recipes</Link></div>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Best matches for what you have, starting with food to use soon.</p>
-      <ul className="mt-3 grid gap-3 sm:grid-cols-3">{data.cookNow.slice(0, 6).map(recipe => <li key={recipe.recipeId}><Link href={`/recipes/${recipe.recipeId}`} className="block h-full rounded-lg border border-zinc-200 bg-surface p-4 hover:border-accent dark:border-zinc-800"><p className="font-medium">{recipe.title}</p><p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{recipe.missingIngredientIds.length ? `Missing: ${recipe.missingIngredientIds.map(id => ingredients.find(i => i.id === id)?.name ?? id).join(', ')}` : 'You have everything it needs.'}</p>{recipe.usesExpiringItemIds.length > 0 && <p className="mt-2 text-xs text-amber-800 dark:text-amber-300">Uses {recipe.usesExpiringItemIds.length} item{recipe.usesExpiringItemIds.length === 1 ? '' : 's'} to use soon</p>}</Link></li>)}</ul>
+      <ul className="mt-3 grid gap-3 sm:grid-cols-3">{data.cookNow.slice(0, 6).map((recipe, i) => <li key={recipe.recipeId}><Link href={`/recipes/${recipe.recipeId}`} className={`block h-full rounded-2xl p-4 transition hover:-translate-y-0.5 ${i % 2 ? 'bg-tile-mint' : 'bg-tile-sky'}`}><p className="font-display text-lg font-semibold leading-tight tracking-tight">{recipe.title}</p><p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{recipe.missingIngredientIds.length ? `Missing: ${recipe.missingIngredientIds.map(id => ingredients.find(i => i.id === id)?.name ?? id).join(', ')}` : 'You have everything it needs.'}</p>{recipe.usesExpiringItemIds.length > 0 && <p className="mt-2 text-xs text-amber-800 dark:text-amber-300">Uses {recipe.usesExpiringItemIds.length} item{recipe.usesExpiringItemIds.length === 1 ? '' : 's'} to use soon</p>}</Link></li>)}</ul>
     </section>}
   </Page>;
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatUsd } from "@/platform/money";
 import type { PlanFormData } from "@/modules/planning";
+import { BaoSays } from "@/ui/Bao";
 import { alert, btnPrimary, btnText, chip, chipOff, chipOn, field as input } from "@/ui/styles";
 import { formatQty, planErrorMessage, type ApiErrorBody } from "./ui";
 
@@ -17,7 +18,7 @@ function Group({ title, note, children }: { title: string; note?: React.ReactNod
   return (
     <fieldset className="border-t border-zinc-200 pt-6 dark:border-zinc-800">
       <legend className="sr-only">{title}</legend>
-      <h2 className="font-semibold" aria-hidden>{title}</h2>
+      <h2 className="font-display text-xl font-semibold tracking-tight" aria-hidden>{title}</h2>
       {note && <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">{note}</p>}
       <div className="mt-3">{children}</div>
     </fieldset>
@@ -225,11 +226,13 @@ export function PlanForm({ data, limits, preselected = [] }: { data: PlanFormDat
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+      <div className="flex flex-col gap-3 border-t border-zinc-200 pt-6 sm:flex-row sm:flex-wrap sm:items-center dark:border-zinc-800">
         <button disabled={busy} className={`w-full sm:w-auto ${btnPrimary}`}>
-          {busy ? "Planning… this can take a few seconds" : `Plan ${meals} dinners for ${servings}`}
+          {busy ? "Planning…" : `Plan ${meals} dinners for ${servings}`}
         </button>
-        {!busy && <span className="text-sm text-zinc-500">Up to {budget ? `$${budget}` : "your budget"}, {maxMinutes} minutes each</span>}
+        {busy
+          ? <BaoSays mood="thinking" pose="hold" prop="spoon" motion="bob" size={44}>Weighing {data.recipes.length} dinners against your fridge and {budget ? `$${budget}` : "the budget"}. A few seconds.</BaoSays>
+          : <span className="text-sm text-zinc-500">Up to {budget ? `$${budget}` : "your budget"}, {maxMinutes} minutes each</span>}
       </div>
     </form>
   );

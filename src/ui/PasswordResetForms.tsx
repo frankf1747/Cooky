@@ -44,7 +44,7 @@ export function ForgotPasswordForm({ expired }: { expired: boolean }) {
     >
       {expired && <p role="alert" className={`mb-4 ${alert}`}>That reset link has expired or was already used. Ask for a new one.</p>}
       {sent ? (
-        <p role="status" className="rounded-lg bg-accent-soft p-3 text-sm">If an account exists for {email}, Cooky sent it a link to set a new password. Check your email.</p>
+        <p role="status" className="rounded-xl bg-accent-soft p-3 text-sm">If an account exists for {email}, Cooky sent it a link to set a new password. Check your email.</p>
       ) : (
         <form onSubmit={submit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1.5 text-sm font-medium">

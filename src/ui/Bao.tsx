@@ -1,59 +1,189 @@
-// Owner: Platform. "Bao", Cooky's cook: a round steamed bun in a chef's hat, drawn by Recipes &
-// Cook for v1 (#24) and kept as the face of the cooking assistant. Pure SVG, so it scales and
-// works in both colour schemes. Five moods; the label says which, for screen readers.
-export type BaoMood = "happy" | "thinking" | "cheer" | "worried" | "proud";
+// Owner: Platform. "Bao", Cooky's bun: the voice of the app. Drawn by Recipes & Cook for v1
+// (#24) and grown here: moods, poses (wave, hold, cover its eyes), props (spoon, basket, receipt,
+// timer), eyes that can look somewhere, and small motion (bob, blink, a one-shot wiggle) that
+// stops under reduced motion. Pure SVG, so it scales and works in both colour schemes. The label
+// says what Bao is doing, for screen readers; decorative uses pass `decorative`.
+import type { ReactNode } from "react";
+
+export type BaoMood = "happy" | "look" | "thinking" | "cheer" | "worried" | "proud" | "sleepy";
+export type BaoPose = "rest" | "wave" | "hold" | "cover";
+export type BaoProp = "none" | "spoon" | "basket" | "receipt" | "timer";
+export type BaoMotion = "none" | "bob" | "wiggle";
 
 const LABEL: Record<BaoMood, string> = {
-  happy: "Bao, ready to help",
-  thinking: "Bao, reading the recipe",
+  happy: "Bao, happy",
+  look: "Bao, watching",
+  thinking: "Bao, thinking",
   cheer: "Bao, cheering",
   worried: "Bao, concerned",
-  proud: "Bao, proud of you",
+  proud: "Bao, proud",
+  sleepy: "Bao, dozing",
 };
 
-export function Bao({ mood = "happy", size = 40, className = "" }: { mood?: BaoMood; size?: number; className?: string }) {
-  const eyes = {
-    happy: <><path d="M38 58 q4 -5 8 0" /><path d="M58 58 q4 -5 8 0" /></>,
-    proud: <><path d="M37 57 h10" /><path d="M57 57 h10" /></>,
-    cheer: <><path d="M37 60 l5 -6 l5 6" /><path d="M57 60 l5 -6 l5 6" /></>,
-    thinking: <><circle cx="42" cy="57" r="2.6" fill="#3b2f2f" stroke="none" /><circle cx="64" cy="54" r="2.6" fill="#3b2f2f" stroke="none" /></>,
-    worried: <><circle cx="42" cy="59" r="2.6" fill="#3b2f2f" stroke="none" /><circle cx="62" cy="59" r="2.6" fill="#3b2f2f" stroke="none" /><path d="M36 53 q4 -3 9 -4" /><path d="M68 53 q-4 -3 -9 -4" /></>,
-  }[mood];
-  const mouth = {
-    happy: <path d="M46 67 q6 6 12 0" />,
-    proud: <path d="M45 66 q7 8 14 0 z" fill="#e86a5b" />,
-    cheer: <path d="M44 65 q8 11 16 0 z" fill="#e86a5b" />,
-    thinking: <path d="M48 69 h8" />,
-    worried: <path d="M47 69 q5 -3 10 0" />,
-  }[mood];
+const INK = "#3b2f2f";
+
+export function Bao({
+  mood = "happy",
+  pose = "rest",
+  prop = "none",
+  motion = "none",
+  look,
+  size = 40,
+  className = "",
+  decorative = false,
+}: {
+  mood?: BaoMood;
+  pose?: BaoPose;
+  prop?: BaoProp;
+  motion?: BaoMotion;
+  /** Where the eyes look, each axis -1..1. Only the "look" mood has pupils. */
+  look?: { x: number; y: number };
+  size?: number;
+  className?: string;
+  decorative?: boolean;
+}) {
+  const lx = Math.max(-1, Math.min(1, look?.x ?? 0)) * 3;
+  const ly = Math.max(-1, Math.min(1, look?.y ?? 0)) * 2.5;
+  const covered = pose === "cover";
+
+  const eyes: Record<BaoMood, ReactNode> = {
+    look: (
+      <g className="bao-blink">
+        <ellipse cx="46" cy="66" rx="7" ry="8" fill="#fff" stroke={INK} strokeWidth="2" />
+        <ellipse cx="74" cy="66" rx="7" ry="8" fill="#fff" stroke={INK} strokeWidth="2" />
+        <circle cx={46 + lx} cy={66 + ly} r="3.2" fill={INK} />
+        <circle cx={74 + lx} cy={66 + ly} r="3.2" fill={INK} />
+      </g>
+    ),
+    happy: <><path d="M40 66 q6 -6 12 0" /><path d="M68 66 q6 -6 12 0" /></>,
+    proud: <><path d="M40 65 h12" /><path d="M68 65 h12" /></>,
+    cheer: <><path d="M40 68 l6 -7 l6 7" /><path d="M68 68 l6 -7 l6 7" /></>,
+    thinking: <><circle cx="46" cy="66" r="2.8" fill={INK} stroke="none" /><circle cx="74" cy="63" r="2.8" fill={INK} stroke="none" /><path d="M66 55 q8 -4 14 0" /></>,
+    worried: <><circle cx="46" cy="67" r="2.8" fill={INK} stroke="none" /><circle cx="74" cy="67" r="2.8" fill={INK} stroke="none" /><path d="M39 60 q5 -3 11 -2" /><path d="M81 60 q-5 -3 -11 -2" /></>,
+    sleepy: <><path d="M40 67 q6 4 12 0" /><path d="M68 67 q6 4 12 0" /></>,
+  };
+  const mouth: Record<BaoMood, ReactNode> = {
+    look: <path d="M54 84 q6 4 12 0" />,
+    happy: <path d="M52 83 q8 7 16 0" />,
+    proud: <path d="M51 82 q9 9 18 0 z" fill="#e86a5b" />,
+    cheer: <path d="M50 81 q10 13 20 0 z" fill="#e86a5b" />,
+    thinking: <path d="M54 86 h12" />,
+    worried: <path d="M53 86 q7 -4 14 0" />,
+    sleepy: <ellipse cx="60" cy="86" rx="3.5" ry="4.5" fill="#e86a5b" stroke="none" />,
+  };
+
+  const motionClass = motion === "bob" ? "bao-bob" : motion === "wiggle" ? "bao-wiggle" : "";
+  const a11y = decorative ? { "aria-hidden": true } : { role: "img", "aria-label": LABEL[mood] };
+
   return (
-    <svg width={size} height={size} viewBox="0 0 104 104" role="img" aria-label={LABEL[mood]} className={className}>
+    <svg width={size} height={size} viewBox="0 0 120 120" className={`${motionClass} ${className}`} {...a11y}>
       {/* hat */}
       <g fill="#fff" stroke="#e7dccb" strokeWidth="2">
-        <circle cx="38" cy="22" r="11" />
-        <circle cx="52" cy="16" r="13" />
-        <circle cx="66" cy="22" r="11" />
-        <rect x="34" y="22" width="36" height="16" rx="4" />
+        <circle cx="44" cy="24" r="11" />
+        <circle cx="60" cy="18" r="13" />
+        <circle cx="76" cy="24" r="11" />
+        <rect x="40" y="24" width="40" height="16" rx="5" />
       </g>
-      {/* bun */}
-      <path d="M14 70 C14 46 30 34 52 34 C74 34 90 46 90 70 C90 86 74 94 52 94 C30 94 14 86 14 70 Z" fill="#fff4e0" stroke="#f0d9b5" strokeWidth="2.5" />
-      <path d="M44 38 q8 6 16 0" stroke="#f0d9b5" strokeWidth="2" fill="none" />
+      {/* arms behind the body: a wave, or two arms reaching forward to hold something */}
+      {pose === "wave" && <path d="M98 74 q16 -6 12 -24" fill="none" stroke="var(--bao-line)" strokeWidth="7" strokeLinecap="round" />}
+      {pose === "wave" && <circle cx="110" cy="48" r="6" fill="var(--bao-body)" stroke="var(--bao-line)" strokeWidth="2.5" />}
+      {/* body */}
+      <path d="M18 76 C18 48 36 36 60 36 C84 36 102 48 102 76 C102 96 84 106 60 106 C36 106 18 96 18 76 Z" fill="var(--bao-body)" stroke="var(--bao-line)" strokeWidth="2.5" />
+      <path d="M50 42 q10 7 20 0" stroke="var(--bao-line)" strokeWidth="2" fill="none" />
       {/* cheeks */}
-      <ellipse cx="32" cy="68" rx="6" ry="4" fill="#ffb7c5" opacity="0.8" />
-      <ellipse cx="72" cy="68" rx="6" ry="4" fill="#ffb7c5" opacity="0.8" />
-      <g stroke="#3b2f2f" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
-        {eyes}
-        {mouth}
+      <ellipse cx="38" cy="78" rx="6" ry="4" fill="#ffb7c5" opacity="0.8" />
+      <ellipse cx="82" cy="78" rx="6" ry="4" fill="#ffb7c5" opacity="0.8" />
+      {/* face */}
+      <g stroke={INK} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        {!covered && eyes[mood]}
+        {mouth[mood]}
       </g>
-      {/* thinking: three small bubbles; worried: a drop */}
-      {mood === "thinking" && (
+      {/* thinking bubbles, a worried drop, a sleepy "z" */}
+      {mood === "thinking" && !covered && (
         <g fill="#a8d8ea">
-          <circle cx="80" cy="44" r="2" />
-          <circle cx="86" cy="37" r="3" />
-          <circle cx="94" cy="28" r="4" />
+          <circle cx="90" cy="50" r="2" />
+          <circle cx="97" cy="42" r="3" />
+          <circle cx="106" cy="32" r="4" />
         </g>
       )}
-      {mood === "worried" && <path d="M80 44 q3 6 0 9 q-3 -3 0 -9" fill="#a8d8ea" />}
+      {mood === "worried" && <path d="M90 52 q3 6 0 9 q-3 -3 0 -9" fill="#a8d8ea" />}
+      {mood === "sleepy" && (
+        <g fill="none" stroke="#a8d8ea" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M92 44 h7 l-7 7 h7" />
+          <path d="M103 32 h5 l-5 5 h5" />
+        </g>
+      )}
+      {/* hands over the eyes */}
+      {covered && (
+        <g fill="var(--bao-body)" stroke="var(--bao-line)" strokeWidth="2.5">
+          <path d="M22 86 q6 -22 24 -20" fill="none" strokeWidth="7" strokeLinecap="round" />
+          <path d="M98 86 q-6 -22 -24 -20" fill="none" strokeWidth="7" strokeLinecap="round" />
+          <circle cx="46" cy="66" r="9" />
+          <circle cx="74" cy="66" r="9" />
+        </g>
+      )}
+      {/* holding something in front */}
+      {pose === "hold" && (
+        <g>
+          <path d="M26 86 q8 10 22 12" fill="none" stroke="var(--bao-line)" strokeWidth="7" strokeLinecap="round" />
+          <path d="M94 86 q-8 10 -22 12" fill="none" stroke="var(--bao-line)" strokeWidth="7" strokeLinecap="round" />
+          {prop === "spoon" && (
+            <g transform="rotate(-20 60 100)">
+              <rect x="57" y="80" width="6" height="30" rx="3" fill="#c9a06a" />
+              <ellipse cx="60" cy="78" rx="8" ry="6" fill="#d9b27c" stroke="#b58a52" strokeWidth="1.5" />
+            </g>
+          )}
+          {prop === "basket" && (
+            <g>
+              <path d="M42 94 h36 l-4 16 h-28 z" fill="#d9b27c" stroke="#b58a52" strokeWidth="1.5" />
+              <path d="M48 94 q12 -14 24 0" fill="none" stroke="#b58a52" strokeWidth="2.5" />
+              <circle cx="52" cy="92" r="4" fill="#e86a5b" />
+              <circle cx="62" cy="90" r="4" fill="#7cc47f" />
+            </g>
+          )}
+          {prop === "receipt" && (
+            <g>
+              <path d="M46 88 h28 v24 l-4 -3 -4 3 -4 -3 -4 3 -4 -3 -4 3 -4 -3 z" fill="#fff" stroke="#9a9db0" strokeWidth="1.5" />
+              <path d="M51 94 h18 M51 99 h12 M51 104 h16" stroke="#9a9db0" strokeWidth="1.5" strokeLinecap="round" />
+            </g>
+          )}
+          {prop === "timer" && (
+            <g>
+              <circle cx="60" cy="100" r="12" fill="#fff" stroke={INK} strokeWidth="2.5" />
+              <path d="M60 92 v8 l5 3" fill="none" stroke={INK} strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M56 86 h8" stroke={INK} strokeWidth="2.5" strokeLinecap="round" />
+            </g>
+          )}
+        </g>
+      )}
     </svg>
+  );
+}
+
+/** Bao says one line: the bun and a speech bubble. The bubble carries the page's voice. */
+export function BaoSays({
+  children,
+  mood = "happy",
+  pose = "rest",
+  prop = "none",
+  motion = "none",
+  size = 56,
+  className = "",
+}: {
+  children: ReactNode;
+  mood?: BaoMood;
+  pose?: BaoPose;
+  prop?: BaoProp;
+  motion?: BaoMotion;
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <div className={`flex items-end gap-3 ${className}`}>
+      <Bao mood={mood} pose={pose} prop={prop} motion={motion} size={size} className="shrink-0" />
+      <p className="relative min-w-0 rounded-2xl rounded-bl-md border border-zinc-200 bg-surface px-4 py-3 text-[15px] leading-snug dark:border-zinc-800">
+        {children}
+      </p>
+    </div>
   );
 }

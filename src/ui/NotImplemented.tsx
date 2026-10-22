@@ -18,7 +18,7 @@ type Props = {
 export function NotImplemented({ title, owner, spec, purpose, v = 1, back = { href: "/home", label: "Back to this week" } }: Props) {
   return (
     <Page title={title} width="narrow">
-      <div className="rounded-lg border border-dashed border-zinc-300 p-6 dark:border-zinc-700">
+      <div className="rounded-2xl border border-dashed border-zinc-300 p-6 dark:border-zinc-700">
         <p className="font-medium">Coming soon</p>
         <p className="mt-1 text-zinc-600 dark:text-zinc-400">{purpose}</p>
         <Link href={back.href} className={`${btnSecondary} mt-4`}>{back.label}</Link>

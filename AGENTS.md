@@ -76,21 +76,27 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
   Never write "safe to eat" or certify a dish allergen-free.
 - **UI states:** every screen you build has loading, empty, error and retry states; retry is
   disabled while a request is in flight.
-- **One look, phone first, no emoji (decided 2026-10-21, palette 2026-10-22):** no emoji or
-  pictographic symbols anywhere a user can see them (labels, buttons, messages, empty states,
-  seed text); icons come only from `@phosphor-icons/react`, one family, through the shared UI.
-  Colours are the tokens in `app/globals.css` (paper and ink, one sky-blue accent, a sakura
-  "attention" tint) and pages never pick a colour by hand: use the classes in
-  `src/ui/styles.ts` (`btnPrimary`, `btnSecondary`, `btnSecondarySm`, `btnText`, `field`,
-  `panel`, `chip`/`chipOn`/`chipOff`/`chipRow`, `tag`, `alert`), zinc only for neutral text and
-  borders, amber only for past-date warnings. Shapes: 8px corners, pill chips, no shadows.
-  Build every page on `src/ui/Page.tsx` (title, one-line description, main action, back link);
-  sections are linked from the nav in `src/ui/AppNav.tsx` (Platform). Design for a 375px phone
-  first: controls 44px tall, text fields 16px, the main action full width, chip rows scroll
-  sideways (`chipRow`), nothing wider than the screen. No per-feature themes or custom fonts.
-  Bao (`src/ui/Bao.tsx`) is the cooking assistant's face and appears only on the cook screen.
-  Recipe images are placeholders (`app/(app)/recipes/RecipeImage.tsx`) until dish visuals are
-  chosen.
+- **One look, phone first, Bao's voice, no emoji (decided 2026-10-21, look 2026-10-22):** no
+  emoji or pictographic symbols anywhere a user can see them (labels, buttons, messages, empty
+  states, seed text); icons come only from `@phosphor-icons/react`, one family. Colours are the
+  tokens in `app/globals.css` and pages never pick a colour by hand: one sky-blue accent for
+  actions, and five tiles that each mean one thing across the app (plan = sky, shop = butter,
+  scan = tangerine, cook = mint, use soon = sakura; `tiles` in `src/ui/styles.ts`), zinc only for
+  neutral text and borders, amber only for past-date warnings. Use the shared classes
+  (`btnPrimary`, `btnSecondary`, `btnSecondarySm`, `btnText`, `field`, `panel`, `chip`/`chipOn`/
+  `chipOff`/`chipRow`, `tag`, `alert`, `tiles`/`tileFor`). Shapes: pill buttons, 16px cards,
+  food photos in a `.blob`. Type: headlines in the display face (`font-display`), body in Geist;
+  no other fonts. Build every page on `src/ui/Page.tsx`; sections are linked from the nav in
+  `src/ui/AppNav.tsx` (Platform). Design for a 375px phone first: controls 44px tall, text
+  fields 16px, the main action full width, chip rows scroll sideways (`chipRow`), nothing wider
+  than the screen.
+  **Bao** (`src/ui/Bao.tsx`) is the voice of the app. Every empty state, waiting state and
+  milestone is one line from Bao in a `BaoSays` bubble: specific, warm, a little dry, never
+  cute for its own sake, never an exclamation mark in a row. Bao reacts (mood, pose, prop) to
+  what the person just did; it never blocks an action or hides information. Motion is the
+  classes in `globals.css` (`bao-bob`, `bao-wiggle`, `pop-in`, `rise-in`, `tick-pop`), small and
+  physical, and all of it stops under reduced motion. Recipe images are placeholders
+  (`app/(app)/recipes/RecipeImage.tsx`) until dish visuals are chosen.
 - **Tests with the code:** each module function you implement gets unit tests next to it; each
   AI unit you touch gets its eval run on `dev/` before you call it done.
 

@@ -86,7 +86,7 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
       </div>
 
       {toBuy.length === 0 ? (
-        <p className="mt-3 rounded-lg border border-dashed border-zinc-300 p-4 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
+        <p className="mt-3 rounded-2xl border border-dashed border-zinc-300 p-4 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
           Nothing to buy: your fridge and staples cover every meal.
         </p>
       ) : (
