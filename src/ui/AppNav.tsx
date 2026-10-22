@@ -56,7 +56,7 @@ export function AppNav({ email, pro }: { email: string; pro: boolean }) {
   };
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-line bg-background/90 backdrop-blur-md">
+      <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-8 px-4 sm:h-16 sm:px-6 lg:px-8">
           <Link href="/fridge" aria-label="Cooky, your fridge" className="rounded-full">
             <Wordmark />

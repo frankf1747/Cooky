@@ -259,6 +259,17 @@ input:-webkit-autofill:focus {
   40% { transform: translateY(-5px) rotate(-7deg); }
   70% { transform: translateY(1px) rotate(3deg); }
 }
+@keyframes bun-idle {
+  0%, 100% { transform: rotate(0) scale(1, 1); }
+  25% { transform: rotate(-2deg) scale(0.99, 1.012); }
+  50% { transform: rotate(0) scale(1, 1); }
+  75% { transform: rotate(2deg) scale(0.99, 1.012); }
+}
+@keyframes hat-sway {
+  0%, 100% { transform: rotate(0); }
+  30% { transform: rotate(2.5deg); }
+  80% { transform: rotate(-2.5deg); }
+}
 @keyframes bun-blink {
   0%, 94%, 100% { transform: scaleY(1); }
   96.5% { transform: scaleY(0.1); }
@@ -283,6 +294,9 @@ input:-webkit-autofill:focus {
 }
 
 .bun-breathe { transform-origin: 50% 88%; animation: bun-breathe 4.8s ease-in-out infinite; }
+/* Bao with nothing to do: a slow rock on its base with a breath in it, the hat a beat behind. */
+.bun-idle { transform-origin: 50% 88%; animation: bun-idle 6.4s ease-in-out infinite; }
+.bun-idle .bun-hat { transform-box: fill-box; transform-origin: 50% 100%; animation: hat-sway 6.4s ease-in-out infinite; }
 .bun-hop { transform-origin: 50% 88%; animation: bun-hop 0.9s var(--ease-out) 1; }
 .bun-nod { transform-origin: 50% 88%; animation: bun-nod 0.6s ease-in-out 1; }
 .bun-hop .bun-hat, .bun-nod .bun-hat { transform-box: fill-box; transform-origin: 50% 100%; animation: hat-lag 0.9s var(--ease-out) 0.08s 1; }

@@ -1,4 +1,4 @@
-// Owner: Plan & Shop. One plan (PLN6, PLN8): the dinners in cooking order with their reasons and a
+// Owner: Plan & Shop. One plan (PLN6, PLN8): the dishes in cooking order with their reasons and a
 // swap, save, then the next two steps as big buttons (the shopping list with its count and
 // price, and stocking the fridge from the receipt), and one floating Cook button that cooks the
 // whole plan in sequence.
@@ -58,8 +58,8 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
       back={{ href: "/plan", label: "All plans" }}
       kicker="Step 1 · Plan"
       tone="plan"
-      title={`${plan.meals.length} dinners for ${plan.servings}`}
-      description={plan.status === "saved" ? "Saved: this is your plan for the week. Cook the dinners in order with the Cook button." : "Swap anything you don't fancy, then save the plan to keep it."}
+      title={`${plan.meals.length} ${plan.meals.length === 1 ? "dish" : "dishes"} for ${plan.servings}`}
+      description={plan.status === "saved" ? "Saved: this is your plan for the week. Cook the dishes in order with the Cook button." : "Swap anything you don't fancy, then save the plan to keep it."}
       actions={plan.status === "saved" ? (
         <div><span className={`${tagGood} !px-3 !py-1.5 !text-sm`}>Saved for this week</span></div>
       ) : (
@@ -75,7 +75,7 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
                   <RecipeImage id={m.recipeId} imageUrl={null} title={m.title} shape="soft" className="h-20 w-24 sm:h-24 sm:w-32" />
                 </Link>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-medium text-muted">Dinner {i + 1}</p>
+                  <p className="text-[13px] font-medium text-muted">Dish {i + 1}</p>
                   <h2 className={`${h3} mt-1`}>
                     <Link href={`/recipes/${m.recipeId}`} className="underline-offset-4 hover:underline">{m.title}</Link>
                   </h2>
