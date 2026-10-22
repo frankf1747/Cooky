@@ -63,7 +63,7 @@ export function BillingClient({ initial, status, priceCents, poll }: Props) {
 
   if (plan.plan === "pro") {
     return (
-      <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950">
+      <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950">
         <p className="font-medium text-emerald-900 dark:text-emerald-100">Cooky Pro is on.</p>
         <p className="mt-1 text-sm text-emerald-800 dark:text-emerald-200">AI plans and swaps, receipt scanning and the cooking assistant are unlocked, each within its daily limit.</p>
       </div>

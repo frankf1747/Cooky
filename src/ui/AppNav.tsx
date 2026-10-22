@@ -26,7 +26,7 @@ export function AppNav({ email, pro }: { email: string; pro: boolean }) {
     <>
       <header className="sticky top-0 z-30 border-b border-zinc-200 bg-background/95 backdrop-blur dark:border-zinc-800">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4 sm:px-6">
-          <Link href="/home" className="text-lg font-semibold tracking-tight">Cooky</Link>
+          <Link href="/home" className="font-display text-xl font-bold tracking-tight">Cooky</Link>
           <nav aria-label="Sections" className="hidden items-center gap-1 sm:flex">
             {SECTIONS.map((s) => {
               const on = isActive(pathname, s.match);
@@ -35,7 +35,7 @@ export function AppNav({ email, pro }: { email: string; pro: boolean }) {
                   key={s.href}
                   href={s.href}
                   aria-current={on ? "page" : undefined}
-                  className={`rounded-lg px-3 py-1.5 text-sm transition ${on ? "bg-accent-soft font-medium" : "text-zinc-600 hover:bg-zinc-100 hover:text-foreground dark:text-zinc-400 dark:hover:bg-zinc-800"}`}
+                  className={`rounded-full px-3.5 py-1.5 text-sm transition ${on ? "bg-accent-soft font-medium" : "text-zinc-600 hover:bg-zinc-100 hover:text-foreground dark:text-zinc-400 dark:hover:bg-zinc-800"}`}
                 >
                   {s.label}
                 </Link>
@@ -44,7 +44,7 @@ export function AppNav({ email, pro }: { email: string; pro: boolean }) {
           </nav>
           <div className="ml-auto flex items-center gap-2">
             {!pro && (
-              <Link href="/billing" className="hidden rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 sm:inline-flex dark:border-zinc-700 dark:hover:bg-zinc-800">
+              <Link href="/billing" className="hidden rounded-full border border-zinc-300 px-3.5 py-1.5 text-sm font-medium hover:bg-zinc-100 sm:inline-flex dark:border-zinc-700 dark:hover:bg-zinc-800">
                 Unlock Pro
               </Link>
             )}
@@ -54,7 +54,7 @@ export function AppNav({ email, pro }: { email: string; pro: boolean }) {
                 <span className="hidden max-w-40 truncate text-zinc-600 sm:inline dark:text-zinc-400">{email}</span>
                 <span className="sr-only">Account menu</span>
               </summary>
-              <div className="absolute right-0 mt-2 w-60 rounded-lg border border-zinc-200 bg-surface p-1 text-sm shadow-lg shadow-zinc-900/10 dark:border-zinc-800">
+              <div className="absolute right-0 mt-2 w-60 rounded-xl border border-zinc-200 bg-surface p-1.5 text-sm shadow-lg shadow-zinc-900/10 dark:border-zinc-800">
                 <p className="truncate px-3 pt-2 text-xs text-zinc-500">{email}</p>
                 <p className="px-3 pb-2 text-xs text-zinc-500">{pro ? "Cooky Pro" : "Free plan"}</p>
                 <Link href="/settings" className="block rounded-md px-3 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800">Settings</Link>

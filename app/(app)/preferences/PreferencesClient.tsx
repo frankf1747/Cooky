@@ -67,7 +67,7 @@ export function PreferencesClient({ initial, titles }: { initial: Preference[]; 
   return (
     <>
       {items.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-zinc-300 bg-surface p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
+        <div className="rounded-2xl border border-dashed border-zinc-300 bg-surface p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
           <p>No preferences yet.</p>
           <p className="mt-1">
             After you cook, tell Cooky how it was (for example &ldquo;a bit dry&rdquo;) and choose <span className="font-medium">Always</span> to keep it.
@@ -75,7 +75,7 @@ export function PreferencesClient({ initial, titles }: { initial: Preference[]; 
           </p>
         </div>
       ) : (
-        <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 bg-surface dark:divide-zinc-800 dark:border-zinc-800">
+        <ul className="divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-surface dark:divide-zinc-800 dark:border-zinc-800">
           {items.map((p) => (
             <li key={p.id} className={`p-4 ${p.active ? "" : "opacity-60"}`}>
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -116,7 +116,7 @@ export function PreferencesClient({ initial, titles }: { initial: Preference[]; 
         </ul>
       )}
 
-      <form onSubmit={add} className="mt-8 rounded-lg border border-zinc-200 bg-surface p-4 dark:border-zinc-800">
+      <form onSubmit={add} className="mt-8 rounded-2xl border border-zinc-200 bg-surface p-4 dark:border-zinc-800">
         <h2 className="font-semibold">Add a preference</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-[auto_auto_1fr]">
           <label className="flex flex-col gap-1 text-sm">

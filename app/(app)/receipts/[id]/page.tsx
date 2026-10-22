@@ -41,7 +41,7 @@ export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">)
       )}
 
       {receipt.status === "failed" && (
-        <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
+        <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
           <p className="text-red-800 dark:text-red-200">
             Cooky couldn&apos;t read this receipt. Nothing was added to your fridge, and Cooky doesn&apos;t keep receipt photos, so scan it again to retry.
           </p>

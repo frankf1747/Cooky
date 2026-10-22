@@ -7,7 +7,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Chunk, CookAnswer, Recipe } from "@spec/contract";
-import { Bao, type BaoMood } from "@/ui/Bao";
+import { Bao, BaoSays, type BaoMood } from "@/ui/Bao";
 import { alert, btnPrimary as btn, btnSecondary as btnGhost, btnSecondarySm, btnText, chip, chipOff, chipRow, field as input, muted, panel as card, tag } from "@/ui/styles";
 import { cookErrorMessage, formatQty, formatTimer, scaled, type ApiErrorBody } from "../../recipes/ui";
 
@@ -69,11 +69,20 @@ function Timer({ seconds, onDone }: { seconds: number; onDone?: () => void }) {
     }, 1000);
     return () => clearTimeout(t);
   }, [running, left]);
+  const pct = total ? ((total - left) / total) * 100 : 0;
   return (
-    <div className={`mt-4 flex flex-wrap items-center gap-3 p-3 ${card}`}>
-      <span className="text-2xl font-semibold tabular-nums" aria-live="polite">{left === 0 ? "Time's up" : formatTimer(left)}</span>
-      <span className="text-sm text-zinc-600 dark:text-zinc-400">{running ? "Timer running" : left === 0 ? "" : `of ${formatTimer(total)}`}</span>
-      <div className="ml-auto flex gap-2">
+    <div className={`mt-4 flex flex-wrap items-center gap-4 p-3 ${card}`}>
+      <div
+        className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full"
+        style={{ background: `conic-gradient(var(--accent) ${pct}%, var(--accent-soft) 0)` }}
+        aria-hidden
+      >
+        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-surface font-display text-lg font-semibold tabular-nums">{left === 0 ? "0:00" : formatTimer(left)}</span>
+      </div>
+      <div className="min-w-0 flex-1 text-sm">
+        <p className="font-medium" aria-live="polite">{left === 0 ? "Time's up. On to the next bit." : running ? `Timer running, of ${formatTimer(total)}` : `Timer for ${formatTimer(total)}. Tap start when the step begins.`}</p>
+      </div>
+      <div className="flex w-full gap-2 sm:ml-auto sm:w-auto">
         <button
           onClick={() => {
             if (left === 0) {
@@ -81,7 +90,7 @@ function Timer({ seconds, onDone }: { seconds: number; onDone?: () => void }) {
               setRunning(true);
             } else setRunning((r) => !r);
           }}
-          className={btn}
+          className={`flex-1 sm:flex-none ${btn}`}
         >
           {running ? "Pause" : left === 0 ? "Restart" : "Start timer"}
         </button>
@@ -207,19 +216,14 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
   if (done) {
     return (
       <section className="mx-auto w-full max-w-2xl px-4 pb-24 pt-6 sm:px-6 sm:pb-12">
-        <div className="flex items-center gap-3">
-          <Bao mood={confirmed ? "cheer" : "proud"} size={48} className="shrink-0" />
-          <div>
-            <h1 className="text-[22px] font-semibold leading-tight tracking-tight sm:text-2xl">{confirmed ? "Logged. Nice cooking." : "Done cooking"}</h1>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              {confirmed ? `${recipe.title} is done and your fridge is up to date.` : "Check what you used. Your fridge only changes when you confirm."}
-            </p>
-          </div>
-        </div>
+        <h1 className="font-display text-[26px] font-semibold leading-tight tracking-tight sm:text-[2rem]">{confirmed ? "Logged" : "Done cooking"}</h1>
+        <BaoSays mood={confirmed ? "cheer" : "proud"} pose="hold" prop="spoon" motion={confirmed ? "wiggle" : "none"} className="mt-3">
+          {confirmed ? `${recipe.title}, done. The fridge knows. Nice cooking.` : "Check what you used. The fridge only changes when you confirm, so take your time."}
+        </BaoSays>
 
         {!confirmed && (
           <>
-            <h2 className="mt-6 font-semibold">What you used</h2>
+            <h2 className="mt-6 font-display text-xl font-semibold tracking-tight">What you used</h2>
             <ul className={`mt-2 divide-y divide-zinc-200 dark:divide-zinc-800 ${card}`}>
               {groups.map((g) => (
                 <li key={g.ingredientId} className="flex items-center justify-between gap-3 px-4 py-3">
@@ -272,7 +276,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
                   <button
                     key={n} role="radio" aria-checked={rating === n} aria-label={`${n} out of 5`}
                     onClick={() => setRating(rating === n ? null : n)}
-                    className={`h-10 w-10 rounded-lg border text-sm font-medium transition active:scale-[0.97] ${rating !== null && n <= rating ? "border-accent bg-accent text-on-accent" : "border-zinc-300 bg-surface dark:border-zinc-700"}`}
+                    className={`h-10 w-10 rounded-full border text-sm font-medium transition active:scale-[0.97] ${rating !== null && n <= rating ? "border-accent bg-accent text-on-accent" : "border-zinc-300 bg-surface dark:border-zinc-700"}`}
                   >
                     {n}
                   </button>
@@ -341,7 +345,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
       <Link href={`/recipes/${recipe.id}`} className="text-sm text-zinc-600 hover:underline dark:text-zinc-400">Back to the recipe</Link>
       <div className="mt-2 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-[22px] font-semibold leading-tight tracking-tight">{recipe.title}</h1>
+          <h1 className="font-display text-[26px] font-semibold leading-tight tracking-tight">{recipe.title}</h1>
           <p className={`text-sm ${muted}`}>Dinner in about {minutesLeft} min</p>
         </div>
         {steps.length > 0 && <p className={`shrink-0 text-sm ${muted}`}>Step {index + 1} of {steps.length}</p>}
@@ -365,10 +369,18 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
       </details>
 
       {step ? (
-        <div className={`mt-4 p-5 ${card}`}>
-          <p className="text-lg leading-snug sm:text-xl">{step.text}</p>
+        <div key={step.id} className={`pop-in mt-4 p-5 ${card}`}>
+          <div className="flex items-start gap-4">
+            <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-tile-mint font-display text-lg font-bold">{step.stepNo}</span>
+            <p className="font-display text-xl font-medium leading-snug sm:text-2xl">{step.text}</p>
+          </div>
           {step.timerSeconds && <Timer key={step.id} seconds={step.timerSeconds} onDone={() => setTimerDone(true)} />}
-          {timerDone && <p className="mt-2 text-sm" role="status">Time&apos;s up. On to the next bit.</p>}
+          {timerDone && (
+            <div className="mt-3 flex items-center gap-2 text-sm" role="status">
+              <Bao mood="cheer" pose="hold" prop="timer" motion="wiggle" size={36} decorative />
+              Ding. Bao heard it too.
+            </div>
+          )}
           <div className="mt-5 grid grid-cols-2 gap-3">
             <button
               onClick={() => {
@@ -388,12 +400,12 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
               disabled={index === steps.length - 1}
               className={btn}
             >
-              Next step
+              {index === steps.length - 1 ? "Last step" : "Next step"}
             </button>
           </div>
         </div>
       ) : (
-        <p className={`mt-6 text-sm ${muted}`}>This recipe has no steps yet.</p>
+        <BaoSays mood="worried" className="mt-6">This recipe has no steps yet. Even I can&apos;t cook from nothing.</BaoSays>
       )}
 
       {/* the step's prep tip first, then answers to questions, each with its source */}
@@ -406,7 +418,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
         )}
         {thread.map(({ q, a }, i) => (
           <div key={i} className="space-y-2">
-            <p className="ml-auto w-fit max-w-[85%] rounded-lg bg-accent-soft px-3 py-2 text-sm">{q}</p>
+            <p className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-accent-soft px-3.5 py-2 text-sm">{q}</p>
             <AnswerCard mood={a.notCovered ? "worried" : "happy"}>
               <p>{a.answer}</p>
               {a.notCovered && <p className={`mt-1 text-xs ${muted}`}>Cooky only answers from this recipe, so it won&apos;t guess. Try saying it another way, or use a quick question below.</p>}
@@ -442,7 +454,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
         ))}
         {asking && (
           <AnswerCard mood="thinking">
-            <p className={muted} role="status">Checking the recipe…</p>
+            <p className={muted} role="status">Reading the recipe. Give me a second.</p>
           </AnswerCard>
         )}
         {askFailure && <ErrorNote failure={askFailure} onRetry={() => ask(lastQuestion.current)} busy={asking} />}
@@ -450,7 +462,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
 
       {pro ? (
         <div className="mt-5">
-          <p className={`text-xs ${muted}`}>Ask Bao</p>
+          <p className="font-display text-base font-semibold tracking-tight">Ask Bao</p>
           <div className={`mt-2 ${chipRow}`}>
             {QUICK.map((q) => (
               <button key={q} onClick={() => askQuick(q)} disabled={asking} className={`${chip} ${chipOff} disabled:opacity-50`}>
@@ -478,7 +490,7 @@ export function CookClient({ recipe, pro, defaultServings, limits }: { recipe: R
           <Bao mood="happy" size={40} className="shrink-0" />
           <p>
             <span className={`mr-2 ${tag}`}>Cooky Pro</span>
-            Ask Bao anything about this recipe while you cook. Steps, timers and tips stay free. <Link className={btnText} href="/billing">Unlock Pro</Link>
+            I can answer questions about this recipe while you cook. Is it done, it&apos;s sticking, that sort of thing. Steps, timers and tips stay free. <Link className={btnText} href="/billing">Unlock Pro</Link>
           </p>
         </div>
       )}

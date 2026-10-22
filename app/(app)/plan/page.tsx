@@ -37,7 +37,7 @@ export default async function PlanPage(props: PageProps<"/plan">) {
       {data.recentPlans.length === 0 ? (
         <p className="mt-2 text-sm text-zinc-500">No plans yet. Your first one will show up here.</p>
       ) : (
-        <ul className="mt-2 divide-y divide-zinc-200 rounded-lg border border-zinc-200 bg-surface dark:divide-zinc-800 dark:border-zinc-800">
+        <ul className="mt-2 divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-surface dark:divide-zinc-800 dark:border-zinc-800">
           {data.recentPlans.map((p) => (
             <li key={p.planId}>
               <Link href={`/plan/${p.planId}`} className="flex items-center justify-between gap-4 px-4 py-3 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800">

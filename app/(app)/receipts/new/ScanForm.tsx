@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Bao, BaoSays } from "@/ui/Bao";
 import { alert, btnPrimary, btnText, field } from "@/ui/styles";
 import { receiptErrorMessage, type ApiErrorBody, type ReceiptError } from "../ui";
 
@@ -67,14 +68,17 @@ export function ScanForm({ maxPx, maxMb, plans, initialPlanId }: { maxPx: number
 
   return (
     <div className="mt-6 grid gap-4">
-      <label className="flex min-h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-zinc-300 bg-surface p-6 text-center hover:border-accent dark:border-zinc-700">
+      <label className="flex min-h-48 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl bg-tile-tangerine p-6 text-center transition hover:-translate-y-0.5 active:scale-[0.99]">
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element -- a local object URL, not an optimisable asset
           <img src={preview} alt="Your receipt photo" className="max-h-80 rounded-md object-contain" />
         ) : (
-          <span className="text-zinc-600 dark:text-zinc-400">Tap to take a photo or choose one</span>
+          <>
+            <Bao mood="look" pose="hold" prop="receipt" motion="bob" size={64} decorative />
+            <span className="font-display text-lg font-semibold tracking-tight">Tap to take a photo</span>
+          </>
         )}
-        <span className="text-sm text-zinc-500">{file ? "Tap to choose a different photo" : "JPEG, PNG or WebP"}</span>
+        <span className="text-sm text-zinc-500">{file ? "Tap to choose a different photo" : "Or choose one. JPEG, PNG or WebP."}</span>
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp,image/*"
@@ -104,7 +108,7 @@ export function ScanForm({ maxPx, maxMb, plans, initialPlanId }: { maxPx: number
         >
           {busy ? "Reading your receipt…" : error?.retry ? "Try again" : "Read receipt"}
         </button>
-        {busy && <span className="text-sm text-zinc-500" aria-live="polite">This can take up to half a minute.</span>}
+        {busy && <BaoSays mood="thinking" pose="hold" prop="receipt" motion="bob" size={44}>Reading it now. Squinting at the tax line. Up to half a minute.</BaoSays>}
       </div>
 
       {error && (

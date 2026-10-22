@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { browserClient } from "@/platform/db-browser";
+import { AuthBao, type AuthAttention } from "./AuthBao";
 import { AuthShell } from "./AuthShell";
 import { alert, btnPrimary, btnText, field } from "./styles";
 import { PASSWORD_MIN_CHARS } from "./password";
@@ -12,6 +13,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [attention, setAttention] = useState<AuthAttention>("none");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -42,7 +44,8 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   return (
     <AuthShell
       title={mode === "login" ? "Welcome back" : "Create your account"}
-      lead={mode === "login" ? "Your fridge, plans and lists are where you left them." : "Two minutes to set up: your household, budget and the foods you skip."}
+      lead={mode === "login" ? "Your fridge, plans and lists are where you left them. Bao kept an eye on them." : "Two minutes to set up. Bao does the maths from then on."}
+      mascot={<AuthBao attention={attention} />}
       footer={
         mode === "login" ? (
           <>New here? <Link className={btnText} href="/signup">Create an account</Link></>
@@ -54,20 +57,26 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       <form onSubmit={submit} className="flex flex-col gap-4">
         <label className="flex flex-col gap-1.5 text-sm font-medium">
           Email
-          <input className={field} type="email" required autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input
+            className={field} type="email" required autoComplete="email" placeholder="you@example.com" value={email}
+            onChange={(e) => setEmail(e.target.value)} onFocus={() => setAttention("email")} onBlur={() => setAttention("none")}
+          />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium">
           <span className="flex items-baseline justify-between">
             Password
             {mode === "login" && <Link className={`text-xs ${btnText}`} href="/forgot-password">Forgot it?</Link>}
           </span>
-          <input className={field} type="password" required minLength={PASSWORD_MIN_CHARS} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input
+            className={field} type="password" required minLength={PASSWORD_MIN_CHARS} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password}
+            onChange={(e) => setPassword(e.target.value)} onFocus={() => setAttention("password")} onBlur={() => setAttention("none")}
+          />
           {mode === "signup" && <span className="font-normal text-zinc-500">At least {PASSWORD_MIN_CHARS} characters.</span>}
         </label>
         {error && <p role="alert" className={alert}>{error}</p>}
-        {notice && <p role="status" className="rounded-lg bg-accent-soft p-3 text-sm">{notice}</p>}
+        {notice && <p role="status" className="rounded-xl bg-accent-soft p-3 text-sm">{notice}</p>}
         <button disabled={busy} className={`mt-1 ${btnPrimary}`}>
-          {busy ? "Please wait…" : mode === "login" ? "Log in" : "Create account"}
+          {busy ? "One moment…" : mode === "login" ? "Log in" : "Create account"}
         </button>
       </form>
     </AuthShell>

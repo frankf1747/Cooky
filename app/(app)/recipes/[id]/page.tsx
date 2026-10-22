@@ -38,27 +38,27 @@ export default async function RecipePage(props: PageProps<"/recipes/[id]">) {
       </>}
     >
       <div className="flex flex-wrap items-start gap-5">
-        <RecipeImage imageUrl={recipe.imageUrl} title={recipe.title} className="h-32 w-44 shrink-0" />
+        <RecipeImage imageUrl={recipe.imageUrl} title={recipe.title} className="h-36 w-44 shrink-0 bg-tile-mint" />
         {recipe.tags.length > 0 && (
           <p className="flex flex-1 flex-wrap content-start gap-1.5">
             {recipe.tags.map((t) => (
-              <span key={t} className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{t}</span>
+              <span key={t} className="rounded-full bg-tile-sky px-2.5 py-0.5 text-xs font-medium">{t}</span>
             ))}
           </p>
         )}
       </div>
 
-      <h2 className="mt-8 text-lg font-semibold">Ingredients <span className="text-sm font-normal text-zinc-500">for {recipe.baseServings}</span></h2>
+      <h2 className="mt-8 font-display text-xl font-semibold tracking-tight">Ingredients <span className="font-sans text-sm font-normal tracking-normal text-zinc-500">for {recipe.baseServings}</span></h2>
       <PrepChecklist ingredients={recipe.ingredients} />
 
-      <h2 className="mt-8 text-lg font-semibold">Steps</h2>
+      <h2 className="mt-8 font-display text-xl font-semibold tracking-tight">Steps</h2>
       {steps.length === 0 ? (
         <p className="mt-2 text-sm text-zinc-500">This recipe has no steps yet.</p>
       ) : (
         <ol className="mt-3 space-y-3 text-sm">
           {steps.map((s) => (
             <li key={s.id} className={`flex gap-3 p-3 ${panel}`}>
-              <span className="w-6 shrink-0 font-semibold tabular-nums">{s.stepNo}.</span>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tile-mint font-display font-bold">{s.stepNo}</span>
               <div className="flex-1">
                 <p className="leading-relaxed">{s.text}</p>
                 {s.timerSeconds && <p className="mt-1 text-xs text-zinc-500">Timer {formatTimer(s.timerSeconds)}</p>}
@@ -71,7 +71,7 @@ export default async function RecipePage(props: PageProps<"/recipes/[id]">) {
 
       {recipe.faqs.length > 0 && (
         <>
-          <h2 className="mt-8 text-lg font-semibold">Questions cooks ask</h2>
+          <h2 className="mt-8 font-display text-xl font-semibold tracking-tight">Questions cooks ask</h2>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {recipe.faqs.map((f) => (
               <details key={f.id} className={`px-3 py-2 text-sm ${panel}`}>

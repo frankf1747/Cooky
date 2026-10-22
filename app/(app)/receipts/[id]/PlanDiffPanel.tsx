@@ -10,7 +10,7 @@ export function PlanDiffPanel({ diff, plan, lines }: { diff: z.infer<typeof Plan
   const recipes = (ids: string[]) => ids.map((id) => plan.recipeTitles[id] ?? "a planned meal").join(", ");
 
   return (
-    <div className="mt-6 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+    <div className="mt-6 rounded-2xl border border-zinc-200 bg-surface p-4 dark:border-zinc-800">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-semibold">Compared with your plan</h2>
         <Link href={`/plan/${plan.planId}`} className="text-sm text-zinc-500 hover:underline">Open the plan</Link>
