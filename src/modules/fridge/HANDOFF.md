@@ -1,33 +1,47 @@
-# Fridge MVP handoff
+# Fridge v1 handoff
 
-Implemented on `fridge/inventory`: own-user inventory view; separate purchase batches; catalog or generic manual add; mark used/tossed; date-reference labels and location filter; deterministic Cook now coverage; proposed cooking deductions (read-only). All quantity writes call the existing atomic `apply_inventory_batch` RPC. No AI calls, shared schema, routes, dependencies or secrets were changed.
+## Implemented
 
-## Pending Platform integration (Frank)
+- User-scoped inventory, separate purchase batches, manual catalog/generic additions, search and category/location/reference-date filters.
+- Expiring-soon attention list; deterministic Cook now coverage and missing ingredient names. Attention items link to a recipe that uses them and offer a reviewed freezer move when a guide exists.
+- FRG4 item editor: absolute quantity (including zero), storage location and explicit reference date. Completion actions and edits use `edit_fridge_item` with `expectedQty` and an `edt:` idempotency key.
+- The SQL transaction checks stock under lock, records ledger events and refuses stale quantities with 409. The browser refreshes conflicts and requires a new confirmation. Network retries preserve their operation key.
+- Moves recompute an automatic guide from the destination shelf life; user-set dates stay unchanged unless explicitly replaced. If a destination has no guide but the item has an automatic date, the UI requires an explicit replacement rather than retaining a misleading old guide. An item with no date can still move without inventing one.
+- Replay returns the original persisted edit fields, including after later edits or completion. The server-only replay lookup is scoped to the session user and exact key; item ownership is checked before the lookup.
+- All relative/addition batches use `apply_inventory_batch`, now passing the user's local date from shared `localToday`. Insufficient stock uses the exact locked `error.details` values, not a later stock snapshot.
+- Shared zinc styling with dark variants. Typical storage guides retain their sources and never certify food safety. Date inputs listen to input/change so the browser's date value and preview stay aligned.
 
-- `PATCH /api/fridge/items/:id` quantity, location and expiry-date changes deliberately return 501. The current RPC applies additive deltas only. It cannot atomically set an absolute quantity or edit metadata. A read-then-write delta races with another edit; do not implement a direct table update as a workaround.
-- Extend the shared transaction to accept an expected quantity/version (reject stale stock with 409), atomic absolute edits, and metadata edits. Preserve user ownership, ledger events, non-negative quantities and exactly-once batch semantics in the same transaction. Save the original operation response for retries before reading current item state.
-- Completion also currently reads stock before calling the additive RPC; concurrent changes can reject the action or leave residual stock. Extend the same CAS/atomic completion transaction to mark-used/tossed before multi-instance production use.
-- Freezer moves must recalculate the typical date from the freezer shelf life, unless the date was user-set. Test moves, explicit dates, two simultaneous edits, edit versus cook deductions, and replay after subsequent stock changes.
-- Current insufficient-stock errors include a numeric shortfall based on a new user-scoped stock snapshot, explicitly labelled `shortfallBasis: current_stock_snapshot`. The RPC must report the exact locked transaction shortfall to remove this race in diagnostics.
-- The shared POST route always emits 201; SPEC asks for 200 on replay. Fridge's current return shape cannot signal that distinction. Platform should coordinate replay response/status without changing the public schema unilaterally.
-- `proposeDeductions` can report a shortfall on the final allocation for a partially stocked ingredient. Completely absent stock cannot be represented as a Deduction because itemId is required. Cook must compare recipe requirements with the proposed list and require user correction before confirmation.
-- The current RPC sets added_on using DB current_date (UTC), while the expiry guide uses the profile timezone. Align added_on with the user timezone in the transaction; the browser test showed Oct 21 versus local Oct 20.
-- Shared seed shelf-life sources contain placeholders. Data & Proof must replace these with sourced guides before final submission. The UI exposes the actual source and does not describe dates as safety assessments.
+No shared contract, migration, dependency, environment file or another owner's module was changed.
 
 ## Verification
 
-Run `npm run check`, `npm run check:contract`, `npm test`. Fridge has 18 tests covering ownership, batches/retries, dates, generic stock, ranking, deductions, errors and explicit unsupported edits. Unit mocks verify application wiring, not SQL atomicity. Run the repo's database tests and the gate against a preview before merging; a teammate must verify.
+Fridge module tests cover exact response schemas, owner isolation, separate batches, retries, invalid dates/units, date sources, filters, recipe matching, FEFO deduction proposals, atomic edit wiring, zero quantity, combined edits, inactive errors, mocked concurrent quantity changes and replay after completion. These mocks test module behavior; they do not replace Platform's SQL tests.
 
-In a signed-in browser at `/fridge`: add a catalog ingredient; refresh and verify one new batch; add unmatched food; verify it does not satisfy ingredient coverage; mark the test batch used; refresh and verify it disappears. Confirm dates say typical guide and display sources. Recipe detail destinations are owned by Recipes & Cook and may remain placeholders until that module lands.
+Signed-in hosted-dev browser checks on the user's test account:
 
-No push, deploy or merge has been performed.
+1. Added chicken breast, 600 g; local added date displayed correctly.
+2. Changed to 400 g and moved to freezer; guide changed to the catalog's freezer date.
+3. Set a custom reference date; it persisted after saving.
+4. Changed to 300 g and moved back to fridge; custom date stayed unchanged.
+5. Submitted 350 g from a second tab still showing 400 g; API returned a conflict, browser refreshed to 300 g and did not overwrite stock.
 
-## Verification observed on local hosted dev
+The development server now uses `npm run dev:hosted -- --no-server-fast-refresh`. Default server fast refresh repeatedly reloaded in this environment. Webpack was tried but this repo only wires Tailwind through its Turbopack loader, so webpack leaves the UI unstyled. Turbopack with server fast refresh disabled renders correctly without editing shared config.
 
-`npm run check` passed; contract check via `node --import tsx scripts/check-contract.ts` passed (39 routes); `npm test` passed (15 files, 127 tests); unauthenticated smoke passed against localhost:3000 (db/storage ok, AI fake). Signed-in browser: added 6 eggs, reloaded, verified one persisted batch and recipe coverage increasing from 0% to 25%. Browser-native confirmation stalled the automation; replaced it with inline confirmation. Completion is unit-tested; the final browser completion flow still needs a teammate click-through. No full gate/database-test or preview verification is claimed.
+Final verification: `npm run check` passed (lint, typecheck, static); contract check passed (39 routes); `npm test` passed (39 files, 387 tests, including 29 Fridge tests); localhost smoke passed. The real hosted edit/conflict flow passed as described above. The test chicken batch was marked used successfully at the end.
 
-## Usability additions
+## Remaining integration/verification
 
-Added client-side search, combined category/location/reference-date filters, clickable inventory summary counts, missing ingredient names on recipe cards, receipt-entry link, and a live date/source preview before adding food. The server creation path and browser preview use the same pure helper. No changes to the shared contract or database.
+- Run Platform's SQL tests and the full gate with local Supabase/Docker. They were unavailable in this environment; no database gate pass is claimed.
+- Webpack-generated route types exposed TS2344 for the existing shared handler's optional RouteContext argument. This was observed only in the webpack experiment; the final Turbopack type generation and complete `npm run check` pass. No shared handler or generated type was edited.
+- The original shared POST route still always returns 201 for manual add, including a retry; SPEC expects 200 on replay. The route was kept unchanged per the module workflow. Coordinate a replay-aware response adapter with Platform; the existing add result shape has only itemId. No repeated addition is written.
+- `proposeDeductions` cannot represent a completely missing ingredient because the current Deduction requires an itemId. Cook already owns the missing-ingredient review and correction flow.
+- FRG6 weekly check and FRG7 waste statistics remain explicit 501 (v2 per SPEC §0).
+- A teammate must verify on a deployment before merging. Changes are committed and pushed on the Fridge feature branch for a draft PR; no deployment or merge into main was performed.
 
-Verification: lint/types/static checks passed; contract check passed (39 routes); full test suite passed (16 files, 132 tests, including 18 Fridge tests). Browser click-through verified generic food creation, empty-search messaging, clearing filters, inline used/discard confirmation, and successful stock removal for both actions. Test purchases remain auditable ledger records; they are not physically deleted. Platform completion concurrency limitations still apply.
+Latest main UI integration: preserved the shared Page layout and compact inventory rows from Platform, added the editor/conflict guards to those rows, and imported shared field/button styles. Post-integration checks: 41 test files / 405 tests passed; contract remains 39 routes.
+
+## Latest shared UI integration (2026-10-21)
+
+Merged main through 1c621f2 into the existing feature branch. Kept the Bao empty state, shared colour tokens, phone navigation and recipe tiles. Item editing, confirmation snapshots, expectedQty and conflict refresh remain in place. The editor uses shared pill buttons, fields and panels; loading and save notices use Bao. Date guide sources are visible per batch for touch/keyboard users.
+
+Installed the lockfile dependencies with npm ci (including @phosphor-icons/react 2.1.10); package files unchanged. Restarted dev after moving the stale .next cache aside. Static/type checks and 39-route contract passed; 41 files / 415 unit tests passed. Gate still stops at local database ECONNREFUSED (Supabase/Docker not running). A 375px browser check verified layout, add and quantity edit; preview and teammate verification remain required.

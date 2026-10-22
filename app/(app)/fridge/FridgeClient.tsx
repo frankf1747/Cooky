@@ -1,7 +1,9 @@
 'use client';
 // Owner: Fridge. The landing page: the virtual fridge (VirtualFridge.tsx), where plated dishes you
 // can cook today go into your plan with a tap, then what's inside, with adding, filtering, and
-// marking food used or discarded.
+// editing a batch (quantity, location, date: FRG2, FRG4) or marking it used or discarded. Every
+// change sends the quantity the person saw (expectedQty); a batch changed elsewhere returns 409
+// and the list refreshes before anything is confirmed again.
 import Link from 'next/link';
 import { useCallback, useRef, useState, type FormEvent } from 'react';
 import { MagnifyingGlass } from '@phosphor-icons/react';
@@ -11,14 +13,16 @@ import type { IngredientRow, CategoryRow } from '@/modules/fridge/data';
 import { EmptyState, Page, Section } from '@/ui/Page';
 import { PlanPicksBar } from '@/ui/PlanPick';
 import { alert, btnPrimary as primaryClass, btnSecondary, btnSecondarySm as buttonClass, btnText, chip, chipOff, chipOn, chipRow, field as inputClass, h2, label, note, notice as noticeClass, panel, rows, tag, tagNeutral, tagPast } from '@/ui/styles';
+import ItemEditor from './ItemEditor';
 import { VirtualFridge } from './VirtualFridge';
 
 type Props = { initial: FridgeView; ingredients: IngredientRow[]; categories: CategoryRow[]; today: string };
+class RequestError extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }
 const locations = { fridge: 'Fridge', freezer: 'Freezer', pantry: 'Pantry' };
 async function api(path: string, init?: RequestInit) {
   const res = await fetch(path, { ...init, headers: { 'Content-Type': 'application/json', ...init?.headers } });
   const body = await res.json();
-  if (!res.ok) throw new Error(`${body.error ?? 'Request failed'}${body.message ? `: ${body.message}` : ''}${body.code ? ` (${body.code})` : ''}${body.requestId ? ` · ${body.requestId}` : ''}`);
+  if (!res.ok) throw new RequestError(res.status, body.code ?? '', `${body.error ?? 'Request failed'}${body.message ? `: ${body.message}` : ''}${body.code ? ` (${body.code})` : ''}${body.requestId ? ` · ${body.requestId}` : ''}`);
   return body;
 }
 
@@ -36,7 +40,8 @@ export default function FridgeClient({ initial, ingredients, categories, today }
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
-  const [confirmation, setConfirmation] = useState<{ itemId: string; status: 'used' | 'tossed' } | null>(null);
+  const [confirmation, setConfirmation] = useState<{ item: FridgeItem; status: 'used' | 'tossed' } | null>(null);
+  const [editing, setEditing] = useState<{ item: FridgeItem; location?: Location } | null>(null);
   const [adding, setAdding] = useState(false);
   function addByHand() {
     setAdding(true);
@@ -56,10 +61,16 @@ export default function FridgeClient({ initial, ingredients, categories, today }
     if (operation.current?.body !== body) operation.current = { body, key: crypto.randomUUID() };
     try {
       await api(path, { method, body: JSON.stringify({ ...payload, idempotencyKey: operation.current.key }) });
-      operation.current = null; setConfirmation(null); setNotice(message);
+      operation.current = null; setConfirmation(null); setEditing(null); setNotice(message);
       if (method === 'POST') setForm(current => ({ ...current, qty: '' }));
       await load();
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save changes'); }
+    } catch (e) {
+      if (e instanceof RequestError && e.status === 409) {
+        operation.current = null; setConfirmation(null); setEditing(null);
+        await load();
+        setError('This batch changed in another operation. Review the refreshed stock and open it again before confirming.');
+      } else setError(e instanceof Error ? e.message : 'Could not save changes');
+    }
     finally { pending.current = false; setBusy(false); }
   }
   function add(e: FormEvent) {
@@ -141,7 +152,7 @@ export default function FridgeClient({ initial, ingredients, categories, today }
           </label>
           <label className={label}>
             <span>Use-by date <span className="font-normal text-subtle">(optional)</span></span>
-            <input className={inputClass} type="date" value={form.expiresOn} onChange={e => setForm({ ...form, expiresOn: e.target.value })} />
+            <input className={inputClass} type="date" value={form.expiresOn} onInput={e => setForm({ ...form, expiresOn: e.currentTarget.value })} onChange={e => setForm({ ...form, expiresOn: e.target.value })} />
           </label>
           <div className="flex flex-col gap-4 border-t border-line pt-4 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between lg:col-span-4" aria-live="polite">
             <p className="text-sm text-muted">{preview.expiresOn ? <>Typical use-by: {preview.expiresOn}{preview.source ? ` (source: ${preview.source})` : ''}. Leave the date blank to use it.</> : 'No storage guide for this food, so no date is set unless you enter one.'}</p>
@@ -195,19 +206,27 @@ export default function FridgeClient({ initial, ingredients, categories, today }
                   <div className="min-w-0 flex-1 basis-full sm:basis-auto">
                     <p className="font-medium">{item.name}</p>
                     <p className="text-sm text-muted">{item.qty}{item.unit === 'count' ? '' : ` ${item.unit}`} · {locations[item.location]}{item.kind === 'dish' ? ' · leftovers' : item.kind === 'generic' ? ' · not used by recipes' : ''}</p>
-                    {item.expiresOn && <p className="mt-0.5 text-xs text-subtle">Typical guide · {source(item)}</p>}
+                    {item.expiresOn && <p className="mt-0.5 text-xs text-subtle">{item.expirySource === 'user' ? 'Date entered by you' : `Typical guide, not a safety check · ${source(item)}`}</p>}
                   </div>
                   <span title={`Typical storage guide. Source: ${source(item)}. Added ${item.addedOn}.`} className={days !== null && days < 0 ? tagPast : needsAttention ? tag : tagNeutral}>{days === null ? 'No date' : days < 0 ? `Past its date (${item.expiresOn})` : days === 0 ? 'Use today' : `${days} day${days === 1 ? '' : 's'} left`}</span>
                   <div className="flex gap-2">
-                    <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => setConfirmation({ itemId: item.id, status: 'used' })}>Used</button>
-                    <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => setConfirmation({ itemId: item.id, status: 'tossed' })}>Discard</button>
+                    <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => { setConfirmation(null); setEditing({ item }); }}>Edit</button>
+                    <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => { setEditing(null); setConfirmation({ item, status: 'used' }); }}>Used</button>
+                    <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => { setEditing(null); setConfirmation({ item, status: 'tossed' }); }}>Discard</button>
                   </div>
                 </div>
-                {confirmation?.itemId === item.id && (
+                {/* Food on a clock: suggest the freezer when it has a guide there (the fridge shelves above already show dishes that use it). */}
+                {needsAttention && item.location !== 'freezer' && previewExpiry(ingredients.find(i => i.id === item.ingredientId), categories, item.category ?? 'prepared', 'freezer', '', today).expiresOn && editing?.item.id !== item.id && (
+                  <button type="button" className={`mt-2 text-sm ${btnText}`} disabled={busy || loading} onClick={() => { setConfirmation(null); setEditing({ item, location: 'freezer' }); }}>Won&apos;t get to it? Review a move to the freezer</button>
+                )}
+                {editing?.item.id === item.id && (
+                  <ItemEditor key={`${item.id}:${editing.location ?? item.location}`} item={editing.item} initialLocation={editing.location} ingredients={ingredients} categories={categories} today={today} busy={busy || loading} onCancel={() => setEditing(null)} onSave={patch => void mutate(`/api/fridge/items/${item.id}`, 'PATCH', patch, 'Batch updated.')} />
+                )}
+                {confirmation?.item.id === item.id && (
                   <div className={`pop-in mt-3 flex flex-wrap items-center justify-between gap-3 ${note}`} role="group" aria-label="Confirm change">
                     <p>{confirmation.status === 'used' ? 'Mark' : 'Discard'} all {item.qty}{item.unit === 'count' ? '' : ` ${item.unit}`} of {item.name}{confirmation.status === 'used' ? ' as used' : ''}?</p>
                     <div className="flex gap-2">
-                      <button type="button" className={`${primaryClass} !h-10 sm:!h-9 !px-4 !text-sm`} disabled={busy || loading} onClick={() => void mutate(`/api/fridge/items/${item.id}`, 'PATCH', { status: confirmation.status }, confirmation.status === 'used' ? 'Marked as used.' : 'Discarded.')}>{confirmation.status === 'used' ? 'Mark used' : 'Discard'}</button>
+                      <button type="button" className={`${primaryClass} !h-10 sm:!h-9 !px-4 !text-sm`} disabled={busy || loading} onClick={() => void mutate(`/api/fridge/items/${item.id}`, 'PATCH', { status: confirmation.status, expectedQty: confirmation.item.qty }, confirmation.status === 'used' ? 'Marked as used.' : 'Discarded.')}>{confirmation.status === 'used' ? 'Mark used' : 'Discard'}</button>
                       <button type="button" className={buttonClass} disabled={busy} onClick={() => setConfirmation(null)}>Cancel</button>
                     </div>
                   </div>

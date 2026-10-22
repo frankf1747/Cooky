@@ -8,7 +8,7 @@ import type { Category, Location, ReceiptLine, Unit } from "@spec/contract";
 import { formatUsd } from "@/platform/money";
 import { Check } from "@phosphor-icons/react";
 import { alert, btnPrimary, btnText, h2, note, rows, tick, tickOff, tickOn } from "@/ui/styles";
-import { FLAG_TEXT, confirmBody, receiptErrorMessage, toEdit, type ApiErrorBody, type EditLine, type ReceiptError } from "../ui";
+import { FLAG_TEXT, applyChange, confirmBody, receiptErrorMessage, toEdit, type ApiErrorBody, type EditLine, type ReceiptError, type ReviewShelf } from "../ui";
 
 /** Compact controls for a receipt line; several share one row. Still 16px on phones so iOS does not zoom. */
 const field =
@@ -17,11 +17,11 @@ const field =
 const UNITS: Unit[] = ["g", "ml", "count"];
 const LOCATIONS: Location[] = ["fridge", "freezer", "pantry"];
 
-export function ReviewForm({ receiptId, lines, categories }: { receiptId: string; lines: ReceiptLine[]; categories: readonly Category[] }) {
+export function ReviewForm({ receiptId, lines, categories, shelf }: { receiptId: string; lines: ReceiptLine[]; categories: readonly Category[]; shelf: ReviewShelf }) {
   const router = useRouter();
   const food = lines.filter((l) => l.decision !== "ignored");
   const ignored = lines.filter((l) => l.decision === "ignored");
-  const [edits, setEdits] = useState<Record<string, EditLine>>(() => Object.fromEntries(food.map((l) => [l.lineId, toEdit(l)])));
+  const [edits, setEdits] = useState<Record<string, EditLine>>(() => Object.fromEntries(food.map((l) => [l.lineId, toEdit(l, shelf)])));
   const [problems, setProblems] = useState<Record<string, string>>({});
   // One key per set of choices: a retry of the same choices can never add the items twice.
   const [key, setKey] = useState(() => crypto.randomUUID());
@@ -33,7 +33,7 @@ export function ReviewForm({ receiptId, lines, categories }: { receiptId: string
   const ticked = Object.values(edits).filter((e) => e.include).length;
 
   function change(lineId: string, patch: Partial<EditLine>) {
-    setEdits((all) => ({ ...all, [lineId]: { ...all[lineId], ...patch } }));
+    setEdits((all) => ({ ...all, [lineId]: applyChange(all[lineId], patch, shelf) }));
     setProblems((all) => {
       const rest = { ...all };
       delete rest[lineId];
@@ -106,10 +106,14 @@ export function ReviewForm({ receiptId, lines, categories }: { receiptId: string
                 placeholder="Amount"
                 className={`${field} w-24`}
               />
-              <select value={e.unit ?? ""} onChange={(ev) => change(l.lineId, { unit: (ev.target.value || null) as Unit | null })} disabled={busy} aria-label="Unit" className={field}>
-                <option value="">unit…</option>
-                {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-              </select>
+              {e.unitLocked ? (
+                <span className="px-1 text-sm text-muted" aria-label={`Unit: ${e.unit}`}>{e.unit === "count" ? "items" : e.unit}</span>
+              ) : (
+                <select value={e.unit ?? ""} onChange={(ev) => change(l.lineId, { unit: (ev.target.value || null) as Unit | null })} disabled={busy} aria-label="Unit" className={field}>
+                  <option value="">unit…</option>
+                  {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                </select>
+              )}
               <select value={e.location ?? ""} onChange={(ev) => change(l.lineId, { location: (ev.target.value || null) as Location | null })} disabled={busy} aria-label="Where it goes" className={field}>
                 <option value="">where…</option>
                 {LOCATIONS.map((x) => <option key={x} value={x}>{x}</option>)}

@@ -1,1 +1,185 @@
-[]
+[
+  {
+    "id": "calc01-one-recipe-no-fridge",
+    "note": "Hand-computed from supabase/seed (prices 2026-10-21), not from app output. Chicken 400 g of a 454 g pack 749; spinach 150 of 170 g 229; garlic 3 of 10 50; lemon 1 of 6 349; olive oil 30 of 1000 ml 1099.",
+    "recipes": ["rcp_lemon_garlic_chicken"],
+    "servings": 2,
+    "expect": {
+      "items": [
+        { "ingredientId": "ing_chicken_breast", "packages": 1, "costCents": 749, "leftoverQty": 54 },
+        { "ingredientId": "ing_spinach", "packages": 1, "costCents": 229, "leftoverQty": 20 },
+        { "ingredientId": "ing_garlic", "packages": 1, "costCents": 50, "leftoverQty": 7 },
+        { "ingredientId": "ing_lemon", "packages": 1, "costCents": 349, "leftoverQty": 5 },
+        { "ingredientId": "ing_olive_oil", "packages": 1, "costCents": 1099, "leftoverQty": 970 }
+      ],
+      "totalCents": 2476
+    }
+  },
+  {
+    "id": "calc02-fridge-covers-part",
+    "note": "Hand-computed. 200 g chicken in the fridge: buy 200, still one 454 g pack; leftover 200 + 454 - 400 = 254.",
+    "recipes": ["rcp_lemon_garlic_chicken"],
+    "servings": 2,
+    "fridge": [{ "ingredientId": "ing_chicken_breast", "qty": 200, "unit": "g" }],
+    "expect": {
+      "items": [
+        { "ingredientId": "ing_chicken_breast", "packages": 1, "costCents": 749, "leftoverQty": 254 },
+        { "ingredientId": "ing_spinach", "packages": 1, "costCents": 229, "leftoverQty": 20 },
+        { "ingredientId": "ing_garlic", "packages": 1, "costCents": 50, "leftoverQty": 7 },
+        { "ingredientId": "ing_lemon", "packages": 1, "costCents": 349, "leftoverQty": 5 },
+        { "ingredientId": "ing_olive_oil", "packages": 1, "costCents": 1099, "leftoverQty": 970 }
+      ],
+      "totalCents": 2476
+    }
+  },
+  {
+    "id": "calc03-scale-up-3-servings",
+    "note": "Hand-computed. x1.5: chicken 600 g -> 2 packs (908) 1498, left 308; spinach 225 -> 2 packs (340) 458, left 115; garlic 4.5 -> 1 pack, left 5.5; lemon 1.5 -> 1 bag, left 4.5; oil 45 -> 1, left 955.",
+    "recipes": ["rcp_lemon_garlic_chicken"],
+    "servings": 3,
+    "expect": {
+      "items": [
+        { "ingredientId": "ing_chicken_breast", "packages": 2, "costCents": 1498, "leftoverQty": 308 },
+        { "ingredientId": "ing_spinach", "packages": 2, "costCents": 458, "leftoverQty": 115 },
+        { "ingredientId": "ing_garlic", "packages": 1, "costCents": 50, "leftoverQty": 5.5 },
+        { "ingredientId": "ing_lemon", "packages": 1, "costCents": 349, "leftoverQty": 4.5 },
+        { "ingredientId": "ing_olive_oil", "packages": 1, "costCents": 1099, "leftoverQty": 955 }
+      ],
+      "totalCents": 3454
+    }
+  },
+  {
+    "id": "calc04-merge-two-recipes",
+    "note": "Hand-computed. Fried rice + frittata, optional ingredients not bought. Eggs 3 + 6 = 9 -> one dozen 599, left 3.",
+    "recipes": ["rcp_egg_fried_rice", "rcp_spinach_frittata"],
+    "servings": 2,
+    "expect": {
+      "items": [
+        { "ingredientId": "ing_rice", "packages": 1, "costCents": 399, "leftoverQty": 1211 },
+        { "ingredientId": "ing_egg", "packages": 1, "costCents": 599, "leftoverQty": 3 },
+        { "ingredientId": "ing_scallion", "packages": 1, "costCents": 129, "leftoverQty": 3 },
+        { "ingredientId": "ing_soy_sauce", "packages": 1, "costCents": 399, "leftoverQty": 490 },
+        { "ingredientId": "ing_avocado_oil", "packages": 1, "costCents": 799, "leftoverQty": 485 },
+        { "ingredientId": "ing_spinach", "packages": 1, "costCents": 229, "leftoverQty": 70 },
+        { "ingredientId": "ing_onion", "packages": 1, "costCents": 99, "leftoverQty": 0 },
+        { "ingredientId": "ing_butter", "packages": 1, "costCents": 299, "leftoverQty": 439 }
+      ],
+      "totalCents": 2952
+    }
+  },
+  {
+    "id": "calc05-staples-not-bought",
+    "note": "Hand-computed. As calc04 with soy sauce, avocado oil and butter as staples: cost 0, nothing left over. 2952 - 399 - 799 - 299 = 1455.",
+    "recipes": ["rcp_egg_fried_rice", "rcp_spinach_frittata"],
+    "servings": 2,
+    "staples": ["ing_soy_sauce", "ing_avocado_oil", "ing_butter"],
+    "expect": {
+      "items": [
+        { "ingredientId": "ing_rice", "packages": 1, "costCents": 399, "leftoverQty": 1211 },
+        { "ingredientId": "ing_egg", "packages": 1, "costCents": 599, "leftoverQty": 3 },
+        { "ingredientId": "ing_scallion", "packages": 1, "costCents": 129, "leftoverQty": 3 },
+        { "ingredientId": "ing_soy_sauce", "packages": 0, "costCents": 0, "leftoverQty": 0 },
+        { "ingredientId": "ing_avocado_oil", "packages": 0, "costCents": 0, "leftoverQty": 0 },
+        { "ingredientId": "ing_spinach", "packages": 1, "costCents": 229, "leftoverQty": 70 },
+        { "ingredientId": "ing_onion", "packages": 1, "costCents": 99, "leftoverQty": 0 },
+        { "ingredientId": "ing_butter", "packages": 0, "costCents": 0, "leftoverQty": 0 }
+      ],
+      "totalCents": 1455
+    }
+  },
+  {
+    "id": "calc06-fridge-covers-fully",
+    "note": "Hand-computed. 500 g tomato and 12 eggs at home: neither bought; left 200 g and 8. Soy sauce is optional here.",
+    "recipes": ["rcp_tomato_egg_stir_fry"],
+    "servings": 2,
+    "fridge": [
+      { "ingredientId": "ing_tomato", "qty": 500, "unit": "g" },
+      { "ingredientId": "ing_egg", "qty": 12, "unit": "count" }
+    ],
+    "expect": {
+      "items": [
+        { "ingredientId": "ing_tomato", "packages": 0, "costCents": 0, "leftoverQty": 200 },
+        { "ingredientId": "ing_egg", "packages": 0, "costCents": 0, "leftoverQty": 8 },
+        { "ingredientId": "ing_scallion", "packages": 1, "costCents": 129, "leftoverQty": 4 },
+        { "ingredientId": "ing_sugar", "packages": 1, "costCents": 449, "leftoverQty": 899 },
+        { "ingredientId": "ing_avocado_oil", "packages": 1, "costCents": 799, "leftoverQty": 480 },
+        { "ingredientId": "ing_rice", "packages": 1, "costCents": 399, "leftoverQty": 1211 }
+      ],
+      "totalCents": 1776
+    }
+  },
+  {
+    "id": "calc07-scale-down-1-serving",
+    "note": "Hand-computed. x0.5: beef 150 of 454 -> left 304; tortillas 135 of 680 -> 545; onion 0.5 of 1 -> 0.5; paprika 2.5 of 74 -> 71.5; cheddar 30 of 227 -> 197; pico 60 of 340 -> 280. Avocado optional.",
+    "recipes": ["rcp_beef_tacos"],
+    "servings": 1,
+    "expect": {
+      "items": [
+        { "ingredientId": "ing_ground_beef", "packages": 1, "costCents": 649, "leftoverQty": 304 },
+        { "ingredientId": "ing_flour_tortilla", "packages": 1, "costCents": 229, "leftoverQty": 545 },
+        { "ingredientId": "ing_onion", "packages": 1, "costCents": 99, "leftoverQty": 0.5 },
+        { "ingredientId": "ing_smoked_paprika", "packages": 1, "costCents": 249, "leftoverQty": 71.5 },
+        { "ingredientId": "ing_cheddar", "packages": 1, "costCents": 499, "leftoverQty": 197 },
+        { "ingredientId": "ing_pico_de_gallo", "packages": 1, "costCents": 299, "leftoverQty": 280 }
+      ],
+      "totalCents": 2024
+    }
+  },
+  {
+    "id": "calc08-shared-garlic-optional-lemon",
+    "note": "Hand-computed. Pasta + chicken: garlic 4 + 3 = 7 of one 10-clove pack; the pasta's lemon is optional, so only the chicken's 1 lemon counts.",
+    "recipes": ["rcp_garlic_butter_pasta", "rcp_lemon_garlic_chicken"],
+    "servings": 2,
+    "expect": {
+      "items": [
+        { "ingredientId": "ing_pasta", "packages": 1, "costCents": 99, "leftoverQty": 254 },
+        { "ingredientId": "ing_butter", "packages": 1, "costCents": 299, "leftoverQty": 424 },
+        { "ingredientId": "ing_garlic", "packages": 1, "costCents": 50, "leftoverQty": 3 },
+        { "ingredientId": "ing_frozen_peas", "packages": 1, "costCents": 199, "leftoverQty": 304 },
+        { "ingredientId": "ing_parmesan", "packages": 1, "costCents": 299, "leftoverQty": 187 },
+        { "ingredientId": "ing_chicken_breast", "packages": 1, "costCents": 749, "leftoverQty": 54 },
+        { "ingredientId": "ing_spinach", "packages": 1, "costCents": 229, "leftoverQty": 20 },
+        { "ingredientId": "ing_lemon", "packages": 1, "costCents": 349, "leftoverQty": 5 },
+        { "ingredientId": "ing_olive_oil", "packages": 1, "costCents": 1099, "leftoverQty": 970 }
+      ],
+      "totalCents": 3372
+    }
+  },
+  {
+    "id": "calc09-4-servings-with-garlic-at-home",
+    "note": "Hand-computed. x2: chicken 800 -> 2 packs, left 108; spinach 300 -> 2 packs, left 40; garlic need 6, have 2, buy 4 -> 1 pack, left 2 + 10 - 6 = 6; lemon 2 -> left 4; oil 60 -> left 940.",
+    "recipes": ["rcp_lemon_garlic_chicken"],
+    "servings": 4,
+    "fridge": [{ "ingredientId": "ing_garlic", "qty": 2, "unit": "count" }],
+    "expect": {
+      "items": [
+        { "ingredientId": "ing_chicken_breast", "packages": 2, "costCents": 1498, "leftoverQty": 108 },
+        { "ingredientId": "ing_spinach", "packages": 2, "costCents": 458, "leftoverQty": 40 },
+        { "ingredientId": "ing_garlic", "packages": 1, "costCents": 50, "leftoverQty": 6 },
+        { "ingredientId": "ing_lemon", "packages": 1, "costCents": 349, "leftoverQty": 4 },
+        { "ingredientId": "ing_olive_oil", "packages": 1, "costCents": 1099, "leftoverQty": 940 }
+      ],
+      "totalCents": 3454
+    }
+  },
+  {
+    "id": "calc10-partial-fridge-and-exact-cover",
+    "note": "Hand-computed. Frittata with 4 eggs, 50 g spinach and 1 onion at home: buy 2 eggs (one dozen, left 4 + 12 - 6 = 10), 50 g spinach (one bag, left 50 + 170 - 100 = 120), no onion. Parmesan and milk are optional.",
+    "recipes": ["rcp_spinach_frittata"],
+    "servings": 2,
+    "fridge": [
+      { "ingredientId": "ing_egg", "qty": 4, "unit": "count" },
+      { "ingredientId": "ing_spinach", "qty": 50, "unit": "g" },
+      { "ingredientId": "ing_onion", "qty": 1, "unit": "count" }
+    ],
+    "expect": {
+      "items": [
+        { "ingredientId": "ing_egg", "packages": 1, "costCents": 599, "leftoverQty": 10 },
+        { "ingredientId": "ing_spinach", "packages": 1, "costCents": 229, "leftoverQty": 120 },
+        { "ingredientId": "ing_onion", "packages": 0, "costCents": 0, "leftoverQty": 0 },
+        { "ingredientId": "ing_butter", "packages": 1, "costCents": 299, "leftoverQty": 439 }
+      ],
+      "totalCents": 1127
+    }
+  }
+]

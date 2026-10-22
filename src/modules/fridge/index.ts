@@ -1,12 +1,12 @@
 // Owner: Fridge. MVP: ledger, inventory reads, manual add/completion and Cook joins.
 import type { z } from 'zod';
-import { FridgeItemCreate, FridgeItemPatch, FridgeView, type BatchEvent, type CookNowEntry, type Deduction, type FridgeCheck, type FridgeItem, type NewFridgeItem } from '@spec/contract';
+import { FridgeItemCreate, FridgeItemPatch, FridgeView, type BatchEvent, type CookNowEntry, type Deduction, type FridgeCheck, FridgeItem, type NewFridgeItem } from '@spec/contract';
 import targets from '@spec/targets.json';
 import { reader } from '@/platform/db';
-import { badRequest, conflict, notFound, notImplemented } from '@/platform/errors';
+import { badRequest, notFound, notImplemented } from '@/platform/errors';
 import { addDays, dbError, loadCatalog, loadItems, todayFor, validDate } from './data';
-import { previewExpiry } from './presentation';
-import { writeBatch } from './ledger';
+import { previewExpiry, previewItemExpiry } from './presentation';
+import { editReplay, writeEdit, writeBatch } from './ledger';
 
 function active(items: FridgeItem[]) { return items.filter(i => i.status === 'active' && i.qty > 0); }
 function soon(items: FridgeItem[], today: string) {
@@ -72,19 +72,23 @@ export async function updateItem(userId: string, itemId: string, raw: z.infer<ty
   const parsed = FridgeItemPatch.safeParse(raw); if (!parsed.success) throw badRequest();
   const input = parsed.data;
   const current = (await loadItems(userId)).find(i => i.id === itemId); if (!current) throw notFound();
-  // Platform's RPC supports additive deltas only. Read-then-set quantity edits can
-  // silently double-apply during concurrent requests; leave them explicit until
-  // Platform supplies an atomic set/CAS + replay-result transaction.
-  if (input.qty !== undefined || input.location !== undefined || input.expiresOn !== undefined) throw notImplemented('fridge quantity/metadata edits require Platform atomic set support');
-  if (!input.status) throw badRequest();
-  if (current.status !== 'active') {
-    if (current.status === input.status) return current;
-    throw conflict('item_inactive', { message: 'This batch has already been finished.' });
+  if (input.expectedQty === undefined) throw badRequest('invalid_input', 'Refresh the fridge and include the quantity you saw');
+  if (input.qty !== undefined && input.status !== undefined) throw badRequest('invalid_input', 'Change quantity or mark finished, not both');
+  if (input.qty === undefined && input.status === undefined && input.location === undefined && input.expiresOn === undefined) throw badRequest('invalid_input', 'Choose a change to save');
+  if (input.expiresOn && !validDate(input.expiresOn)) throw badRequest('invalid_input', 'Invalid calendar date');
+  const key = `edt:${input.idempotencyKey}`;
+  const replayed = await editReplay(userId, itemId, key);
+  if (replayed) return FridgeItem.parse({ ...current, ...replayed, id: itemId });
+  let expiry: { p_expires_on?: string; p_expiry_source?: FridgeItem['expirySource'] } = {};
+  if (input.expiresOn) expiry = { p_expires_on: input.expiresOn, p_expiry_source: 'user' };
+  else if (input.location && input.location !== current.location && current.expirySource !== 'user') {
+    const [{ ingredients, categories }, today] = await Promise.all([loadCatalog(), todayFor(userId)]);
+    const guide = previewItemExpiry(current, ingredients, categories, input.location, '', today);
+    if (guide.expiresOn) expiry = { p_expires_on: guide.expiresOn, p_expiry_source: guide.expirySource };
+    else if (current.expiresOn) throw badRequest('invalid_input', 'No guide exists for this location. Enter your own reference date before moving it.');
   }
-  const desired = 0;
-  await writeBatch(userId, [{ itemId, delta: desired - current.qty, reason: input.status === 'tossed' ? 'toss' : 'adjust' }], `man:${input.idempotencyKey}`);
-  const updated = (await loadItems(userId)).find(i => i.id === itemId); if (!updated) throw notFound();
-  return updated;
+  const edited = await writeEdit(userId, { p_item: itemId, p_key: key, p_expected_qty: input.expectedQty, ...(input.qty !== undefined ? { p_qty: input.qty } : {}), ...(input.status ? { p_status: input.status } : {}), ...(input.location ? { p_location: input.location } : {}), ...expiry });
+  return FridgeItem.parse({ ...current, ...edited, id: itemId });
 }
 export async function expiringSoon(userId: string): Promise<FridgeItem[]> { return soon(await loadItems(userId), await todayFor(userId)); }
 export async function cookNow(userId: string): Promise<CookNowEntry[]> { return rankRecipes(userId, await loadItems(userId), await todayFor(userId)); }
