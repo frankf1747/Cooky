@@ -54,6 +54,7 @@ export function AppNav({ email, pro }: { email: string; pro: boolean }) {
               <div className="absolute right-0 mt-2 w-56 rounded-lg border border-zinc-200 bg-[var(--background)] p-1 text-sm shadow-lg dark:border-zinc-800">
                 <p className="px-3 py-2 text-xs text-zinc-500">{pro ? "Cooky Pro" : "Free plan"}</p>
                 <Link href="/settings" className="block rounded-md px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900">Settings</Link>
+                <Link href="/preferences" className="block rounded-md px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900">Taste preferences</Link>
                 <Link href="/billing" className="block rounded-md px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900">{pro ? "Your Pro plan" : "Unlock Pro"}</Link>
                 <form action="/auth/signout" method="post">
                   <button className="w-full rounded-md px-3 py-2 text-left hover:bg-zinc-100 dark:hover:bg-zinc-900">Sign out</button>
