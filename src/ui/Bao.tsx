@@ -1,9 +1,11 @@
 // Owner: Platform. "Bao", Cooky's bun: the voice of the app. Drawn by Recipes & Cook for v1
-// (#24) and grown here: moods, poses (wave, hold, cover its eyes), props (spoon, basket, receipt,
-// timer), eyes that can look somewhere, and small motion (bob, blink, a one-shot wiggle) that
-// stops under reduced motion. Pure SVG, so it scales and works in both colour schemes. The label
-// says what Bao is doing, for screen readers; decorative uses pass `decorative`.
-import type { ReactNode } from "react";
+// (#24) and redrawn here as a proper 2D illustration: a steamed bun with soft shading, pleats
+// peeking out under the hat, glossy eyes, blushed cheeks and, at `detail="rich"`, a paper grain.
+// Moods, poses (wave, hold, cover its eyes), props (spoon, basket, receipt, timer), eyes that can
+// look somewhere, and small motion (bob, blink, a one-shot wiggle) that stops under reduced
+// motion. Pure SVG, so it scales and works in both colour schemes. The label says what Bao is
+// doing, for screen readers; decorative uses pass `decorative`.
+import { useId, type ReactNode } from "react";
 
 export type BaoMood = "happy" | "look" | "thinking" | "cheer" | "worried" | "proud" | "sleepy";
 export type BaoPose = "rest" | "wave" | "hold" | "cover";
@@ -21,12 +23,15 @@ const LABEL: Record<BaoMood, string> = {
 };
 
 const INK = "#3b2f2f";
+const LINE = "#e3c493";
+const BODY = "M18 76 C18 48 36 36 60 36 C84 36 102 48 102 76 C102 96 84 106 60 106 C36 106 18 96 18 76 Z";
 
 export function Bao({
   mood = "happy",
   pose = "rest",
   prop = "none",
   motion = "none",
+  detail = "plain",
   look,
   size = 40,
   className = "",
@@ -36,12 +41,15 @@ export function Bao({
   pose?: BaoPose;
   prop?: BaoProp;
   motion?: BaoMotion;
+  /** "rich" adds paper grain and a second highlight; use it for one big Bao, not a grid of small ones. */
+  detail?: "plain" | "rich";
   /** Where the eyes look, each axis -1..1. Only the "look" mood has pupils. */
   look?: { x: number; y: number };
   size?: number;
   className?: string;
   decorative?: boolean;
 }) {
+  const id = useId().replace(/:/g, "");
   const lx = Math.max(-1, Math.min(1, look?.x ?? 0)) * 3;
   const ly = Math.max(-1, Math.min(1, look?.y ?? 0)) * 2.5;
   const covered = pose === "cover";
@@ -51,8 +59,12 @@ export function Bao({
       <g className="bao-blink">
         <ellipse cx="46" cy="66" rx="7" ry="8" fill="#fff" stroke={INK} strokeWidth="2" />
         <ellipse cx="74" cy="66" rx="7" ry="8" fill="#fff" stroke={INK} strokeWidth="2" />
-        <circle cx={46 + lx} cy={66 + ly} r="3.2" fill={INK} />
-        <circle cx={74 + lx} cy={66 + ly} r="3.2" fill={INK} />
+        <circle cx={46 + lx} cy={66 + ly} r="3.8" fill="#4a3728" />
+        <circle cx={74 + lx} cy={66 + ly} r="3.8" fill="#4a3728" />
+        <circle cx={46 + lx} cy={66 + ly} r="2.2" fill={INK} />
+        <circle cx={74 + lx} cy={66 + ly} r="2.2" fill={INK} />
+        <circle cx={44.6 + lx} cy={64.4 + ly} r="1.2" fill="#fff" />
+        <circle cx={72.6 + lx} cy={64.4 + ly} r="1.2" fill="#fff" />
       </g>
     ),
     happy: <><path d="M40 66 q6 -6 12 0" /><path d="M68 66 q6 -6 12 0" /></>,
@@ -77,27 +89,71 @@ export function Bao({
 
   return (
     <svg width={size} height={size} viewBox="0 0 120 120" className={`${motionClass} ${className}`} {...a11y}>
+      <defs>
+        {/* the bun: lit from the top left, warm in the fold at the bottom */}
+        <radialGradient id={`${id}-body`} cx="40%" cy="30%" r="75%">
+          <stop offset="0" stopColor="#fffaf0" />
+          <stop offset="0.55" stopColor="var(--bao-body)" />
+          <stop offset="1" stopColor="#efd3aa" />
+        </radialGradient>
+        <linearGradient id={`${id}-hat`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset="1" stopColor="#e9ebef" />
+        </linearGradient>
+        <radialGradient id={`${id}-cheek`}>
+          <stop offset="0" stopColor="#ffa9bb" stopOpacity="0.95" />
+          <stop offset="1" stopColor="#ffa9bb" stopOpacity="0" />
+        </radialGradient>
+        <clipPath id={`${id}-clip`}>
+          <path d={BODY} />
+        </clipPath>
+        {detail === "rich" && (
+          <filter id={`${id}-grain`} x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" />
+            <feColorMatrix type="saturate" values="0" />
+          </filter>
+        )}
+      </defs>
+
       {/* hat */}
-      <g fill="#fff" stroke="#e7dccb" strokeWidth="2">
+      <g fill={`url(#${id}-hat)`} stroke="#dfd4c4" strokeWidth="2">
         <circle cx="44" cy="24" r="11" />
         <circle cx="60" cy="18" r="13" />
         <circle cx="76" cy="24" r="11" />
         <rect x="40" y="24" width="40" height="16" rx="5" />
       </g>
+      <path d="M46 36 h28" stroke="#dfd4c4" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 3" />
+
       {/* arms behind the body: a wave, or two arms reaching forward to hold something */}
-      {pose === "wave" && <path d="M98 74 q16 -6 12 -24" fill="none" stroke="var(--bao-line)" strokeWidth="7" strokeLinecap="round" />}
-      {pose === "wave" && <circle cx="110" cy="48" r="6" fill="var(--bao-body)" stroke="var(--bao-line)" strokeWidth="2.5" />}
-      {/* body */}
-      <path d="M18 76 C18 48 36 36 60 36 C84 36 102 48 102 76 C102 96 84 106 60 106 C36 106 18 96 18 76 Z" fill="var(--bao-body)" stroke="var(--bao-line)" strokeWidth="2.5" />
-      <path d="M50 42 q10 7 20 0" stroke="var(--bao-line)" strokeWidth="2" fill="none" />
+      {pose === "wave" && <path d="M98 74 q16 -6 12 -24" fill="none" stroke={LINE} strokeWidth="7" strokeLinecap="round" />}
+      {pose === "wave" && <circle cx="110" cy="48" r="6" fill="var(--bao-body)" stroke={LINE} strokeWidth="2.5" />}
+
+      {/* body, its shading, and the pleats peeking out under the hat */}
+      <path d={BODY} fill={`url(#${id}-body)`} stroke={LINE} strokeWidth="2.5" />
+      {detail === "rich" && (
+        <g clipPath={`url(#${id}-clip)`} style={{ mixBlendMode: "multiply" }} opacity="0.14">
+          <rect x="18" y="36" width="84" height="70" filter={`url(#${id}-grain)`} />
+        </g>
+      )}
+      <ellipse cx="46" cy="50" rx="12" ry="6" fill="#fff" opacity={detail === "rich" ? 0.55 : 0.4} />
+      <g fill="none" stroke={LINE} strokeWidth="1.6" strokeLinecap="round" opacity="0.9">
+        <path d="M44 41 q-7 4 -11 11" />
+        <path d="M52 41 q-3 5 -4 11" />
+        <path d="M68 41 q3 5 4 11" />
+        <path d="M76 41 q7 4 11 11" />
+      </g>
+      <path d="M26 92 q34 14 68 0" fill="none" stroke="#e9c79a" strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
+
       {/* cheeks */}
-      <ellipse cx="38" cy="78" rx="6" ry="4" fill="#ffb7c5" opacity="0.8" />
-      <ellipse cx="82" cy="78" rx="6" ry="4" fill="#ffb7c5" opacity="0.8" />
+      <circle cx="38" cy="78" r="8" fill={`url(#${id}-cheek)`} />
+      <circle cx="82" cy="78" r="8" fill={`url(#${id}-cheek)`} />
+
       {/* face */}
       <g stroke={INK} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
         {!covered && eyes[mood]}
         {mouth[mood]}
       </g>
+
       {/* thinking bubbles, a worried drop, a sleepy "z" */}
       {mood === "thinking" && !covered && (
         <g fill="#a8d8ea">
@@ -113,20 +169,22 @@ export function Bao({
           <path d="M103 32 h5 l-5 5 h5" />
         </g>
       )}
+
       {/* hands over the eyes */}
       {covered && (
-        <g fill="var(--bao-body)" stroke="var(--bao-line)" strokeWidth="2.5">
+        <g fill="var(--bao-body)" stroke={LINE} strokeWidth="2.5">
           <path d="M22 86 q6 -22 24 -20" fill="none" strokeWidth="7" strokeLinecap="round" />
           <path d="M98 86 q-6 -22 -24 -20" fill="none" strokeWidth="7" strokeLinecap="round" />
           <circle cx="46" cy="66" r="9" />
           <circle cx="74" cy="66" r="9" />
         </g>
       )}
+
       {/* holding something in front */}
       {pose === "hold" && (
         <g>
-          <path d="M26 86 q8 10 22 12" fill="none" stroke="var(--bao-line)" strokeWidth="7" strokeLinecap="round" />
-          <path d="M94 86 q-8 10 -22 12" fill="none" stroke="var(--bao-line)" strokeWidth="7" strokeLinecap="round" />
+          <path d="M26 86 q8 10 22 12" fill="none" stroke={LINE} strokeWidth="7" strokeLinecap="round" />
+          <path d="M94 86 q-8 10 -22 12" fill="none" stroke={LINE} strokeWidth="7" strokeLinecap="round" />
           {prop === "spoon" && (
             <g transform="rotate(-20 60 100)">
               <rect x="57" y="80" width="6" height="30" rx="3" fill="#c9a06a" />

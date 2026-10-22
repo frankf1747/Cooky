@@ -44,7 +44,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   return (
     <AuthShell
       title={mode === "login" ? "Welcome back" : "Create your account"}
-      lead={mode === "login" ? "Your fridge, plans and lists are where you left them. Bao kept an eye on them." : "Two minutes to set up. Bao does the maths from then on."}
+      lead={mode === "login" ? "Your fridge is where you left it." : "Two minutes to set up. Bao does the maths from then on."}
       mascot={<AuthBao attention={attention} />}
       footer={
         mode === "login" ? (
