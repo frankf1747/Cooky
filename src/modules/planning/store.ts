@@ -135,3 +135,44 @@ export async function markSaved(db: SupabaseClient, w: { db: SupabaseClient; use
   }
   return { planId, version, status: "saved" as const };
 }
+
+/** The plan's current version with the inputs it was made from (for swapMeal). 404 when not this user's. */
+export async function readCurrent(db: SupabaseClient, userId: string, planId: string): Promise<{ plan: PlanDraft; inputs: PlanCreate }> {
+  const plan = await ownPlan(db, userId, planId);
+  const v = await currentVersion(db, userId, plan);
+  return { plan: toDraft(plan, v), inputs: v.inputs };
+}
+
+/**
+ * Store version base+1 as a draft and point the plan at it (PLN7). Earlier versions are never
+ * changed. Two inserts guard against a concurrent swap: the (plan_id, version) key refuses a second
+ * version base+1, and the pointer moves only from base; either way the caller gets 409 stale_version.
+ */
+export async function insertNextVersion(
+  w: { db: SupabaseClient; userId: string },
+  planId: string,
+  base: number,
+  inputs: PlanCreate,
+  draft: Omit<PlanDraft, "planId" | "version" | "status">,
+  run: RunInfo,
+): Promise<PlanDraft> {
+  const version = base + 1;
+  const versionId = newId("plv");
+  const v = await w.db.from("plan_versions").insert({
+    id: versionId, plan_id: planId, user_id: w.userId, version, inputs,
+    meals: draft.meals, shopping: draft.shopping, total_cents: draft.totalCents,
+    price_as_of: draft.priceAsOf, assumptions: draft.assumptions, run_id: run.runId,
+  });
+  if (v.error) {
+    if ((v.error as { code?: string }).code === "23505") throw conflict("stale_version", { currentVersion: version });
+    fail(`saving version ${version} of ${planId}`, v.error);
+  }
+  const p = await w.db.from("plans").update({ current_version: version, status: "draft" })
+    .eq("user_id", w.userId).eq("id", planId).eq("current_version", base).select("id");
+  if (p.error || !p.data?.length) {
+    await w.db.from("plan_versions").delete().eq("user_id", w.userId).eq("id", versionId);
+    if (p.error) fail(`moving ${planId} to version ${version}`, p.error);
+    throw conflict("stale_version", { currentVersion: version });
+  }
+  return { planId, version, status: "draft", ...draft };
+}
