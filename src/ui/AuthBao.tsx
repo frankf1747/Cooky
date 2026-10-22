@@ -53,7 +53,7 @@ export function AuthBao({ attention }: { attention: AuthAttention }) {
         className="relative h-52 w-52 lg:h-80 lg:w-80"
       />
       <span
-        className="absolute -right-4 top-6 rounded-2xl rounded-bl-md bg-surface px-3.5 py-2 text-sm font-medium shadow-sm shadow-foreground/10 lg:-right-10 lg:top-14 lg:text-base"
+        className="absolute -right-6 top-12 rounded-2xl rounded-bl-md bg-surface px-3.5 py-2 text-sm font-medium shadow-sm shadow-foreground/10 lg:-right-10 lg:top-14 lg:text-base"
         aria-live="polite"
       >
         {CAPTION[attention]}
