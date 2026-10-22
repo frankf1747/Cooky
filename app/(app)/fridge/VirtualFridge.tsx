@@ -14,7 +14,7 @@ import type { CookNowEntry, FridgeItem } from "@spec/contract";
 import { Bao } from "@/ui/Bao";
 import { DishArt } from "@/ui/DishArt";
 import { PICKS_MAX, planPicks, usePlanPicks } from "@/ui/planPicks";
-import { btnPrimary, btnSecondary, btnSecondarySm, btnText, tag, tagNeutral, tagPast } from "@/ui/styles";
+import { btnIcon, btnPrimary, btnSecondary, btnText, tag, tagNeutral, tagPast } from "@/ui/styles";
 
 /** How many plates fit on each shelf. */
 const READY_MAX = 6;
@@ -45,7 +45,7 @@ export function VirtualFridge({ cookNow, items, expiringSoon, today, onAddByHand
   const crisper = [...items].sort((a, b) => Number(soon.has(b.id)) - Number(soon.has(a.id))).slice(0, CRISPER_MAX);
 
   return (
-    <div className="-mx-4 overflow-hidden px-10 pb-3 pt-1 sm:mx-0 sm:px-16">
+    <div className="-mx-4 overflow-x-clip px-12 pb-3 pt-1 sm:mx-0 sm:px-16">
       <div className="relative mx-auto w-full max-w-[34rem]">
         {/* the cabinet */}
         <div className="relative rounded-[34px] bg-cobalt-deep p-2.5 shadow-float sm:p-3">
@@ -114,9 +114,15 @@ export function VirtualFridge({ cookNow, items, expiringSoon, today, onAddByHand
           <span className="h-2.5 w-7 rounded-b-lg bg-cobalt-deep" />
         </div>
         <div className="mt-3 flex justify-center">
-          <button type="button" onClick={() => setOpen((o) => !o)} className={btnSecondarySm}>
-            {open ? <DoorIcon size={18} aria-hidden /> : <DoorOpen size={18} aria-hidden />}
-            {open ? "Close the fridge" : "Open the fridge"}
+          {/* icon only: a shut door closes it, an open door opens it; the name says which */}
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            aria-label={open ? "Close the fridge" : "Open the fridge"}
+            title={open ? "Close the fridge" : "Open the fridge"}
+            className={btnIcon}
+          >
+            {open ? <DoorIcon size={20} aria-hidden /> : <DoorOpen size={20} aria-hidden />}
           </button>
         </div>
       </div>
@@ -182,7 +188,7 @@ function Door({ side, open, children }: { side: "left" | "right"; open: boolean;
   const left = side === "left";
   return (
     <div
-      className={`relative h-full w-1/2 transition-transform duration-[950ms] ease-[cubic-bezier(.3,.75,.2,1)] [transform-style:preserve-3d] ${left ? "origin-left" : "origin-right delay-[80ms]"} ${open ? (left ? "[transform:rotateY(-112deg)]" : "[transform:rotateY(112deg)]") : ""}`}
+      className={`relative h-full w-1/2 transition-transform duration-[950ms] ease-[cubic-bezier(.3,.75,.2,1)] [transform-style:preserve-3d] ${left ? "origin-left" : "origin-right delay-[80ms]"} ${open ? (left ? "[transform:rotateY(-100deg)]" : "[transform:rotateY(100deg)]") : ""}`}
     >
       {/* front */}
       <div className={`absolute inset-0 bg-cobalt-deep [backface-visibility:hidden] ${left ? "rounded-l-[34px] rounded-r-md border-r border-on-brand/15" : "rounded-l-md rounded-r-[34px] border-l border-on-brand/15"}`}>
