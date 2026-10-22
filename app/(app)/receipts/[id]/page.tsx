@@ -5,7 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { Category, type ReceiptDraft } from "@spec/contract";
 import { getSessionUser } from "@/platform/auth";
 import { ApiError } from "@/platform/errors";
-import { getForReview, type PlanLabels } from "@/modules/receipts";
+import { getForReview, type PlanLabels, type ReviewShelf } from "@/modules/receipts";
 import { PlanDiffPanel } from "./PlanDiffPanel";
 import { ReviewForm } from "./ReviewForm";
 import { Page } from "@/ui/Page";
@@ -18,8 +18,9 @@ export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">)
 
   let receipt: ReceiptDraft;
   let plan: PlanLabels | null;
+  let shelf: ReviewShelf;
   try {
-    ({ receipt, plan } = await getForReview(user.id, id));
+    ({ receipt, plan, shelf } = await getForReview(user.id, id));
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) notFound();
     throw err;
@@ -37,7 +38,7 @@ export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">)
       {receipt.planDiff && plan && <PlanDiffPanel diff={receipt.planDiff} plan={plan} lines={receipt.lines} />}
 
       {receipt.status === "parsed" && (
-        <ReviewForm receiptId={receipt.receiptId} lines={receipt.lines} categories={Category.options} />
+        <ReviewForm receiptId={receipt.receiptId} lines={receipt.lines} categories={Category.options} shelf={shelf} />
       )}
 
       {receipt.status === "failed" && (
