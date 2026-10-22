@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import ItemEditor from './ItemEditor';
 import { useCallback, useRef, useState, type FormEvent } from 'react';
 import { Category, FridgeView, type FridgeItem, type Location } from '@spec/contract';
 import { filterInventory, summarizeInventory, previewExpiry, referenceDays } from '@/modules/fridge/presentation';
@@ -10,11 +11,12 @@ import { Page } from '@/ui/Page';
 import { alert, btnPrimary as primaryClass, btnSecondarySm as buttonClass, chip, chipOff, chipOn, chipRow, field as inputClass, tag } from '@/ui/styles';
 
 type Props = { initial: FridgeView; ingredients: IngredientRow[]; categories: CategoryRow[]; today: string };
+class RequestError extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }
 const locations = { fridge: 'Fridge', freezer: 'Freezer', pantry: 'Pantry' };
 async function api(path: string, init?: RequestInit) {
   const res = await fetch(path, { ...init, headers: { 'Content-Type': 'application/json', ...init?.headers } });
   const body = await res.json();
-  if (!res.ok) throw new Error(`${body.error ?? 'Request failed'}${body.message ? `: ${body.message}` : ''}${body.code ? ` (${body.code})` : ''}${body.requestId ? ` · ${body.requestId}` : ''}`);
+  if (!res.ok) throw new RequestError(res.status, body.code ?? '', `${body.error ?? 'Request failed'}${body.message ? `: ${body.message}` : ''}${body.code ? ` (${body.code})` : ''}${body.requestId ? ` · ${body.requestId}` : ''}`);
   return body;
 }
 
@@ -32,7 +34,8 @@ export default function FridgeClient({ initial, ingredients, categories, today }
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
-  const [confirmation, setConfirmation] = useState<{ itemId: string; status: 'used' | 'tossed' } | null>(null);
+  const [confirmation, setConfirmation] = useState<{ item: FridgeItem; status: 'used' | 'tossed' } | null>(null);
+  const [editing, setEditing] = useState<{ item: FridgeItem; location?: Location } | null>(null);
   const [adding, setAdding] = useState(initial.items.length === 0);
   const load = useCallback(async () => {
     setLoading(true); setError('');
@@ -48,10 +51,16 @@ export default function FridgeClient({ initial, ingredients, categories, today }
     if (operation.current?.body !== body) operation.current = { body, key: crypto.randomUUID() };
     try {
       await api(path, { method, body: JSON.stringify({ ...payload, idempotencyKey: operation.current.key }) });
-      operation.current = null; setConfirmation(null); setNotice(message);
+      operation.current = null; setConfirmation(null); setEditing(null); setNotice(message);
       if (method === 'POST') setForm(current => ({ ...current, qty: '' }));
       await load();
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save changes'); }
+    } catch (e) {
+      if (e instanceof RequestError && e.status === 409) {
+        operation.current = null; setConfirmation(null); setEditing(null);
+        await load();
+        setError('This batch changed in another operation. Review the refreshed stock and open it again before confirming.');
+      } else setError(e instanceof Error ? e.message : 'Could not save changes');
+    }
     finally { pending.current = false; setBusy(false); }
   }
   function add(e: FormEvent) {
@@ -80,7 +89,7 @@ export default function FridgeClient({ initial, ingredients, categories, today }
     </>}
   >
     {error && <div role="alert" className={`mb-4 ${alert}`}><p>{error}</p><div className="mt-2 flex items-center gap-3"><button className={buttonClass} disabled={loading || busy} onClick={() => void load()}>Try again</button><span className="text-xs">If a save failed, repeating the same action is safe.</span></div></div>}
-    {notice && <p role="status" className="pop-in mb-4 rounded-xl bg-tile-mint p-3 text-sm">{notice}</p>}
+    {notice && <div role="status" className="pop-in mb-4"><BaoSays mood="happy">{notice}</BaoSays></div>}
 
     {adding && <section aria-labelledby="add-heading" className="mb-8 rounded-2xl border border-zinc-200 bg-surface p-4 sm:p-5 dark:border-zinc-800">
       <h2 id="add-heading" className="font-display text-xl font-semibold tracking-tight">Add food</h2>
@@ -93,7 +102,7 @@ export default function FridgeClient({ initial, ingredients, categories, today }
         <label className="block text-sm">Quantity<input className={`${inputClass} mt-1`} type="number" min="0.01" step="any" required value={form.qty} onChange={e => setForm({ ...form, qty: e.target.value })} /></label>
         <label className="block text-sm">Unit<select className={`${inputClass} mt-1`} disabled={Boolean(form.ingredientId)} value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value as Props['ingredients'][number]['base_unit'] })}><option value="g">g</option><option value="ml">ml</option><option value="count">count</option></select></label>
         <label className="block text-sm">Store in<select className={`${inputClass} mt-1`} value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}>{Object.entries(locations).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
-        <label className="block text-sm">Use-by date (optional)<input className={`${inputClass} mt-1`} type="date" value={form.expiresOn} onChange={e => setForm({ ...form, expiresOn: e.target.value })} /></label>
+        <label className="block text-sm">Use-by date (optional)<input className={`${inputClass} mt-1`} type="date" value={form.expiresOn} onInput={e => setForm({ ...form, expiresOn: e.currentTarget.value })} onChange={e => setForm({ ...form, expiresOn: e.target.value })} /></label>
         <div className="flex flex-wrap items-center justify-between gap-3 sm:col-span-2 lg:col-span-4" aria-live="polite">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">{preview.expiresOn ? <>Typical use-by: {preview.expiresOn}{preview.source ? ` (source: ${preview.source})` : ''}. Leave the date blank to use it.</> : 'No storage guide for this food, so no date is set unless you enter one.'}</p>
           <button type="submit" disabled={busy || loading} className={primaryClass}>{busy ? 'Adding…' : 'Add to fridge'}</button>
@@ -115,7 +124,7 @@ export default function FridgeClient({ initial, ingredients, categories, today }
     </div>
 
     <section aria-label="Food on hand" className="mt-4">
-      {loading && <p role="status" className="py-6 text-sm text-zinc-500">Loading your fridge…</p>}
+      {loading && <div role="status" className="py-4"><BaoSays mood="thinking">Checking what is in your fridge.</BaoSays></div>}
       {!loading && data && shown.length === 0 && <div className="py-4"><BaoSays mood={filtered ? 'thinking' : 'sleepy'} pose="hold" prop="basket">{filtered ? 'Nothing matches those filters. Clear one, or try another name.' : 'The fridge is empty. Echoes, even. Scan a receipt or add food by hand and I will keep track of it.'}</BaoSays>{filtered ? <button type="button" className={`${buttonClass} mt-4`} onClick={clearFilters}>Clear filters</button> : <div className="mt-4 flex gap-2"><Link href="/receipts/new" className={primaryClass}>Scan a receipt</Link>{!adding && <button type="button" className={buttonClass} onClick={() => setAdding(true)}>Add food</button>}</div>}</div>}
       {shown.length > 0 && <ul className="divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-surface dark:divide-zinc-800 dark:border-zinc-800">
         {shown.map(item => {
@@ -129,15 +138,19 @@ export default function FridgeClient({ initial, ingredients, categories, today }
               </div>
               <span title={`Typical storage guide. Source: ${source(item)}. Added ${item.addedOn}.`} className={days !== null && days < 0 ? 'inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200' : needsAttention ? tag : 'inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'}>{days === null ? 'No date' : days < 0 ? `Past its date (${item.expiresOn})` : days === 0 ? 'Use today' : `${days} day${days === 1 ? '' : 's'} left`}</span>
               <div className="flex gap-2">
-                <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => setConfirmation({ itemId: item.id, status: 'used' })}>Used</button>
-                <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => setConfirmation({ itemId: item.id, status: 'tossed' })}>Discard</button>
+                <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => { setConfirmation(null); setEditing({ item }); }}>Edit batch</button>
+                <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => { setEditing(null); setConfirmation({ item, status: 'used' }); }}>Used</button>
+                <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => { setEditing(null); setConfirmation({ item, status: 'tossed' }); }}>Discard</button>
               </div>
             </div>
-            {confirmation?.itemId === item.id && <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-md bg-zinc-100 p-3 dark:bg-zinc-900" role="group" aria-label="Confirm change"><p className="text-sm">{confirmation.status === 'used' ? 'Mark' : 'Discard'} all {item.qty}{item.unit === 'count' ? '' : ` ${item.unit}`} of {item.name}{confirmation.status === 'used' ? ' as used' : ''}?</p><div className="flex gap-2"><button type="button" className={primaryClass} disabled={busy || loading} onClick={() => void mutate(`/api/fridge/items/${item.id}`, 'PATCH', { status: confirmation.status }, confirmation.status === 'used' ? 'Marked as used.' : 'Discarded.')}>{confirmation.status === 'used' ? 'Mark used' : 'Discard'}</button><button type="button" className={buttonClass} disabled={busy} onClick={() => setConfirmation(null)}>Cancel</button></div></div>}
+            <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">{item.expirySource === 'user' ? 'Reference date entered by you' : 'Typical storage guide'}. Source: {source(item)}. A date is not a safety assessment.</p>
+            {editing?.item.id === item.id && <ItemEditor key={`${item.id}:${editing.location ?? item.location}`} item={editing.item} initialLocation={editing.location} ingredients={ingredients} categories={categories} today={today} busy={busy || loading} onCancel={() => setEditing(null)} onSave={patch => void mutate(`/api/fridge/items/${item.id}`, 'PATCH', patch, 'Batch updated.')} />}
+            {needsAttention && <div className="mt-3 space-y-2 text-sm"><p className="text-zinc-600 dark:text-zinc-400">Check the date and condition before deciding what to do.</p>{data?.cookNow.find(r => r.usesExpiringItemIds.includes(item.id)) && <Link className="block underline" href={`/recipes/${data.cookNow.find(r => r.usesExpiringItemIds.includes(item.id))!.recipeId}`}>View a recipe using this ingredient</Link>}{item.location !== 'freezer' && previewExpiry(ingredients.find(i => i.id === item.ingredientId), categories, item.category ?? 'prepared', 'freezer', '', today).expiresOn && <button type="button" className={buttonClass} disabled={busy || loading} onClick={() => { setConfirmation(null); setEditing({ item, location: 'freezer' }); }}>Review move to freezer</button>}</div>}
+            {confirmation?.item.id === item.id && <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface p-3" role="group" aria-label="Confirm change"><p className="text-sm">{confirmation.status === 'used' ? 'Mark' : 'Discard'} all {item.qty}{item.unit === 'count' ? '' : ` ${item.unit}`} of {item.name}{confirmation.status === 'used' ? ' as used' : ''}?</p><div className="flex gap-2"><button type="button" className={primaryClass} disabled={busy || loading} onClick={() => void mutate(`/api/fridge/items/${item.id}`, 'PATCH', { status: confirmation.status, expectedQty: confirmation.item.qty }, confirmation.status === 'used' ? 'Marked as used.' : 'Discarded.')}>{confirmation.status === 'used' ? 'Mark used' : 'Discard'}</button><button type="button" className={buttonClass} disabled={busy} onClick={() => setConfirmation(null)}>Cancel</button></div></div>}
           </li>;
         })}
       </ul>}
-      {shown.length > 0 && <p className="mt-2 text-xs text-zinc-500" aria-live="polite">Showing {shown.length} of {summary.total}. Each purchase stays a separate entry. Hover a date to see its source.</p>}
+      {shown.length > 0 && <p className="mt-2 text-xs text-zinc-500" aria-live="polite">Showing {shown.length} of {summary.total}. Each purchase stays a separate entry. Date sources are shown with each batch.</p>}
     </section>
 
     {data && data.cookNow.length > 0 && <section aria-labelledby="cook-heading" className="mt-10">
