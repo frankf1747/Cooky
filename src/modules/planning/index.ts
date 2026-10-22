@@ -32,7 +32,7 @@ type PlanRequest = Pick<PlanCreate, "servings" | "budgetCents" | "maxMinutes" | 
  * and build the draft (meals with reasons, the set's shopping list, assumptions). Code decides which
  * fridge items and preferences belong to each meal.
  */
-async function choosePlan(
+export async function choosePlan(
   userId: string, requestId: string, data: PlanningData, input: PlanRequest,
   feasible: FeasibleSet[], droppedPicks: DroppedPick[], picks: string[],
 ): Promise<{ draft: Omit<PlanDraft, "planId" | "version" | "status">; run: RunInfo }> {
