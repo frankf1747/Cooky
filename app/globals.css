@@ -37,6 +37,10 @@
   --cobalt-deep: #2b4bd8;
   /* text and marks on cobalt-deep, in both schemes */
   --on-brand: #ffffff;
+  /* a sheet of paper on the cobalt ground (the note on the fridge door, Bao's speech bubble):
+     paper stays paper in both schemes, a little dimmer at night */
+  --paper: #fffdf8;
+  --on-paper: #1e1b24;
   --crust: #e8a33d;
   --crust-tint: #f7e5bf;
   --crust-ink: #74470c;
@@ -83,6 +87,7 @@
     --cobalt-tint: #222a4d;
     --cobalt-ink: #c6d0ff;
     --cobalt-deep: #1f2b6e;
+    --paper: #ece4d4;
     --crust: #edb054;
     --crust-tint: #3b2e17;
     --crust-ink: #f6d9a0;
@@ -122,6 +127,8 @@
   --color-cobalt-ink: var(--cobalt-ink);
   --color-cobalt-deep: var(--cobalt-deep);
   --color-on-brand: var(--on-brand);
+  --color-paper: var(--paper);
+  --color-on-paper: var(--on-paper);
   --color-crust: var(--crust);
   --color-crust-tint: var(--crust-tint);
   --color-crust-ink: var(--crust-ink);
@@ -187,6 +194,16 @@ p {
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Fields the browser filled in keep the field's own colours instead of the browser's pale blue,
+   which is unreadable at night. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--foreground);
+  box-shadow: 0 0 0 1000px var(--surface) inset;
+  caret-color: var(--foreground);
 }
 
 /* A row of chips that scrolls sideways on phones, without a scrollbar. */

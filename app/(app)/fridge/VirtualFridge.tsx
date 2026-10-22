@@ -99,7 +99,7 @@ export function VirtualFridge({ cookNow, items, expiringSoon, today, onAddByHand
               <Bao mood="welcoming" size={58} ground={false} decorative className="absolute left-1/2 top-[28%] -translate-x-1/2 -rotate-6" />
             </Door>
             <Door side="right" open={open}>
-              <span className="absolute left-1/2 top-[30%] w-[64%] -translate-x-1/2 rotate-3 rounded-md bg-surface px-3 py-3 text-center font-display text-[15px] italic leading-snug text-foreground shadow-float">
+              <span className="absolute left-1/2 top-[30%] w-[64%] -translate-x-1/2 rotate-3 rounded-md bg-paper px-3 py-3 text-center font-display text-[15px] italic leading-snug text-on-paper shadow-float">
                 {empty ? "Empty. Stock me." : ready.length ? `${ready.length} ${ready.length === 1 ? "dinner" : "dinners"} ready` : "What's for dinner?"}
               </span>
             </Door>

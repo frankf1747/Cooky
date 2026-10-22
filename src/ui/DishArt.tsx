@@ -7,7 +7,7 @@
 import { useId, type ReactNode } from "react";
 
 const F = {
-  plate: "#fffdf8", rim: "#2b4bd8", iron: "#2e2a33", ironIn: "#3a3540", wood: "#c48848", fork: "#a59c91",
+  plate: "#fffdf8", rim: "#2b4bd8", iron: "#2e2a33", ironIn: "#3a3540", ironRim: "#5c5563", wood: "#c48848", fork: "#a59c91",
   rice: "#fbf6ea", grain: "#e4d9c2", friedRice: "#f3dfb0",
   pasta: "#f4d488", pastaShade: "#ddb260", soba: "#c58b4c", sobaShade: "#a8733a",
   sauce: "#d4492a", sauceHi: "#e86b45", curry: "#dd9a35", curryHi: "#eab65a", cream: "#f5ead2",
@@ -442,6 +442,8 @@ export function DishArt({
           <rect x={cx + 30} y={cy - 6} width="44" height="12" rx="6" fill={F.iron} transform={`rotate(${flip ? 28 : -28} ${cx} ${cy})`} />
           <circle cx={cx + 2.5} cy={cy + 3.5} r="46" fill="#3c2a14" opacity="0.14" />
           <circle cx={cx} cy={cy} r="45" fill={F.iron} />
+          {/* a lit rim, so the pan keeps its edge on a dark table */}
+          <circle cx={cx} cy={cy} r="44.4" fill="none" stroke={F.ironRim} strokeWidth="1.2" />
           <circle cx={cx} cy={cy} r="40" fill={F.ironIn} />
         </g>
       ) : (
