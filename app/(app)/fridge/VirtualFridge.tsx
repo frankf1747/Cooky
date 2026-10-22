@@ -45,7 +45,7 @@ export function VirtualFridge({ cookNow, items, expiringSoon, today, onAddByHand
   const crisper = [...items].sort((a, b) => Number(soon.has(b.id)) - Number(soon.has(a.id))).slice(0, CRISPER_MAX);
 
   return (
-    <div className="-mx-4 overflow-hidden px-12 pb-3 pt-1 sm:mx-0 sm:px-16">
+    <div className="-mx-4 overflow-x-clip px-12 pb-3 pt-1 sm:mx-0 sm:px-16">
       <div className="relative mx-auto w-full max-w-[34rem]">
         {/* the cabinet */}
         <div className="relative rounded-[34px] bg-cobalt-deep p-2.5 shadow-float sm:p-3">
