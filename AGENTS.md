@@ -73,6 +73,12 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
   Never write "safe to eat" or certify a dish allergen-free.
 - **UI states:** every screen you build has loading, empty, error and retry states; retry is
   disabled while a request is in flight.
+- **Plain UI, no emoji (MVP, decided 2026-10-21):** no emoji or pictographic symbols anywhere a
+  user can see them (labels, buttons, messages, empty states, seed text). Use the app's plain
+  style (zinc palette with `dark:` variants, as on the plan, receipts and settings pages); no
+  per-feature themes, mascots or custom fonts. Make features work first; visual design comes
+  later. Recipe images are placeholders (`app/(app)/recipes/RecipeImage.tsx`) until dish visuals
+  are chosen.
 - **Tests with the code:** each module function you implement gets unit tests next to it; each
   AI unit you touch gets its eval run on `dev/` before you call it done.
 
