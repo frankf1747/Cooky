@@ -63,8 +63,8 @@ export function Bao({
         <circle cx={74 + lx} cy={66 + ly} r="3.8" fill="#4a3728" />
         <circle cx={46 + lx} cy={66 + ly} r="2.2" fill={INK} />
         <circle cx={74 + lx} cy={66 + ly} r="2.2" fill={INK} />
-        <circle cx={44.6 + lx} cy={64.4 + ly} r="1.2" fill="#fff" />
-        <circle cx={72.6 + lx} cy={64.4 + ly} r="1.2" fill="#fff" />
+        <circle cx={44.4 + lx} cy={64.2 + ly} r="1.7" fill="#fff" />
+        <circle cx={72.4 + lx} cy={64.2 + ly} r="1.7" fill="#fff" />
       </g>
     ),
     happy: <><path d="M40 66 q6 -6 12 0" /><path d="M68 66 q6 -6 12 0" /></>,
