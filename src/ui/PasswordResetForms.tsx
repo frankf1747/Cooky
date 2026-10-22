@@ -83,7 +83,7 @@ export function ResetPasswordForm({ email }: { email: string | null }) {
     try {
       const { error: updateError } = await browserClient().auth.updateUser({ password: next });
       if (updateError) return setError(`Cooky couldn't set your password: ${updateError.message}`);
-      router.push("/fridge");
+      router.push("/home");
       router.refresh();
     } catch {
       setError("Cooky couldn't reach the sign-in service. Try again.");
