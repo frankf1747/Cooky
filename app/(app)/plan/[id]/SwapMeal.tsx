@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { PreferenceProposal } from "@spec/contract";
 import { formatUsd } from "@/platform/money";
-import { alert, btnSecondarySm as btnGhost, btnText, field as input, panel } from "@/ui/styles";
+import { alert, btnSecondarySm as btnGhost, btnText, field as input, well } from "@/ui/styles";
 import { planErrorMessage, type ApiErrorBody } from "../ui";
 
 type Answer = "always" | "once" | "dismiss";
@@ -56,13 +56,13 @@ export function SwapMeal({ planId, version, mealIndex, title, maxChars }: { plan
   }
 
   return (
-    <div className="mt-3">
+    <div className="mt-4">
       {!open ? (
         <button className={btnGhost} onClick={() => { setOpen(true); setError(null); }} disabled={busy}>
           Swap this dish
         </button>
       ) : (
-        <form onSubmit={swap} className="flex flex-wrap items-center gap-2" aria-busy={busy}>
+        <form onSubmit={swap} className="flex flex-col gap-2 sm:flex-row sm:items-center" aria-busy={busy}>
           <input
             className={`${input} min-w-0 flex-1`}
             value={reason}
@@ -73,8 +73,10 @@ export function SwapMeal({ planId, version, mealIndex, title, maxChars }: { plan
             aria-label="Why swap this dish (optional)"
             onChange={(e) => setReason(e.target.value)}
           />
-          <button className={btnGhost} disabled={busy}>{busy ? "Finding another dish…" : "Swap"}</button>
-          <button type="button" className={btnGhost} disabled={busy} onClick={() => setOpen(false)}>Cancel</button>
+          <div className="flex gap-2">
+            <button className={`flex-1 sm:flex-none ${btnGhost}`} disabled={busy}>{busy ? "Finding another dish…" : "Swap"}</button>
+            <button type="button" className={`flex-1 sm:flex-none ${btnGhost}`} disabled={busy} onClick={() => setOpen(false)}>Cancel</button>
+          </div>
         </form>
       )}
 
@@ -91,20 +93,20 @@ export function SwapMeal({ planId, version, mealIndex, title, maxChars }: { plan
       {proposals.map((p) => {
         const a = answers[p.id];
         return (
-          <div key={p.id} className={`mt-3 p-3 text-sm ${panel}`}>
-            <p className="text-zinc-600 dark:text-zinc-400">Remember this for next time?</p>
-            <p className="mt-1 font-medium">{p.value}</p>
-            <p className="text-xs text-zinc-500">{p.reason}</p>
+          <div key={p.id} className={`pop-in mt-3 p-4 text-sm ${well}`}>
+            <p className="text-muted">Remember this for next time?</p>
+            <p className="mt-1 font-display text-lg font-semibold">{p.value}</p>
+            <p className="mt-0.5 text-muted">{p.reason}</p>
             {a === "always" || a === "once" || a === "dismiss" ? (
-              <p className="mt-2">{a === "always" ? "Saved. Your next plans will use it." : a === "once" ? "Used for your next plan only." : "Not saved."}</p>
+              <p className="mt-3 font-medium">{a === "always" ? "Saved. Your next plans will use it." : a === "once" ? "Used for your next plan only." : "Not saved."}</p>
             ) : (
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-wrap gap-2">
                 <button className={btnGhost} disabled={a === "saving"} onClick={() => answer(p, "always")}>Always</button>
                 <button className={btnGhost} disabled={a === "saving"} onClick={() => answer(p, "once")}>Just this time</button>
                 <button className={btnGhost} disabled={a === "saving"} onClick={() => answer(p, "dismiss")}>Don&apos;t save</button>
               </div>
             )}
-            {a === "error" && <p className="mt-2 text-red-700 dark:text-red-300">That didn&apos;t save. You can add it on the <Link className={btnText} href="/preferences">Preferences</Link> page.</p>}
+            {a === "error" && <p role="alert" className={`mt-3 ${alert}`}>That didn&apos;t save. You can add it on the <Link className={btnText} href="/preferences">Preferences</Link> page.</p>}
           </div>
         );
       })}

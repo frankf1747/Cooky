@@ -1,4 +1,11 @@
 'use client';
-export default function FridgeError({ reset }: { reset: () => void }) {
-  return <main className="mx-auto max-w-3xl space-y-4 p-8"><h1 className="text-2xl font-semibold">Your fridge could not load</h1><p role="alert">The catalog or sign-in service could not be reached. Your stored food has not been changed.</p><button className="rounded border px-4 py-2" onClick={reset}>Try again</button></main>;
+// Owner: Fridge. The fridge could not load: say so and offer a retry (never made-up items).
+import { ErrorState } from '@/ui/States';
+
+export default function FridgeError({ error, retry }: { error: unknown; retry: () => void }) {
+  return (
+    <ErrorState title="Your fridge could not load" error={error} retry={retry} back={{ href: '/recipes', label: 'Browse recipes' }}>
+      The catalog or sign-in service could not be reached. Your stored food has not been changed.
+    </ErrorState>
+  );
 }

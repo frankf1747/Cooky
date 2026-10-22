@@ -10,7 +10,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <>
       <AppNav email={user.email} pro={pro} />
-      <div className="flex flex-1 flex-col">{children}</div>
+      <main id="main" className="flex flex-1 flex-col">{children}</main>
     </>
   );
 }

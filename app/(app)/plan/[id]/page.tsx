@@ -1,17 +1,38 @@
-// Owner: Plan & Shop. One plan (PLN6, PLN8): meals with reasons, the package-sized shopping list, save.
+// Owner: Plan & Shop. One plan (PLN6, PLN8): the dinners in cooking order with their reasons and a
+// swap, save, then the next two steps as big buttons (the shopping list with its count and
+// price, and stocking the fridge from the receipt), and one floating Cook button that cooks the
+// whole plan in sequence.
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ArrowRight, CookingPot } from "@phosphor-icons/react/ssr";
 import type { PlanDraft } from "@spec/contract";
 import { getSessionUser } from "@/platform/auth";
 import { ApiError } from "@/platform/errors";
 import { formatUsd } from "@/platform/money";
 import { getPlan, planNotes } from "@/modules/planning";
-import { Page } from "@/ui/Page";
-import { btnSecondary, btnText, panel, tag } from "@/ui/styles";
+import { Kicker, Page, Section } from "@/ui/Page";
+import { h3, panel, rows, tagGood, tones, warn, type Tone } from "@/ui/styles";
+import { RecipeImage } from "../../recipes/RecipeImage";
 import { formatQty } from "../ui";
 import { SaveButton } from "./SaveButton";
 import { SwapMeal } from "./SwapMeal";
 import targets from "@spec/targets.json";
+
+/** A next step as one big button: the step's colour, what it is, and what it costs. */
+function StepButton({ href, tone, kicker, title, detail }: { href: string; tone: Tone; kicker: string; title: string; detail: React.ReactNode }) {
+  return (
+    <Link href={href} className={`group flex items-center gap-4 rounded-[24px] p-5 transition active:scale-[0.99] sm:p-6 ${tones[tone].tint}`}>
+      <span className="min-w-0 flex-1">
+        <Kicker tone={tone} className="!text-foreground/70">{kicker}</Kicker>
+        <span className="mt-2 block font-display text-2xl font-semibold leading-tight sm:text-[1.75rem]">{title}</span>
+        <span className="mt-1 block text-[15px] text-foreground/75">{detail}</span>
+      </span>
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface transition group-hover:translate-x-0.5">
+        <ArrowRight size={20} weight="bold" aria-hidden />
+      </span>
+    </Link>
+  );
+}
 
 export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
   const { id } = await props.params;
@@ -30,141 +51,120 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
   const over = plan.totalCents > plan.budgetCents;
   const unpriced = plan.shopping.unpricedIngredientIds.length;
   const toBuy = plan.shopping.items.filter((i) => i.packages > 0 || i.costCents === null);
-  const covered = plan.shopping.items.filter((i) => i.packages === 0 && i.costCents !== null);
   const titles = new Map(plan.meals.map((m) => [m.recipeId, m.title]));
 
   return (
     <Page
       back={{ href: "/plan", label: "All plans" }}
+      kicker="Step 1 · Plan"
+      tone="plan"
       title={`${plan.meals.length} dinners for ${plan.servings}`}
-      description={<>Version {plan.version}, prices as of {plan.priceAsOf}. {plan.status === "saved" ? "Saved: this is your plan for the week." : "Save the plan to keep it and shop from its list."}</>}
+      description={plan.status === "saved" ? "Saved: this is your plan for the week. Cook the dinners in order with the Cook button." : "Swap anything you don't fancy, then save the plan to keep it."}
       actions={plan.status === "saved" ? (
-        <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">Saved</span>
+        <div><span className={`${tagGood} !px-3 !py-1.5 !text-sm`}>Saved for this week</span></div>
       ) : (
         <SaveButton planId={plan.planId} version={plan.version} />
       )}
     >
-      <div className="grid gap-3">
+      <ol className="grid gap-3">
         {plan.meals.map((m, i) => (
-          <article key={i} className={`p-4 ${panel}`}>
-            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <h2 className="font-semibold">
-                <span className="mr-2 text-zinc-400">{i + 1}.</span>
-                <Link href={`/recipes/${m.recipeId}`} className="hover:underline">{m.title}</Link>
-              </h2>
-              <span className="flex shrink-0 items-center gap-3">
-                {m.usesFridgeItemIds.length > 0 && (
-                  <span className={tag}>
-                    uses {m.usesFridgeItemIds.length} from your fridge
-                  </span>
-                )}
-                <Link href={`/cook/${m.recipeId}`} className={`text-sm ${btnText}`}>Cook</Link>
-              </span>
-            </div>
-            <ul className="mt-2 list-disc pl-5 text-sm text-zinc-600 dark:text-zinc-400">
-              {m.reasons.map((r, j) => <li key={j}>{r}</li>)}
-            </ul>
-            {notes.pastUseBy.filter((p) => p.recipeIds.includes(m.recipeId)).map((p) => (
-              <p key={p.itemId} role="note" className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">
-                Uses your {p.name}, which is past its typical use-by date ({p.expiresOn}). Check it before cooking; dates are a typical guide, not safety advice.
-              </p>
-            ))}
-            <SwapMeal planId={plan.planId} version={plan.version} mealIndex={i} title={m.title} maxChars={targets.limits.feedbackMaxChars} />
-          </article>
-        ))}
-      </div>
-
-      <div id="shopping" className="mt-10 flex scroll-mt-20 flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="text-lg font-semibold">
-          Shopping list
-          {toBuy.length > 0 && <Link href={`/shop/${plan.planId}`} className={`ml-3 text-sm font-normal ${btnText}`}>Open in the store</Link>}
-        </h2>
-        <p className={`text-sm ${over ? "text-red-700 dark:text-red-300" : "text-zinc-600 dark:text-zinc-400"}`}>
-          <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{formatUsd(plan.totalCents)}</span> of {formatUsd(plan.budgetCents)} budget
-          {unpriced > 0 && ` · ${unpriced} item${unpriced > 1 ? "s" : ""} without a price`}
-        </p>
-      </div>
-
-      {toBuy.length === 0 ? (
-        <p className="mt-3 rounded-2xl border border-dashed border-zinc-300 p-4 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
-          Nothing to buy: your fridge and staples cover every meal.
-        </p>
-      ) : (
-        <div className={`mt-3 overflow-x-auto ${panel}`}>
-          <table className="w-full text-sm">
-            <thead className="bg-zinc-50 text-left text-xs font-medium text-zinc-500 dark:bg-zinc-900">
-              <tr>
-                <th className="px-3 py-2">Item</th>
-                <th className="px-3 py-2">Buy</th>
-                <th className="px-3 py-2 text-right">Cost</th>
-                <th className="hidden px-3 py-2 sm:table-cell">Need / have</th>
-                <th className="hidden px-3 py-2 sm:table-cell">Left over</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-              {toBuy.map((i) => (
-                <tr key={`${i.ingredientId}|${i.unit}`}>
-                  <td className="px-3 py-2">
-                    {i.name}
-                    <div className="text-xs text-zinc-500">{i.forRecipeIds.map((r) => titles.get(r) ?? r).join(", ")}</div>
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2">
-                    {i.packageSize !== null ? `${i.packages} × ${formatQty(i.packageSize, i.unit)}` : formatQty(i.buyQty, i.unit)}
-                  </td>
-                  <td className="px-3 py-2 text-right">{formatUsd(i.costCents)}</td>
-                  <td className="hidden px-3 py-2 text-zinc-500 sm:table-cell">{formatQty(i.needQty, i.unit)} / {formatQty(i.haveQty, i.unit)}</td>
-                  <td className="hidden px-3 py-2 text-zinc-500 sm:table-cell">{formatQty(i.leftoverQty, i.unit)}</td>
-                </tr>
+          <li key={i} className={`${panel} p-4 sm:p-5`}>
+            <article>
+              <div className="flex items-start gap-4">
+                <Link href={`/recipes/${m.recipeId}`} className="shrink-0" tabIndex={-1} aria-hidden>
+                  <RecipeImage id={m.recipeId} imageUrl={null} title={m.title} shape="soft" className="h-20 w-24 sm:h-24 sm:w-32" />
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium text-muted">Dinner {i + 1}</p>
+                  <h2 className={`${h3} mt-1`}>
+                    <Link href={`/recipes/${m.recipeId}`} className="underline-offset-4 hover:underline">{m.title}</Link>
+                  </h2>
+                  {m.usesFridgeItemIds.length > 0 && (
+                    <p className={`mt-2 ${tagGood}`}>Uses {m.usesFridgeItemIds.length} from your fridge</p>
+                  )}
+                </div>
+              </div>
+              {m.reasons.length > 0 && (
+                <ul className="mt-4 space-y-1.5 text-[15px] leading-snug text-muted">
+                  {m.reasons.map((r, j) => (
+                    <li key={j} className="flex gap-2.5">
+                      <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cobalt" />
+                      {r}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {notes.pastUseBy.filter((p) => p.recipeIds.includes(m.recipeId)).map((p) => (
+                <p key={p.itemId} role="note" className={`mt-3 ${warn}`}>
+                  Uses your {p.name}, which is past its typical use-by date ({p.expiresOn}). Check it before cooking; dates are a typical guide, not safety advice.
+                </p>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              <SwapMeal planId={plan.planId} version={plan.version} mealIndex={i} title={m.title} maxChars={targets.limits.feedbackMaxChars} />
+            </article>
+          </li>
+        ))}
+      </ol>
 
-      {covered.length > 0 && (
-        <p className="mt-3 text-sm text-zinc-500">
-          Already covered by your fridge or staples: {covered.map((i) => `${i.name} (${formatQty(i.needQty, i.unit)})`).join(", ")}.
-        </p>
-      )}
-
-      {plan.status === "saved" && toBuy.length > 0 && (
-        <div className={`mt-4 flex flex-wrap items-center justify-between gap-3 p-4 text-sm ${panel}`}>
-          <p className="text-zinc-600 dark:text-zinc-400">Back from the store? Scan the receipt to stock your fridge and see anything you missed.</p>
-          <Link href={`/receipts/new?planId=${plan.planId}`} className={btnSecondary}>Scan the receipt</Link>
+      <Section title="Next" className="scroll-mt-24">
+        <div id="shopping" className="grid gap-3">
+          <StepButton
+            href={`/shop/${plan.planId}`}
+            tone="shop"
+            kicker="Step 2 · Shop"
+            title="Shopping list"
+            detail={toBuy.length === 0
+              ? "Nothing to buy: your fridge and staples cover every meal."
+              : <>{toBuy.length} item{toBuy.length === 1 ? "" : "s"} · about <span className="font-semibold tabular-nums">{formatUsd(plan.totalCents)}</span>{plan.budgetCents > 0 && <> of your {formatUsd(plan.budgetCents)}{over && ", over budget"}</>}{unpriced > 0 && ", some prices unknown"}</>}
+          />
+          <StepButton
+            href={`/receipts/new?planId=${plan.planId}`}
+            tone="scan"
+            kicker="Step 3 · Stock"
+            title="Stock the fridge"
+            detail="Back from the store? Scan the receipt: prices get logged and the food goes in."
+          />
         </div>
-      )}
+      </Section>
 
       {notes.extras.items.length > 0 && (
-        <div className="mt-8">
-          <div className="flex items-baseline justify-between gap-4">
-            <h2 className="shrink-0 text-lg font-semibold">Optional extras</h2>
-            <p className="text-sm text-zinc-500">
-              Not in the total{notes.extras.totalCents > 0 && ` · +${formatUsd(notes.extras.totalCents)} if you add them all`}
-              {notes.extras.unpricedIngredientIds.length > 0 && " (some prices unknown)"}
-            </p>
-          </div>
-          <ul className={`mt-3 divide-y divide-zinc-200 text-sm dark:divide-zinc-800 ${panel}`}>
+        <Section
+          className="!mt-12"
+          title="Optional extras"
+          note={<>Not in the total{notes.extras.totalCents > 0 && ` · +${formatUsd(notes.extras.totalCents)} if you add them all`}{notes.extras.unpricedIngredientIds.length > 0 && " (some prices unknown)"}</>}
+        >
+          <ul className={`${rows} text-[15px]`}>
             {notes.extras.items.map((i) => (
-              <li key={`${i.ingredientId}|${i.unit}`} className="flex items-center justify-between gap-4 px-3 py-2">
-                <span>
-                  {i.name} <span className="text-zinc-500">· {formatQty(i.needQty, i.unit)} for {i.forRecipeIds.map((r) => titles.get(r) ?? r).join(", ")}</span>
+              <li key={`${i.ingredientId}|${i.unit}`} className="flex items-center justify-between gap-4 px-4 py-3">
+                <span className="min-w-0">
+                  <span className="font-medium">{i.name}</span>
+                  <span className="block text-sm text-muted">{formatQty(i.needQty, i.unit)} for {i.forRecipeIds.map((r) => titles.get(r) ?? r).join(", ")}</span>
                 </span>
-                <span className="shrink-0 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
+                <span className="shrink-0 whitespace-nowrap text-sm text-muted tabular-nums">
                   {i.buyQty === 0 ? "already covered" : i.packageSize !== null ? `${i.packages} × ${formatQty(i.packageSize, i.unit)} · ${formatUsd(i.costCents)}` : formatUsd(i.costCents)}
                 </span>
               </li>
             ))}
           </ul>
-        </div>
+        </Section>
       )}
 
       {plan.assumptions.length > 0 && (
-        <div className="mt-6 text-xs text-zinc-500">
-          <p className="font-medium">Assumptions</p>
-          <ul className="mt-1 list-disc pl-5">
+        <div className="mt-10 border-t border-line pt-5 text-sm text-muted">
+          <p className="font-medium text-foreground">Assumptions</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
             {plan.assumptions.map((a, i) => <li key={i}>{a}</li>)}
           </ul>
         </div>
+      )}
+      {/* one Cook button for the whole plan, in order, floating where the thumb is */}
+      {plan.meals.length > 0 && (
+        <Link
+          href={`/cook/${plan.meals[0].recipeId}?plan=${plan.planId}&n=0`}
+          className="pop-in fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] right-4 z-20 flex h-14 items-center gap-2.5 rounded-full bg-foreground pl-4 pr-6 text-[15px] font-semibold text-background shadow-float transition hover:scale-[1.02] active:scale-[0.97] sm:bottom-8 sm:right-8"
+        >
+          <CookingPot size={22} weight="fill" aria-hidden />
+          Cook {plan.meals.length === 1 ? "it" : `all ${plan.meals.length}`}
+        </Link>
       )}
     </Page>
   );

@@ -14,8 +14,9 @@ export default async function PreferencesPage() {
   return (
     <Page
       back={{ href: "/plan", label: "Plan dinners" }}
+      kicker="Your taste"
       title="Preferences"
-      description={<>What Cooky remembers about your taste. <span className="font-medium text-zinc-900 dark:text-zinc-100">Never</span> rules keep a dish out of every plan; <span className="font-medium text-zinc-900 dark:text-zinc-100">Prefer</span> notes guide which dishes Cooky picks. Anything you write in a plan request wins for that plan.</>}
+      description={<>What Bao remembers about your taste. <span className="font-medium text-foreground">Never</span> keeps a dish out of every plan; <span className="font-medium text-foreground">Prefer</span> guides the picks. Anything you write in a plan request wins for that plan.</>}
       width="narrow"
     >
       <PreferencesClient initial={items} titles={titles} />

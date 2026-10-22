@@ -12,7 +12,7 @@ export default async function BillingPage(props: PageProps<"/billing">) {
   const { status } = await props.searchParams;
   const initial = await entitlement(user.id);
   return (
-    <Page title="Cooky Pro" description="AI help for planning, receipts and cooking. One payment, test mode only." width="narrow">
+    <Page kicker="Cooky Pro" tone="shop" title="Bao in every step" description="AI help for planning, receipts and cooking. One payment, test mode only." width="normal">
       <BillingClient
         initial={initial}
         status={status === "success" || status === "cancelled" ? status : null}

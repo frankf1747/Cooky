@@ -1,78 +1,186 @@
 @import "tailwindcss";
 
 /*
-  Cooky's look: paper and ink, one sky-blue accent for actions, and five colour tiles that each
-  mean one thing (plan = sky, shop = butter, scan = tangerine, cook = mint, use soon = sakura).
-  Bao, the bun, is the voice of the app. Headlines use the display face, body text Geist. Shapes
-  are pill buttons, 16px cards and blob-masked food. Both colour schemes share the same tokens,
-  so pages never pick a colour by hand; they use the classes in src/ui/styles.ts.
+  Cooky's look (docs/BRAND.md). Warm paper and deep ink; one cobalt accent for actions; four food
+  colours that each mean one step of the week, used as quiet tints, never as decoration:
+    plan = cobalt   shop = crust (toasted bun)   scan = parchment (receipt paper)
+    cook = basil    use soon = tomato            past its date = amber, and only that
+  Headlines are Fraunces, soft and doughy; everything you read or tap is Geist. Shapes come from
+  the bun: pill controls, 16px cards, 24px feature panels, a dome for food. Pages never pick a
+  colour by hand; they use these tokens through the classes in src/ui/styles.ts. Both colour
+  schemes share the token names, so `dark:` variants are rarely needed.
 */
 :root {
   color-scheme: light dark;
-  --background: #fbf8f3;
-  --foreground: #262a3a;
-  --surface: #ffffff;
-  --accent: #4a6eab;
-  --accent-hover: #3d5d94;
-  --accent-soft: #e4f0f8;
+
+  /* paper and ink */
+  --background: #f5f0e6;
+  --surface: #fffdf8;
+  --sunken: #ede6d9;
+  --foreground: #1e1b24;
+  --muted: #57515f;
+  --subtle: #6f6876;
+  --line: #e4dbcc;
+  --line-strong: #c4b8a5;
+
+  /* the one action colour */
+  --accent: #2b4bd8;
+  --accent-hover: #2240c0;
+  --accent-soft: #e6eafb;
   --on-accent: #ffffff;
-  --attention: #ffe4ea;
-  --attention-ink: #9a3b55;
-  --tile-sky: #cde7f3;
-  --tile-sakura: #ffd3dc;
-  --tile-butter: #ffe9a8;
-  --tile-mint: #cdeed6;
-  --tile-tangerine: #ffd4b8;
-  --bao-body: #fff1dc;
-  --bao-line: #e9cfa6;
+
+  /* food colours: a strong tone for marks and a tint for grounds. cobalt-deep is the brand
+     ground for the few big moments (sign in, the landing page); white text sits on it. */
+  --cobalt: #2b4bd8;
+  --cobalt-tint: #e3e8fb;
+  --cobalt-ink: #1e3592;
+  --cobalt-deep: #2b4bd8;
+  /* text and marks on cobalt-deep, in both schemes */
+  --on-brand: #ffffff;
+  --crust: #e8a33d;
+  --crust-tint: #f7e5bf;
+  --crust-ink: #74470c;
+  --basil: #3c8a55;
+  --basil-tint: #dcebd9;
+  --basil-ink: #1e5a33;
+  --tomato: #e0532c;
+  --tomato-tint: #f9dcd0;
+  --tomato-ink: #962c10;
+  --parchment: #e9e1d2;
+  --parchment-ink: #4e4637;
+
+  /* states */
+  --past: #fbeccd;
+  --past-ink: #7f4d00;
+  --danger: #b3261e;
+  --danger-tint: #fce8e6;
+
+  /* elevation: one warm shadow for things that float (menus, the sticky bars) */
+  --shadow-float: 0 1px 0 rgb(30 27 36 / 0.04), 0 14px 36px -14px rgb(74 52 20 / 0.28);
+
+  /* motion */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #16141b;
+    --surface: #201d26;
+    --sunken: #2a2631;
+    --foreground: #f2ece3;
+    --muted: #bcb4c0;
+    --subtle: #9a929f;
+    --line: #342f3c;
+    --line-strong: #4d4756;
+
+    --accent: #8ea2ff;
+    --accent-hover: #a7b6ff;
+    --accent-soft: #262d52;
+    --on-accent: #10132e;
+
+    --cobalt: #8ea2ff;
+    --cobalt-tint: #222a4d;
+    --cobalt-ink: #c6d0ff;
+    --cobalt-deep: #1f2b6e;
+    --crust: #edb054;
+    --crust-tint: #3b2e17;
+    --crust-ink: #f6d9a0;
+    --basil: #72bf88;
+    --basil-tint: #1f3527;
+    --basil-ink: #b9e4c5;
+    --tomato: #f27a55;
+    --tomato-tint: #43251c;
+    --tomato-ink: #ffc4ae;
+    --parchment: #2d2923;
+    --parchment-ink: #e3d9c7;
+
+    --past: #3a2a0f;
+    --past-ink: #f5c26b;
+    --danger: #ff8a80;
+    --danger-tint: #3f1c1b;
+
+    --shadow-float: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 40px -16px rgb(0 0 0 / 0.7);
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
   --color-on-accent: var(--on-accent);
-  --color-attention: var(--attention);
-  --color-attention-ink: var(--attention-ink);
-  --color-tile-sky: var(--tile-sky);
-  --color-tile-sakura: var(--tile-sakura);
-  --color-tile-butter: var(--tile-butter);
-  --color-tile-mint: var(--tile-mint);
-  --color-tile-tangerine: var(--tile-tangerine);
+  --color-cobalt: var(--cobalt);
+  --color-cobalt-tint: var(--cobalt-tint);
+  --color-cobalt-ink: var(--cobalt-ink);
+  --color-cobalt-deep: var(--cobalt-deep);
+  --color-on-brand: var(--on-brand);
+  --color-crust: var(--crust);
+  --color-crust-tint: var(--crust-tint);
+  --color-crust-ink: var(--crust-ink);
+  --color-basil: var(--basil);
+  --color-basil-tint: var(--basil-tint);
+  --color-basil-ink: var(--basil-ink);
+  --color-tomato: var(--tomato);
+  --color-tomato-tint: var(--tomato-tint);
+  --color-tomato-ink: var(--tomato-ink);
+  --color-parchment: var(--parchment);
+  --color-parchment-ink: var(--parchment-ink);
+  --color-past: var(--past);
+  --color-past-ink: var(--past-ink);
+  --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
   --font-sans: var(--font-geist-sans);
-  --font-display: var(--font-display);
+  --font-display: var(--font-fraunces);
   --font-mono: var(--font-geist-mono);
+  --shadow-float: var(--shadow-float);
+  --ease-out: var(--ease-out);
+  --ease-spring: var(--ease-spring);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #14161f;
-    --foreground: #e8e6e0;
-    --surface: #1c1f2b;
-    --accent: #8fb0e8;
-    --accent-hover: #a5c0ee;
-    --accent-soft: #243550;
-    --on-accent: #121420;
-    --attention: #3f2634;
-    --attention-ink: #f4b8c6;
-    --tile-sky: #203b50;
-    --tile-sakura: #4a2634;
-    --tile-butter: #4b3d14;
-    --tile-mint: #1f4030;
-    --tile-tangerine: #4c2f1c;
-    --bao-body: #ffeccf;
-    --bao-line: #d9b985;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
   -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
+}
+
+/* A faint paper grain behind everything, so the cream reads as paper and not as a hex value. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.22 0 0 0 0 0.1 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Fraunces at its softest: rounded terminals, like dough. */
+.font-display {
+  font-variation-settings: "SOFT" 100, "WONK" 0;
+  font-optical-sizing: auto;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
 }
 
 /* Keyboard focus is always visible. */
@@ -89,53 +197,89 @@ body {
   display: none;
 }
 
-/* Food photos sit in a soft blob, not a rectangle. Two shapes so a grid does not look stamped. */
-.blob {
-  border-radius: 46% 54% 52% 48% / 52% 44% 56% 48%;
+/*
+  Shapes from the bun. The dome is a bun's top: it frames food. Dough is the soft blob behind an
+  illustration. The receipt edge is a torn zigzag, used only where something is a receipt.
+*/
+.shape-dome {
+  border-radius: 50% 50% 18px 18px / 40% 40% 18px 18px;
 }
-.blob-2 {
-  border-radius: 55% 45% 48% 52% / 46% 56% 44% 54%;
+.shape-dough {
+  border-radius: 58% 42% 52% 48% / 46% 54% 46% 54%;
+}
+.receipt-edge {
+  --zig: 9px;
+  mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--zig)) no-repeat,
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / calc(2 * var(--zig)) var(--zig) repeat-x;
 }
 
 /*
-  Motion. Small and physical: Bao breathes and blinks, things pop in, a tick wiggles. Each one is
-  a class so a page can opt in; all of them stop under reduced motion.
+  Motion. Small and physical, and always a reaction to something the person did: the bun
+  breathes when it is the hero of a screen, hops when a meal is done, nods when a step is, and
+  its hat lags a beat behind. Each one is a class so a page opts in; all of it stops under
+  reduced motion.
 */
-@keyframes bao-bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+@keyframes bun-breathe {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(0.985, 1.018); }
 }
-@keyframes bao-blink {
-  0%, 92%, 100% { transform: scaleY(1); }
-  95% { transform: scaleY(0.1); }
+@keyframes bun-hop {
+  0% { transform: translateY(0) scale(1, 1); }
+  14% { transform: translateY(0) scale(1.08, 0.9); }
+  38% { transform: translateY(-14%) scale(0.95, 1.07); }
+  60% { transform: translateY(0) scale(1.07, 0.93); }
+  78% { transform: translateY(0) scale(0.98, 1.02); }
+  100% { transform: translateY(0) scale(1, 1); }
 }
-@keyframes bao-wiggle {
+@keyframes bun-nod {
   0%, 100% { transform: rotate(0); }
-  25% { transform: rotate(-7deg); }
-  75% { transform: rotate(7deg); }
+  30% { transform: rotate(-6deg); }
+  65% { transform: rotate(3deg); }
+}
+@keyframes hat-lag {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  40% { transform: translateY(-5px) rotate(-7deg); }
+  70% { transform: translateY(1px) rotate(3deg); }
+}
+@keyframes bun-blink {
+  0%, 94%, 100% { transform: scaleY(1); }
+  96.5% { transform: scaleY(0.1); }
 }
 @keyframes pop-in {
-  0% { transform: scale(0.94); opacity: 0; }
+  0% { transform: scale(0.96); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 @keyframes rise-in {
-  0% { transform: translateY(10px); opacity: 0; }
+  0% { transform: translateY(8px); opacity: 0; }
   100% { transform: translateY(0); opacity: 1; }
 }
 @keyframes tick-pop {
   0% { transform: scale(0.6); }
-  60% { transform: scale(1.2); }
+  60% { transform: scale(1.18); }
   100% { transform: scale(1); }
 }
-.bao-bob { animation: bao-bob 3.2s ease-in-out infinite; }
-.bao-blink { transform-origin: center; transform-box: fill-box; animation: bao-blink 4.5s ease-in-out infinite; }
-.bao-wiggle { transform-origin: 50% 80%; animation: bao-wiggle 0.5s ease-in-out 2; }
+@keyframes shimmer {
+  0% { opacity: 0.55; }
+  50% { opacity: 1; }
+  100% { opacity: 0.55; }
+}
+
+.bun-breathe { transform-origin: 50% 88%; animation: bun-breathe 4.8s ease-in-out infinite; }
+.bun-hop { transform-origin: 50% 88%; animation: bun-hop 0.9s var(--ease-out) 1; }
+.bun-nod { transform-origin: 50% 88%; animation: bun-nod 0.6s ease-in-out 1; }
+.bun-hop .bun-hat, .bun-nod .bun-hat { transform-box: fill-box; transform-origin: 50% 100%; animation: hat-lag 0.9s var(--ease-out) 0.08s 1; }
+.bun-blink { transform-box: fill-box; transform-origin: center; animation: bun-blink 5.5s ease-in-out infinite; }
 /* "backwards", not "both": if an animation never runs (print, a paused tab), the content still shows. */
-.pop-in { animation: pop-in 0.25s ease-out backwards; }
-.rise-in { animation: rise-in 0.3s ease-out backwards; }
-.tick-pop { animation: tick-pop 0.3s ease-out; }
+.pop-in { animation: pop-in 0.24s var(--ease-out) backwards; }
+.rise-in { animation: rise-in 0.36s var(--ease-out) backwards; }
+.tick-pop { animation: tick-pop 0.3s var(--ease-spring); }
+.skeleton { background: var(--sunken); animation: shimmer 1.6s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;

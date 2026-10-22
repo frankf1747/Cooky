@@ -24,8 +24,10 @@ export default async function ReceiptsNewPage(props: PageProps<"/receipts/new">)
 
   return (
     <Page
-      title="Scan a receipt"
-      description="Take a photo of the whole receipt. You check every line before anything goes in your fridge, and Cooky doesn't keep the photo."
+      kicker="Step 3 · Stock"
+      tone="scan"
+      title="Stock the fridge"
+      description="One photo of the whole receipt: prices get logged, you check every line, then it all goes in. Cooky doesn't keep the photo."
       width="narrow"
     >
       <ScanForm

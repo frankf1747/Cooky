@@ -1,13 +1,17 @@
 'use client';
-
+// Owner: Fridge. The landing page: the virtual fridge (VirtualFridge.tsx), where plated dishes you
+// can cook today go into your plan with a tap, then what's inside, with adding, filtering, and
+// marking food used or discarded.
 import Link from 'next/link';
 import { useCallback, useRef, useState, type FormEvent } from 'react';
+import { MagnifyingGlass } from '@phosphor-icons/react';
 import { Category, FridgeView, type FridgeItem, type Location } from '@spec/contract';
 import { filterInventory, summarizeInventory, previewExpiry, referenceDays } from '@/modules/fridge/presentation';
 import type { IngredientRow, CategoryRow } from '@/modules/fridge/data';
-import { BaoSays } from '@/ui/Bao';
-import { Page } from '@/ui/Page';
-import { alert, btnPrimary as primaryClass, btnSecondarySm as buttonClass, chip, chipOff, chipOn, chipRow, field as inputClass, tag } from '@/ui/styles';
+import { EmptyState, Page, Section } from '@/ui/Page';
+import { PlanPicksBar } from '@/ui/PlanPick';
+import { alert, btnPrimary as primaryClass, btnSecondary, btnSecondarySm as buttonClass, btnText, chip, chipOff, chipOn, chipRow, field as inputClass, h2, label, note, notice as noticeClass, panel, rows, tag, tagNeutral, tagPast } from '@/ui/styles';
+import { VirtualFridge } from './VirtualFridge';
 
 type Props = { initial: FridgeView; ingredients: IngredientRow[]; categories: CategoryRow[]; today: string };
 const locations = { fridge: 'Fridge', freezer: 'Freezer', pantry: 'Pantry' };
@@ -33,7 +37,11 @@ export default function FridgeClient({ initial, ingredients, categories, today }
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [confirmation, setConfirmation] = useState<{ itemId: string; status: 'used' | 'tossed' } | null>(null);
-  const [adding, setAdding] = useState(initial.items.length === 0);
+  const [adding, setAdding] = useState(false);
+  function addByHand() {
+    setAdding(true);
+    requestAnimationFrame(() => document.getElementById('add-food')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }
   const load = useCallback(async () => {
     setLoading(true); setError('');
     try { setData(FridgeView.parse(await api('/api/fridge'))); }
@@ -71,79 +79,147 @@ export default function FridgeClient({ initial, ingredients, categories, today }
   const filtered = search.trim() || filter !== 'all' || categoryFilter !== 'all' || dateFilter !== 'all';
   const tabs: [string, number, string][] = [['All', summary.total, 'all'], ['Use soon', summary.attention, 'attention'], ['Past date', summary.past, 'past'], ['No date', summary.noDate, 'no-date']];
   return <Page
-    title="Fridge"
-    description="What you have and what to use first. Dates are a typical storage guide, not a safety check."
-    width="wide"
-    actions={<>
-      <button type="button" className={primaryClass} onClick={() => setAdding(a => !a)} aria-expanded={adding}>{adding ? 'Close' : 'Add food'}</button>
-      <Link href="/receipts/new" className={buttonClass}>Scan a receipt</Link>
-    </>}
+    kicker="Your kitchen"
+    title="Your fridge"
+    description={(data?.items.length ?? 0) > 0 ? 'Tap a dish to put it in your plan.' : undefined}
   >
-    {error && <div role="alert" className={`mb-4 ${alert}`}><p>{error}</p><div className="mt-2 flex items-center gap-3"><button className={buttonClass} disabled={loading || busy} onClick={() => void load()}>Try again</button><span className="text-xs">If a save failed, repeating the same action is safe.</span></div></div>}
-    {notice && <p role="status" className="pop-in mb-4 rounded-xl bg-tile-mint p-3 text-sm">{notice}</p>}
+    {data && <VirtualFridge cookNow={data.cookNow} items={data.items} expiringSoon={data.expiringSoon} today={today} onAddByHand={addByHand} />}
+    <PlanPicksBar />
 
-    {adding && <section aria-labelledby="add-heading" className="mb-8 rounded-2xl border border-zinc-200 bg-surface p-4 sm:p-5 dark:border-zinc-800">
-      <h2 id="add-heading" className="font-display text-xl font-semibold tracking-tight">Add food</h2>
-      <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">Pick an ingredient from the list so recipes can use it, or choose &ldquo;Other&rdquo; for anything else.</p>
-      <form onSubmit={add} className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="block text-sm sm:col-span-2">Ingredient<select className={`${inputClass} mt-1`} value={form.ingredientId} onChange={e => { const chosen = ingredients.find(i => i.id === e.target.value); setForm({ ...form, ingredientId: e.target.value, unit: chosen?.base_unit ?? 'count' }); }}>
-          <option value="">Other food (not in the list)</option>{ingredients.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
-        </select></label>
-        {!form.ingredientId && <><label className="block text-sm">Food name<input className={`${inputClass} mt-1`} required maxLength={160} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label><label className="block text-sm">Category<select className={`${inputClass} mt-1`} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>{Category.options.map(c => <option key={c} value={c}>{c}</option>)}</select></label></>}
-        <label className="block text-sm">Quantity<input className={`${inputClass} mt-1`} type="number" min="0.01" step="any" required value={form.qty} onChange={e => setForm({ ...form, qty: e.target.value })} /></label>
-        <label className="block text-sm">Unit<select className={`${inputClass} mt-1`} disabled={Boolean(form.ingredientId)} value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value as Props['ingredients'][number]['base_unit'] })}><option value="g">g</option><option value="ml">ml</option><option value="count">count</option></select></label>
-        <label className="block text-sm">Store in<select className={`${inputClass} mt-1`} value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}>{Object.entries(locations).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
-        <label className="block text-sm">Use-by date (optional)<input className={`${inputClass} mt-1`} type="date" value={form.expiresOn} onChange={e => setForm({ ...form, expiresOn: e.target.value })} /></label>
-        <div className="flex flex-wrap items-center justify-between gap-3 sm:col-span-2 lg:col-span-4" aria-live="polite">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">{preview.expiresOn ? <>Typical use-by: {preview.expiresOn}{preview.source ? ` (source: ${preview.source})` : ''}. Leave the date blank to use it.</> : 'No storage guide for this food, so no date is set unless you enter one.'}</p>
-          <button type="submit" disabled={busy || loading} className={primaryClass}>{busy ? 'Adding…' : 'Add to fridge'}</button>
+    <Section
+      title={<span id="inside" className="scroll-mt-24">What&apos;s inside</span>}
+      note="Dates are a typical storage guide, not a safety check."
+      actions={<div className="flex items-center gap-4">
+        <button type="button" className={btnText} onClick={() => (adding ? setAdding(false) : addByHand())} aria-expanded={adding}>{adding ? 'Close the form' : 'Add by hand'}</button>
+        <Link href="/receipts/new" className={btnText}>Stock up</Link>
+      </div>}
+      className="scroll-mt-24 !mt-14"
+    >
+    {error && (
+      <div role="alert" className={`mb-5 ${alert}`}>
+        <p>{error}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <button className={buttonClass} disabled={loading || busy} onClick={() => void load()}>Try again</button>
+          <span className="text-xs">If a save failed, repeating the same action is safe.</span>
         </div>
-      </form>
-    </section>}
+      </div>
+    )}
+    {notice && <p role="status" className={`pop-in mb-5 ${noticeClass}`}>{notice}</p>}
+
+    {adding && (
+      <section id="add-food" aria-labelledby="add-heading" className={`rise-in mb-10 scroll-mt-24 p-5 sm:p-6 ${panel}`}>
+        <h2 id="add-heading" className={h2}>Add food</h2>
+        <p className="mt-1.5 text-[15px] text-muted">Pick an ingredient from the list so recipes can use it, or choose &ldquo;Other&rdquo; for anything else.</p>
+        <form onSubmit={add} className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <label className={`${label} sm:col-span-2`}>
+            Ingredient
+            <select className={inputClass} value={form.ingredientId} onChange={e => { const chosen = ingredients.find(i => i.id === e.target.value); setForm({ ...form, ingredientId: e.target.value, unit: chosen?.base_unit ?? 'count' }); }}>
+              <option value="">Other food (not in the list)</option>{ingredients.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+            </select>
+          </label>
+          {!form.ingredientId && <>
+            <label className={label}>
+              Food name
+              <input className={inputClass} required maxLength={160} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+            </label>
+            <label className={label}>
+              Category
+              <select className={inputClass} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>{Category.options.map(c => <option key={c} value={c}>{c}</option>)}</select>
+            </label>
+          </>}
+          <label className={label}>
+            Quantity
+            <input className={inputClass} type="number" min="0.01" step="any" required value={form.qty} onChange={e => setForm({ ...form, qty: e.target.value })} />
+          </label>
+          <label className={label}>
+            Unit
+            <select className={inputClass} disabled={Boolean(form.ingredientId)} value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value as Props['ingredients'][number]['base_unit'] })}><option value="g">g</option><option value="ml">ml</option><option value="count">count</option></select>
+          </label>
+          <label className={label}>
+            Store in
+            <select className={inputClass} value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}>{Object.entries(locations).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select>
+          </label>
+          <label className={label}>
+            <span>Use-by date <span className="font-normal text-subtle">(optional)</span></span>
+            <input className={inputClass} type="date" value={form.expiresOn} onChange={e => setForm({ ...form, expiresOn: e.target.value })} />
+          </label>
+          <div className="flex flex-col gap-4 border-t border-line pt-4 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between lg:col-span-4" aria-live="polite">
+            <p className="text-sm text-muted">{preview.expiresOn ? <>Typical use-by: {preview.expiresOn}{preview.source ? ` (source: ${preview.source})` : ''}. Leave the date blank to use it.</> : 'No storage guide for this food, so no date is set unless you enter one.'}</p>
+            <button type="submit" disabled={busy || loading} className={`w-full sm:w-auto ${primaryClass}`}>{busy ? 'Adding…' : 'Add to fridge'}</button>
+          </div>
+        </form>
+      </section>
+    )}
 
     <div className={chipRow} role="tablist" aria-label="Filter by date">
-      {tabs.map(([label, count, value]) => <button type="button" role="tab" key={value} aria-selected={dateFilter === value} onClick={() => { setDateFilter(value); setConfirmation(null); }} className={`${chip} ${dateFilter === value ? chipOn : chipOff}`}>{label} <span className="opacity-70">{count}</span></button>)}
+      {tabs.map(([text, count, value]) => (
+        <button type="button" role="tab" key={value} aria-selected={dateFilter === value} onClick={() => { setDateFilter(value); setConfirmation(null); }} className={`${chip} ${dateFilter === value ? chipOn : chipOff}`}>
+          {text} <span className="tabular-nums opacity-70">{count}</span>
+        </button>
+      ))}
     </div>
-    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1fr)_160px_160px_auto]">
-      <div className="col-span-2 sm:col-span-1">
-      <label className="sr-only" htmlFor="fridge-search">Search food</label>
-      <input id="fridge-search" type="search" className={inputClass} placeholder="Search food" value={search} onChange={e => setSearch(e.target.value)} />
+    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1fr)_170px_170px_auto]">
+      <div className="relative col-span-2 sm:col-span-1">
+        <label className="sr-only" htmlFor="fridge-search">Search food</label>
+        <MagnifyingGlass size={18} aria-hidden className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-subtle" />
+        <input id="fridge-search" type="search" className={`${inputClass} !pl-11`} placeholder="Search food" value={search} onChange={e => setSearch(e.target.value)} />
       </div>
       <select aria-label="Location" className={inputClass} value={filter} onChange={e => setFilter(e.target.value)}><option value="all">All locations</option>{Object.entries(locations).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select>
       <select aria-label="Category" className={inputClass} value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}><option value="all">All categories</option>{Category.options.map(c => <option key={c} value={c}>{c}</option>)}</select>
-      {filtered ? <button type="button" className={`${buttonClass} col-span-2 sm:col-span-1`} onClick={clearFilters}>Clear</button> : <span className="hidden sm:block" />}
+      {filtered ? <button type="button" className={`${btnSecondary} col-span-2 sm:col-span-1`} onClick={clearFilters}>Clear</button> : <span className="hidden sm:block" />}
     </div>
 
-    <section aria-label="Food on hand" className="mt-4">
-      {loading && <p role="status" className="py-6 text-sm text-zinc-500">Loading your fridge…</p>}
-      {!loading && data && shown.length === 0 && <div className="py-4"><BaoSays mood={filtered ? 'thinking' : 'sleepy'} pose="hold" prop="basket">{filtered ? 'Nothing matches those filters. Clear one, or try another name.' : 'The fridge is empty. Echoes, even. Scan a receipt or add food by hand and I will keep track of it.'}</BaoSays>{filtered ? <button type="button" className={`${buttonClass} mt-4`} onClick={clearFilters}>Clear filters</button> : <div className="mt-4 flex gap-2"><Link href="/receipts/new" className={primaryClass}>Scan a receipt</Link>{!adding && <button type="button" className={buttonClass} onClick={() => setAdding(true)}>Add food</button>}</div>}</div>}
-      {shown.length > 0 && <ul className="divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-surface dark:divide-zinc-800 dark:border-zinc-800">
-        {shown.map(item => {
-          const days = item.expiresOn ? referenceDays(item.expiresOn, today) : null;
-          const needsAttention = data?.expiringSoon.includes(item.id);
-          return <li key={item.id} className="px-4 py-3">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <div className="min-w-0 flex-1 basis-full sm:basis-auto">
-                <p className="font-medium">{item.name}</p>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">{item.qty}{item.unit === 'count' ? '' : ` ${item.unit}`} · {locations[item.location]}{item.kind === 'dish' ? ' · leftovers' : item.kind === 'generic' ? ' · not used by recipes' : ''}</p>
-              </div>
-              <span title={`Typical storage guide. Source: ${source(item)}. Added ${item.addedOn}.`} className={days !== null && days < 0 ? 'inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200' : needsAttention ? tag : 'inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'}>{days === null ? 'No date' : days < 0 ? `Past its date (${item.expiresOn})` : days === 0 ? 'Use today' : `${days} day${days === 1 ? '' : 's'} left`}</span>
-              <div className="flex gap-2">
-                <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => setConfirmation({ itemId: item.id, status: 'used' })}>Used</button>
-                <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => setConfirmation({ itemId: item.id, status: 'tossed' })}>Discard</button>
-              </div>
-            </div>
-            {confirmation?.itemId === item.id && <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-md bg-zinc-100 p-3 dark:bg-zinc-900" role="group" aria-label="Confirm change"><p className="text-sm">{confirmation.status === 'used' ? 'Mark' : 'Discard'} all {item.qty}{item.unit === 'count' ? '' : ` ${item.unit}`} of {item.name}{confirmation.status === 'used' ? ' as used' : ''}?</p><div className="flex gap-2"><button type="button" className={primaryClass} disabled={busy || loading} onClick={() => void mutate(`/api/fridge/items/${item.id}`, 'PATCH', { status: confirmation.status }, confirmation.status === 'used' ? 'Marked as used.' : 'Discarded.')}>{confirmation.status === 'used' ? 'Mark used' : 'Discard'}</button><button type="button" className={buttonClass} disabled={busy} onClick={() => setConfirmation(null)}>Cancel</button></div></div>}
-          </li>;
-        })}
-      </ul>}
-      {shown.length > 0 && <p className="mt-2 text-xs text-zinc-500" aria-live="polite">Showing {shown.length} of {summary.total}. Each purchase stays a separate entry. Hover a date to see its source.</p>}
+    <section aria-label="Food on hand" className="mt-5">
+      {loading && <p role="status" className="py-6 text-[15px] text-muted">Loading your fridge…</p>}
+      {!loading && data && shown.length === 0 && !filtered && (
+        <p className="rounded-2xl bg-sunken/60 px-4 py-5 text-[15px] text-muted">Nothing in here yet. Stock up from a receipt or add food by hand, and it shows up here.</p>
+      )}
+      {!loading && data && shown.length === 0 && filtered && (
+        <EmptyState
+          mood="thinking"
+          pose="think"
+          title="Nothing matches"
+          action={<button type="button" className={btnSecondary} onClick={clearFilters}>Clear filters</button>}
+        >
+          Clear one of those filters, or try another name.
+        </EmptyState>
+      )}
+      {shown.length > 0 && (
+        <ul className={rows}>
+          {shown.map(item => {
+            const days = item.expiresOn ? referenceDays(item.expiresOn, today) : null;
+            const needsAttention = data?.expiringSoon.includes(item.id);
+            return (
+              <li key={item.id} className="px-4 py-3.5 sm:px-5">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5">
+                  <div className="min-w-0 flex-1 basis-full sm:basis-auto">
+                    <p className="font-medium">{item.name}</p>
+                    <p className="text-sm text-muted">{item.qty}{item.unit === 'count' ? '' : ` ${item.unit}`} · {locations[item.location]}{item.kind === 'dish' ? ' · leftovers' : item.kind === 'generic' ? ' · not used by recipes' : ''}</p>
+                    {item.expiresOn && <p className="mt-0.5 text-xs text-subtle">Typical guide · {source(item)}</p>}
+                  </div>
+                  <span title={`Typical storage guide. Source: ${source(item)}. Added ${item.addedOn}.`} className={days !== null && days < 0 ? tagPast : needsAttention ? tag : tagNeutral}>{days === null ? 'No date' : days < 0 ? `Past its date (${item.expiresOn})` : days === 0 ? 'Use today' : `${days} day${days === 1 ? '' : 's'} left`}</span>
+                  <div className="flex gap-2">
+                    <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => setConfirmation({ itemId: item.id, status: 'used' })}>Used</button>
+                    <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => setConfirmation({ itemId: item.id, status: 'tossed' })}>Discard</button>
+                  </div>
+                </div>
+                {confirmation?.itemId === item.id && (
+                  <div className={`pop-in mt-3 flex flex-wrap items-center justify-between gap-3 ${note}`} role="group" aria-label="Confirm change">
+                    <p>{confirmation.status === 'used' ? 'Mark' : 'Discard'} all {item.qty}{item.unit === 'count' ? '' : ` ${item.unit}`} of {item.name}{confirmation.status === 'used' ? ' as used' : ''}?</p>
+                    <div className="flex gap-2">
+                      <button type="button" className={`${primaryClass} !h-10 sm:!h-9 !px-4 !text-sm`} disabled={busy || loading} onClick={() => void mutate(`/api/fridge/items/${item.id}`, 'PATCH', { status: confirmation.status }, confirmation.status === 'used' ? 'Marked as used.' : 'Discarded.')}>{confirmation.status === 'used' ? 'Mark used' : 'Discard'}</button>
+                      <button type="button" className={buttonClass} disabled={busy} onClick={() => setConfirmation(null)}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {shown.length > 0 && <p className="mt-3 text-xs text-subtle" aria-live="polite">Showing {shown.length} of {summary.total}. Each purchase stays a separate entry. Dates are a typical guide; each one names its source.</p>}
     </section>
 
-    {data && data.cookNow.length > 0 && <section aria-labelledby="cook-heading" className="mt-10">
-      <div className="flex flex-wrap items-baseline justify-between gap-2"><h2 id="cook-heading" className="font-display text-xl font-semibold tracking-tight">What you can cook</h2><Link href="/recipes?chips=fridge" className="text-sm font-medium hover:underline">All matching recipes</Link></div>
-      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Best matches for what you have, starting with food to use soon.</p>
-      <ul className="mt-3 grid gap-3 sm:grid-cols-3">{data.cookNow.slice(0, 6).map((recipe, i) => <li key={recipe.recipeId}><Link href={`/recipes/${recipe.recipeId}`} className={`block h-full rounded-2xl p-4 transition hover:-translate-y-0.5 ${i % 2 ? 'bg-tile-mint' : 'bg-tile-sky'}`}><p className="font-display text-lg font-semibold leading-tight tracking-tight">{recipe.title}</p><p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{recipe.missingIngredientIds.length ? `Missing: ${recipe.missingIngredientIds.map(id => ingredients.find(i => i.id === id)?.name ?? id).join(', ')}` : 'You have everything it needs.'}</p>{recipe.usesExpiringItemIds.length > 0 && <p className="mt-2 text-xs text-amber-800 dark:text-amber-300">Uses {recipe.usesExpiringItemIds.length} item{recipe.usesExpiringItemIds.length === 1 ? '' : 's'} to use soon</p>}</Link></li>)}</ul>
-    </section>}
+    </Section>
   </Page>;
 }

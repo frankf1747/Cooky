@@ -1,14 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Geist } from "next/font/google";
+import { Fraunces, Geist } from "next/font/google";
 import "./globals.css";
 
 const sans = Geist({ subsets: ["latin"], variable: "--font-geist-sans", display: "swap" });
-// Headlines and big numbers only; body text stays in Geist.
-const display = Bricolage_Grotesque({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-display", display: "swap" });
+// Headlines, big numbers and Bao's moments only; everything you read or tap stays in Geist.
+// The SOFT axis rounds the terminals, which is most of the brand.
+const display = Fraunces({ subsets: ["latin"], style: ["normal", "italic"], axes: ["SOFT", "WONK", "opsz"], variable: "--font-fraunces", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Cooky",
-  description: "Plan meals from your fridge, buy exactly what you need, cook before food goes off.",
+  title: { default: "Cooky", template: "%s · Cooky" },
+  description: "Plan dinners from your fridge, buy exactly what you need, and cook before food goes off. With Bao, a bun in a chef's hat.",
 };
 
 // Phones: the page runs under the notch and home bar (the tab bar pads itself with the safe
@@ -18,15 +19,20 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbf8f3" },
-    { media: "(prefers-color-scheme: dark)", color: "#14161f" },
+    { media: "(prefers-color-scheme: light)", color: "#f5f0e6" },
+    { media: "(prefers-color-scheme: dark)", color: "#16141b" },
   ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`h-full antialiased ${sans.variable} ${display.variable}`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" data-scroll-behavior="smooth" className={`h-full antialiased ${sans.variable} ${display.variable}`}>
+      <body className="flex min-h-full flex-col">
+        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-full focus:bg-foreground focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-background">
+          Skip to content
+        </a>
+        {children}
+      </body>
     </html>
   );
 }

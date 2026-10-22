@@ -6,7 +6,7 @@ import { useState } from "react";
 import { browserClient } from "@/platform/db-browser";
 import { AuthBao, type AuthAttention } from "./AuthBao";
 import { AuthShell } from "./AuthShell";
-import { alert, btnPrimary, btnText, field } from "./styles";
+import { alert, btnPrimary, btnText, field, label, notice as noticeBox } from "./styles";
 import { PASSWORD_MIN_CHARS } from "./password";
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
@@ -54,15 +54,15 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         )
       }
     >
-      <form onSubmit={submit} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1.5 text-sm font-medium">
+      <form onSubmit={submit} className="flex flex-col gap-5">
+        <label className={label}>
           Email
           <input
             className={field} type="email" required autoComplete="email" placeholder="you@example.com" value={email}
             onChange={(e) => setEmail(e.target.value)} onFocus={() => setAttention("email")} onBlur={() => setAttention("none")}
           />
         </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium">
+        <label className={label}>
           <span className="flex items-baseline justify-between">
             Password
             {mode === "login" && <Link className={`text-xs ${btnText}`} href="/forgot-password">Forgot it?</Link>}
@@ -71,11 +71,11 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             className={field} type="password" required minLength={PASSWORD_MIN_CHARS} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password}
             onChange={(e) => setPassword(e.target.value)} onFocus={() => setAttention("password")} onBlur={() => setAttention("none")}
           />
-          {mode === "signup" && <span className="font-normal text-zinc-500">At least {PASSWORD_MIN_CHARS} characters.</span>}
+          {mode === "signup" && <span className="font-normal text-subtle">At least {PASSWORD_MIN_CHARS} characters.</span>}
         </label>
         {error && <p role="alert" className={alert}>{error}</p>}
-        {notice && <p role="status" className="rounded-xl bg-accent-soft p-3 text-sm">{notice}</p>}
-        <button disabled={busy} className={`mt-1 ${btnPrimary}`}>
+        {notice && <p role="status" className={noticeBox}>{notice}</p>}
+        <button disabled={busy} className={`mt-2 w-full ${btnPrimary}`}>
           {busy ? "One moment…" : mode === "login" ? "Log in" : "Create account"}
         </button>
       </form>

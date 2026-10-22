@@ -1,1 +1,4 @@
-export default function Loading() { return <main className="mx-auto w-full max-w-6xl p-8" role="status">Loading your fridge…</main>; }
+// Owner: Fridge. Shown while the fridge loads.
+import { PageSkeleton } from '@/ui/States';
+
+export default function Loading() { return <PageSkeleton layout="list" width="wide" label="Loading your fridge" />; }

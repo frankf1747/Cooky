@@ -30,7 +30,7 @@ export function SaveButton({ planId, version }: { planId: string; version: numbe
   }
 
   return (
-    <div className="flex flex-col items-stretch gap-2">
+    <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
       <button onClick={save} disabled={busy} className={btnPrimary}>
         {busy ? "Saving…" : error?.retry ? "Try saving again" : "Save this plan"}
       </button>
