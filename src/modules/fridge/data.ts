@@ -1,5 +1,6 @@
 import { FridgeItem, type Category, type Location } from '@spec/contract';
 import { reader } from '@/platform/db';
+import { localToday } from '@/platform/dates';
 import { upstream } from '@/platform/errors';
 
 export type IngredientRow = { id: string; name: string; base_unit: 'g' | 'ml' | 'count'; category: Category; shelf_life_days: Partial<Record<Location, number>>; shelf_life_source: string };
@@ -25,14 +26,7 @@ export async function loadCatalog() {
   dbError('Loading ingredients', ingredients.error); dbError('Loading expiry references', categories.error);
   return { ingredients: (ingredients.data ?? []) as IngredientRow[], categories: (categories.data ?? []) as CategoryRow[] };
 }
-export async function todayFor(userId: string): Promise<string> {
-  const db = await reader();
-  const result = await db.from('profiles').select('timezone').eq('user_id', userId).maybeSingle();
-  dbError('Loading timezone', result.error);
-  const parts = new Intl.DateTimeFormat('en-US', { timeZone: result.data?.timezone ?? 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
-  const value = (type: string) => parts.find(p => p.type === type)!.value;
-  return `${value('year')}-${value('month')}-${value('day')}`;
-}
+export const todayFor = localToday;
 export function addDays(date: string, days: number): string {
   const d = new Date(`${date}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + days); return d.toISOString().slice(0, 10);
 }

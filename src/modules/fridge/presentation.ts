@@ -27,3 +27,15 @@ export function previewExpiry(ingredient: IngredientRow | undefined, categories:
   const date = new Date(`${today}T00:00:00Z`); date.setUTCDate(date.getUTCDate() + days);
   return { expiresOn: date.toISOString().slice(0, 10), expirySource: specific === undefined || specific === null ? 'category' : 'table', source: specific === undefined || specific === null ? fallback?.source ?? null : ingredient?.shelf_life_source ?? null };
 }
+
+/** Recompute only on a real move; user dates are preserved unless explicitly replaced. */
+export function previewItemExpiry(item: FridgeItem, ingredients: IngredientRow[], categories: CategoryRow[], location: Location, explicit: string, today: string) {
+  const ingredient = ingredients.find(i => i.id === item.ingredientId);
+  if (explicit) return { ...previewExpiry(ingredient, categories, item.category ?? 'prepared', location, explicit, today), requiresDate: false };
+  if (location === item.location || item.expirySource === 'user') {
+    const source = item.expirySource === 'user' ? 'Date entered by you' : item.expirySource === 'table' ? ingredient?.shelf_life_source ?? null : categories.find(c => c.category === item.category)?.source ?? null;
+    return { expiresOn: item.expiresOn, expirySource: item.expirySource, source, requiresDate: false };
+  }
+  const guide = previewExpiry(ingredient, categories, item.category ?? (item.kind === 'dish' ? 'prepared' : 'other'), location, '', today);
+  return { ...guide, requiresDate: !guide.expiresOn && Boolean(item.expiresOn) };
+}
