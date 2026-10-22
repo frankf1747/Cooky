@@ -36,7 +36,7 @@ is v2, whatever its priority says.** v1 proofs use *smoke sets* (sizes in
 | Capability | v1 (demo day) | v2 (after) |
 |---|---|---|
 | Accounts and Pro | ACC1–ACC9; onboarding with household size, budget, excluded ingredients and staples only | ACC10, equipment and allergen tags |
-| Recipes | RCP1–RCP3 (seed library of `workload.smokeSets.seedRecipes` recipes), RCP8 for seed chunks | Import (RCP4–RCP7, RCP9 custom ingredients beyond generic items) |
+| Recipes | RCP1–RCP3 (seed library of `workload.smokeSets.seedRecipes` recipes), RCP8; RCP5 text and RCP6 (Pro: describe a dish or paste a recipe; pulled forward by Platform 2026-10-21) | Import from a link or a photo (RCP4, RCP5 image, RCP7 for pages), RCP9 custom ingredients beyond generic items |
 | Planning | PLN1–PLN4, PLN6, PLN8; PLN5 as **one structured call** choosing among code-ranked feasible sets, with repairs | Tool-using planner agent (§6.3), PLN9–PLN10 |
 | Swap and preferences | PLN7 and LRN1–LRN3 if Day 2 allows (first Should to build) | — |
 | Receipt to fridge | RCT1–RCT9, with generic items (RCT10) | Plan diff polish, retry UX polish |
@@ -153,7 +153,7 @@ Proof names an instrument from §13.1. A Must without a proof is a bug in this d
 | RCP2 | Must | Ingredient catalog: id, name, aliases, category, base unit, allergen tags, shelf life in days per location (fridge, freezer, pantry) with its source, and package products (size, unit, price in integer cents, store label, region, price date). | `check:seed` |
 | RCP3 | Must | Library browse and search by text, tag and *cookable now*. Curated recipes are visible to all; imported recipes only to their owner. | `unit`, `scn:authz` |
 | RCP4 | Must | Import from a URL: server fetches with the SSRF guard (§7, G6) within `limits.importFetchTimeoutMs` and `limits.importFetchMaxBytes`; if the page has schema.org `Recipe` JSON-LD, code parses it first; the text (capped at `limits.importTextMaxChars`) goes to `recipe_importer` (§6.3). | `eval:import`, `eval:guard` |
-| RCP5 | Should | Import from pasted text and from a photo of a cookbook page (vision). | `eval:import` |
+| RCP5 | Should | Import from pasted text and from a photo of a cookbook page (vision). Text may also be a description of a dish the person feels like eating ("a cozy soup with white beans"); `recipe_importer` then writes one simple recipe for it in catalog ingredients. Pro only (`quotas.pro.imports_per_day`). | `eval:import` |
 | RCP6 | Must | Import returns a **draft**, never a saved recipe. Each ingredient row carries a catalog id or `null` plus a flag reason (`unknown_ingredient`, `unit_unconvertible`, `quantity_missing`). The user fixes flags (pick a catalog item, create a custom ingredient, or drop the row) and confirms with `POST /api/recipes`. | `eval:import`, `journey` |
 | RCP7 | Must | Pages that are not recipes return `422 { code: "not_a_recipe" }`. | `eval:import` |
 | RCP8 | Must | Confirmed imports are split into step and FAQ chunks for retrieval (§5.7) at save time. | `unit` |
@@ -308,7 +308,7 @@ spend cap `limits.globalDailySpendCapUsd`: past it, AI routes return `503 { code
 | Unit | Trigger (when the code calls it) | Single responsibility | Tools | Effort | Output contract | Uncertainty |
 |---|---|---|---|---|---|---|
 | `receipt_reader` | `POST /api/receipts` | Read printed lines and map food lines to catalog ids | none (image + catalog in prompt) | `low` | `ReceiptExtraction` in `spec/contract.ts` | per-line `confidence`; `null` id when unsure |
-| `recipe_importer` | `POST /api/recipes/import` | Turn page text or image into a recipe draft mapped to the catalog | none | `low` | `RecipeExtraction` | `null` id plus flag reason; `isRecipe: false` |
+| `recipe_importer` | `POST /api/recipes/import` | Turn page text, pasted text, a description of a dish, or an image into a recipe draft mapped to the catalog | none | `low` | `RecipeExtraction` | `null` id plus flag reason; `isRecipe: false` |
 | `planner` | `POST /api/plans`, swap | Choose one of the code-ranked feasible sets and explain it | none in v1 (feasible sets, prices and fridge in the prompt); v2 tools `find_feasible_sets`, `price_plan`, `submit_plan` | `low` | `PlannerChoice` | `assumptions[]`; may only pick a listed set |
 | `cook_assistant` | `POST /api/cook/{id}/ask` | Answer from retrieved chunks only | none | `low` | `CookAnswer` | `notCovered`, `needsClarification` |
 | `preference_proposer` | swap reason, cook feedback | Propose preferences from the user's words | none | `low` | `PreferenceProposals` | empty list when nothing is clear |

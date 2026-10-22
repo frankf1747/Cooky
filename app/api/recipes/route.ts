@@ -11,7 +11,7 @@ export const GET = route({
   handler: async ({ userId, query }) => recipes.list(userId, query),
 });
 
-// POST /api/recipes · v2 · SPEC RCP6
+// POST /api/recipes · v1 · SPEC RCP6, RCP8: save a reviewed draft as the user's own recipe
 export const POST = route({
   auth: "user",
   body: RecipeDraft,
