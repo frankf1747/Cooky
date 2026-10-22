@@ -1,48 +1,33 @@
 // Owner: Platform. The frame for the signed-out pages (log in, sign up, reset a password): a
-// brand panel with Bao and the promise, and the form. Side by side on wide screens, stacked on
-// phones, where the panel shrinks to the wordmark, a small Bao and the promise so the form stays
-// in reach.
+// deep cobalt brand panel that holds Bao and one line, and the form on paper. Side by side on
+// wide screens; on phones the panel is a short band above the form.
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { CalendarCheck, CookingPot, Receipt } from "@phosphor-icons/react/ssr";
-
-const LOOP = [
-  { icon: CalendarCheck, text: "Plan dinners from what is already in your fridge." },
-  { icon: Receipt, text: "Shop one list in real package sizes, then scan the receipt." },
-  { icon: CookingPot, text: "Cook before anything goes off, one step at a time." },
-];
+import { Wordmark } from "./AppNav";
+import { h1 } from "./styles";
 
 export function AuthShell({ title, lead, mascot, children, footer }: { title: string; lead?: ReactNode; mascot?: ReactNode; children: ReactNode; footer?: ReactNode }) {
   return (
-    <main className="flex flex-1 flex-col lg:grid lg:min-h-[100dvh] lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-      <aside className="bg-tile-sky px-4 pb-7 pt-8 sm:px-6 lg:flex lg:flex-col lg:justify-between lg:px-14 lg:py-12">
-        <div className="flex items-start justify-between gap-4">
-          <Link href="/" className="font-display text-xl font-bold tracking-tight">Cooky</Link>
-          <div className="lg:hidden">{mascot}</div>
-        </div>
-        <div className="mt-4 lg:mt-0">
-          <div className="hidden lg:block">{mascot}</div>
-          <p className="mt-6 max-w-md font-display text-[28px] font-semibold leading-[1.05] tracking-tight sm:text-3xl lg:text-5xl">
-            Cook what you have. Buy only what you need.
-          </p>
-          <ul className="mt-8 hidden max-w-md space-y-4 lg:block">
-            {LOOP.map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-start gap-3 text-[15px] leading-snug">
-                <Icon size={22} weight="duotone" className="mt-0.5 shrink-0 text-accent" aria-hidden />
-                {text}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <p className="hidden text-sm text-zinc-600 lg:block dark:text-zinc-400">Free to start. Payments run in Stripe test mode, so nothing is charged.</p>
+    <main id="main" className="flex flex-1 flex-col lg:grid lg:min-h-[100dvh] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+      <aside className="relative flex flex-col overflow-hidden bg-cobalt-deep px-6 pb-8 pt-5 text-on-brand lg:px-14 lg:py-10">
+        <Link href="/" aria-label="Cooky, home" className="w-fit rounded-full">
+          <Wordmark />
+        </Link>
+        {/* a soft dough shape behind Bao, the only decoration on the panel */}
+        <div aria-hidden className="shape-dough absolute left-1/2 top-[52%] h-64 w-72 -translate-x-1/2 -translate-y-1/2 bg-on-brand/[0.07] lg:h-[26rem] lg:w-[30rem]" />
+        <div className="relative my-6 flex justify-center lg:my-0 lg:flex-1 lg:items-center">{mascot}</div>
+        <p className="relative mx-auto hidden max-w-md text-center font-display text-[2.25rem] font-medium leading-[1.08] tracking-[-0.02em] lg:block">
+          Cook what you <em className="italic">have</em>. Buy only what you <em className="italic">need</em>.
+        </p>
       </aside>
 
-      <section className="flex flex-1 flex-col px-4 py-8 sm:px-6 lg:justify-center lg:px-14">
+      <section className="flex flex-1 flex-col px-6 pb-12 pt-9 lg:justify-center lg:px-16">
         <div className="mx-auto w-full max-w-sm">
-          <h1 className="font-display text-[26px] font-semibold tracking-tight sm:text-3xl">{title}</h1>
-          {lead && <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{lead}</p>}
-          <div className="mt-6">{children}</div>
-          {footer && <div className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">{footer}</div>}
+          <h1 className={h1}>{title}</h1>
+          {lead && <p className="mt-3 text-[15px] leading-relaxed text-muted">{lead}</p>}
+          <div className="mt-8">{children}</div>
+          {footer && <div className="mt-8 text-[15px] text-muted">{footer}</div>}
+          <p className="mt-12 text-xs text-subtle">Payments run in Stripe test mode, so nothing is charged.</p>
         </div>
       </section>
     </main>

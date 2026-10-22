@@ -21,17 +21,29 @@ export const aiFixtures: Record<AiUnitName, (input: FakeInput) => unknown> = {
       { raw: "BAG FEE", kind: "non_food", ingredientId: null, category: null, name: "Bag fee", qty: null, unit: null, packageCount: null, priceCents: 10, confidence: "high" },
     ],
   }),
-  recipe_importer: () => ({
-    isRecipe: true,
-    title: "Garlic butter shrimp",
-    baseServings: 2,
-    minutes: 20,
-    ingredients: [
-      { ingredientId: "ing_garlic", name: "Garlic", qty: 3, unit: "count" },
-      { ingredientId: null, name: "Shrimp", qty: 300, unit: "g" },
-    ],
-    steps: ["Melt the butter.", "Cook the garlic for one minute.", "Add the shrimp and cook until pink."],
-  }),
+  // Answers the person's words: the title comes from them, and catalog items they name become
+  // ingredients in the catalog's unit (garlic and olive oil when they name none). One ingredient
+  // outside the catalog keeps the "fix this row" path exercised in the UI.
+  recipe_importer: ({ system, text }) => {
+    const asked = (text.match(/<user_text>[^\n]*\n([\s\S]*?)\n<\/user_text>/)?.[1] ?? text).trim();
+    const catalog = [...system.matchAll(/^(ing_[0-9a-z_]+) \| ([^|]+) \| ([^|\n]*) \| (g|ml|count)$/gm)].map((m) => ({ id: m[1], name: m[2].trim(), words: `${m[2]} ${m[3]}`, unit: m[4] }));
+    const said = (w: string) => w.length >= 3 && new RegExp(`\\b${w}\\b`).test(asked.toLowerCase());
+    const named = catalog.filter((c) => c.words.toLowerCase().split(/[^a-z]+/).some(said)).slice(0, 5);
+    const picked = named.length ? named : catalog.filter((c) => c.id === "ing_garlic" || c.id === "ing_olive_oil");
+    const amount = (unit: string) => (unit === "count" ? 2 : unit === "ml" ? 15 : 150);
+    const title = asked.replace(/^(i (want|feel like|fancy)|something|some|a|an)\s+/i, "").slice(0, 60) || "Bao's weeknight dinner";
+    return {
+      isRecipe: asked.length > 0,
+      title: title.charAt(0).toUpperCase() + title.slice(1),
+      baseServings: 2,
+      minutes: 25,
+      ingredients: [
+        ...picked.map((c) => ({ ingredientId: c.id, name: c.name, qty: amount(c.unit), unit: c.unit })),
+        { ingredientId: null, name: "Fresh herbs", qty: 10, unit: "g" },
+      ],
+      steps: ["Get everything ready and heat a pan over medium heat.", "Cook the main ingredients until golden, about 8 minutes.", "Add the rest and cook until hot through.", "Taste, season and serve. (fake mode)"],
+    };
+  },
   // Picks the first feasible set id that appears in the prompt, as a real choice must.
   planner: ({ text }) => {
     const setId = firstMatch(text, /set_[0-9a-z_]+/) ?? "set_none";

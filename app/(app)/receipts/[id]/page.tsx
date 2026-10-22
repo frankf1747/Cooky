@@ -9,7 +9,7 @@ import { getForReview, type PlanLabels, type ReviewShelf } from "@/modules/recei
 import { PlanDiffPanel } from "./PlanDiffPanel";
 import { ReviewForm } from "./ReviewForm";
 import { Page } from "@/ui/Page";
-import { btnPrimary, btnText } from "@/ui/styles";
+import { alert, btnPrimary, btnText, note } from "@/ui/styles";
 
 export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">) {
   const { id } = await props.params;
@@ -31,8 +31,10 @@ export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">)
   return (
     <Page
       back={{ href: "/receipts/new", label: "Scan another receipt" }}
+      kicker="Step 3 · Stock"
+      tone="scan"
       title={heading}
-      description={receipt.status === "parsed" ? "Check the lines below, then add them to your fridge. Nothing changes until you do." : undefined}
+      description={receipt.status === "parsed" ? "Check the lines, then add them to your fridge; nothing changes until you do." : undefined}
     >
 
       {receipt.planDiff && plan && <PlanDiffPanel diff={receipt.planDiff} plan={plan} lines={receipt.lines} />}
@@ -42,25 +44,25 @@ export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">)
       )}
 
       {receipt.status === "failed" && (
-        <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
-          <p className="text-red-800 dark:text-red-200">
+        <div role="alert" className={`mt-6 ${alert} !p-5`}>
+          <p className="text-[15px]">
             Cooky couldn&apos;t read this receipt. Nothing was added to your fridge, and Cooky doesn&apos;t keep receipt photos, so scan it again to retry.
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-4">
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
             <Link href="/receipts/new" className={btnPrimary}>Scan again</Link>
-            <Link href="/fridge" className={`text-sm ${btnText}`}>Add groceries by hand</Link>
+            <Link href="/fridge" className={btnText}>Add groceries by hand</Link>
           </div>
         </div>
       )}
 
       {receipt.status === "parsing" && (
-        <p className="mt-6 text-zinc-600 dark:text-zinc-400" aria-live="polite">
+        <p className={`mt-6 ${note} text-[15px]`} aria-live="polite">
           Cooky is still reading this receipt. <Link href={`/receipts/${receipt.receiptId}`} className={btnText}>Refresh</Link> in a moment.
         </p>
       )}
 
       {receipt.status === "confirmed" && (
-        <p className="mt-6 text-zinc-600 dark:text-zinc-400">
+        <p className={`mt-6 ${note} text-[15px]`}>
           These items are already in your fridge. <Link href="/fridge" className={btnText}>Open the fridge</Link>
         </p>
       )}

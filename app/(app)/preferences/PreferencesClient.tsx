@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { Preference } from "@spec/contract";
-import { alert, btnPrimary as btn, btnSecondarySm as btnGhost, btnText, field as input } from "@/ui/styles";
+import { EmptyState } from "@/ui/Page";
+import { alert, btnPrimary as btn, btnSecondary, btnSecondarySm as btnGhost, field as input, h3, label, panel, rows, tagNeutral, tagStrong } from "@/ui/styles";
 
 const CATEGORIES = ["flavor", "texture", "ingredient", "effort", "cleanup", "cuisine"] as const;
 
@@ -67,27 +68,28 @@ export function PreferencesClient({ initial, titles }: { initial: Preference[]; 
   return (
     <>
       {items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-zinc-300 bg-surface p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
-          <p>No preferences yet.</p>
-          <p className="mt-1">
-            After you cook, tell Cooky how it was (for example &ldquo;a bit dry&rdquo;) and choose <span className="font-medium">Always</span> to keep it.
-            Or add one below. <Link href="/recipes" className={btnText}>Find something to cook</Link>.
-          </p>
-        </div>
+        <EmptyState
+          title="No preferences yet"
+          mood="welcoming"
+          action={<Link href="/recipes" className={btnSecondary}>Find something to cook</Link>}
+        >
+          After you cook, tell Bao how it was (&ldquo;a bit dry&rdquo;, say) and choose Always to keep it. Or add one below.
+        </EmptyState>
       ) : (
-        <ul className="divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-surface dark:divide-zinc-800 dark:border-zinc-800">
+        <ul className={rows}>
           {items.map((p) => (
-            <li key={p.id} className={`p-4 ${p.active ? "" : "opacity-60"}`}>
+            <li key={p.id} className="p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs uppercase tracking-wide text-zinc-500">
-                    {p.kind === "hard" ? "Never" : "Prefer"} · {p.category}
-                    {p.scopeRecipeId && ` · only in ${titles[p.scopeRecipeId] ?? "one dish"}`}
-                    {!p.active && " · paused"}
+                <div className={`min-w-0 flex-1 ${p.active ? "" : "opacity-60"}`}>
+                  <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
+                    <span className={p.kind === "hard" ? tagStrong : tagNeutral}>{p.kind === "hard" ? "Never" : "Prefer"}</span>
+                    <span className="capitalize">{p.category}</span>
+                    {p.scopeRecipeId && <span>· only in {titles[p.scopeRecipeId] ?? "one dish"}</span>}
+                    {!p.active && <span className="font-medium">· Paused</span>}
                   </p>
                   {editing?.id === p.id ? (
                     <form
-                      className="mt-1 flex gap-2"
+                      className="mt-2 flex flex-col gap-2 sm:flex-row"
                       onSubmit={(e) => {
                         e.preventDefault();
                         if (editing.value.trim()) patch(p, { value: editing.value.trim() });
@@ -95,11 +97,13 @@ export function PreferencesClient({ initial, titles }: { initial: Preference[]; 
                     >
                       <input className={`${input} min-w-0 flex-1`} value={editing.value} autoFocus disabled={busy === p.id}
                         onChange={(e) => setEditing({ id: p.id, value: e.target.value })} aria-label="Preference wording" />
-                      <button className={btnGhost} disabled={busy === p.id || !editing.value.trim()}>Save</button>
-                      <button type="button" className={btnGhost} onClick={() => setEditing(null)} disabled={busy === p.id}>Cancel</button>
+                      <div className="flex gap-2">
+                        <button className={`flex-1 sm:flex-none ${btnGhost}`} disabled={busy === p.id || !editing.value.trim()}>Save</button>
+                        <button type="button" className={`flex-1 sm:flex-none ${btnGhost}`} onClick={() => setEditing(null)} disabled={busy === p.id}>Cancel</button>
+                      </div>
                     </form>
                   ) : (
-                    <p className="mt-1 font-medium">{p.value}</p>
+                    <p className={`mt-2 ${h3}`}>{p.value}</p>
                   )}
                 </div>
                 {editing?.id !== p.id && (
@@ -110,39 +114,39 @@ export function PreferencesClient({ initial, titles }: { initial: Preference[]; 
                   </div>
                 )}
               </div>
-              {error?.id === p.id && <p role="alert" className={`mt-2 ${alert}`}>{error.message}</p>}
+              {error?.id === p.id && <p role="alert" className={`mt-3 ${alert}`}>{error.message}</p>}
             </li>
           ))}
         </ul>
       )}
 
-      <form onSubmit={add} className="mt-8 rounded-2xl border border-zinc-200 bg-surface p-4 dark:border-zinc-800">
-        <h2 className="font-semibold">Add a preference</h2>
-        <div className="mt-3 grid gap-3 sm:grid-cols-[auto_auto_1fr]">
-          <label className="flex flex-col gap-1 text-sm">
+      <form onSubmit={add} className={`mt-10 p-4 sm:p-6 ${panel}`}>
+        <h2 className={h3}>Add a preference</h2>
+        <div className="mt-4 grid gap-4 sm:grid-cols-[auto_auto_1fr]">
+          <label className={label}>
             Type
             <select className={input} value={draft.kind} disabled={busy === "new"} onChange={(e) => setDraft({ ...draft, kind: e.target.value as "soft" | "hard" })}>
               <option value="soft">Prefer</option>
               <option value="hard">Never</option>
             </select>
           </label>
-          <label className="flex flex-col gap-1 text-sm">
+          <label className={label}>
             About
             <select className={input} value={draft.category} disabled={busy === "new"} onChange={(e) => setDraft({ ...draft, category: e.target.value as (typeof CATEGORIES)[number] })}>
               {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </label>
-          <label className="flex flex-col gap-1 text-sm">
+          <label className={label}>
             Preference
             <input className={input} value={draft.value} disabled={busy === "new"} maxLength={60}
               placeholder={draft.kind === "hard" ? "e.g. cilantro" : "e.g. saucier dishes"} onChange={(e) => setDraft({ ...draft, value: e.target.value })} />
           </label>
         </div>
         {draft.kind === "hard" && draft.category === "ingredient" && (
-          <p className="mt-2 text-xs text-zinc-500">Use the ingredient&apos;s name as it appears in recipes; plans will leave out every dish that uses it.</p>
+          <p className="mt-3 text-sm text-muted">Use the ingredient&apos;s name as it appears in recipes; plans will leave out every dish that uses it.</p>
         )}
-        {error?.id === "new" && <p role="alert" className={`mt-2 ${alert}`}>{error.message}</p>}
-        <button className={`mt-3 w-full sm:w-auto ${btn}`} disabled={busy === "new" || !draft.value.trim()}>{busy === "new" ? "Adding…" : "Add"}</button>
+        {error?.id === "new" && <p role="alert" className={`mt-3 ${alert}`}>{error.message}</p>}
+        <button className={`mt-5 w-full sm:w-auto ${btn}`} disabled={busy === "new" || !draft.value.trim()}>{busy === "new" ? "Adding…" : "Add preference"}</button>
       </form>
     </>
   );

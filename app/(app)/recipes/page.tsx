@@ -1,20 +1,23 @@
-// Owner: Recipes & Cook. The recipe library (RCP3): search, quick filters, and cards with time,
-// cost per serving and the fridge item each dish would use.
+// Owner: Recipes & Cook. The recipe library (RCP3): search, quick filters, and cards where the
+// food leads: the dish in the bun's dome, its name, time and cost per serving, and the fridge
+// item it would use up. Colour on a card means something (tomato = use soon), never decoration.
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getSessionUser } from "@/platform/auth";
+import { MagnifyingGlass, Plus } from "@phosphor-icons/react/ssr";
+import { getSessionUser, isPro } from "@/platform/auth";
 import { formatUsd } from "@/platform/money";
 import * as recipes from "@/modules/recipes";
 import type { LibraryCard } from "@/modules/recipes";
 import { RecipeImage } from "./RecipeImage";
-import { Page } from "@/ui/Page";
-import { BaoSays } from "@/ui/Bao";
-import { btnPrimary, btnText, chip, chipOff, chipOn, chipRow, field, tag, tileFor, tiles } from "@/ui/styles";
+import { EmptyState, Page } from "@/ui/Page";
+import { PlanPickButton, PlanPicksBar } from "@/ui/PlanPick";
+import { btnPrimary, btnSecondary, chip, chipOff, chipOn, chipRow, field, h3, tag, tagNeutral, tagPast, tagPro } from "@/ui/styles";
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
 /** Quick filters, each a plain test on a card. */
 const CHIPS: { key: string; label: string; test: (r: LibraryCard) => boolean }[] = [
+  { key: "mine", label: "Your recipes", test: (r) => r.custom },
   { key: "fridge", label: "Uses your fridge", test: (r) => r.usesFridge !== null },
   { key: "cooknow", label: "Cook now", test: (r) => r.coverage >= 1 },
   { key: "quick", label: "20 min or less", test: (r) => r.minutes <= 20 },
@@ -27,9 +30,9 @@ const CHIPS: { key: string; label: string; test: (r: LibraryCard) => boolean }[]
 
 function daysLabel(d: number | null): string {
   if (d === null) return "";
-  if (d < 0) return " (past its date)";
-  if (d === 0) return " (today)";
-  return ` (${d} day${d === 1 ? "" : "s"})`;
+  if (d < 0) return ", past its date";
+  if (d === 0) return ", today";
+  return `, ${d} day${d === 1 ? "" : "s"}`;
 }
 
 export default async function RecipesPage(props: PageProps<"/recipes">) {
@@ -39,7 +42,7 @@ export default async function RecipesPage(props: PageProps<"/recipes">) {
   const q = one(sp.q).trim();
   const active = new Set(one(sp.chips).split(",").filter((k) => CHIPS.some((c) => c.key === k)));
 
-  const cards = await recipes.libraryCards(user.id);
+  const [cards, pro] = await Promise.all([recipes.libraryCards(user.id), isPro(user.id)]);
   const matched = q ? new Set((await recipes.list(user.id, { q })).items.map((r) => r.id)) : null;
   const shown = cards.filter((r) => (!matched || matched.has(r.id)) && CHIPS.every((c) => !active.has(c.key) || c.test(r)));
 
@@ -56,62 +59,89 @@ export default async function RecipesPage(props: PageProps<"/recipes">) {
 
   return (
     <Page
-      title="Recipes"
-      description={`${cards.length} dinners for one or two. Tap one to cook it, or put it in a plan.`}
+      kicker="The library"
+      tone="cook"
+      title="What's for dinner?"
+      description={`${cards.length} dinners for one or two. Tap + to put one in your plan.`}
       width="wide"
-      actions={<Link href="/plan" className={btnPrimary}>Plan dinners</Link>}
+      actions={
+        <Link href="/recipes/import" className={btnSecondary}>
+          <Plus size={18} weight="bold" aria-hidden />
+          Add a recipe
+          {!pro && <span className={`${tagPro} ml-0.5`}>Pro</span>}
+        </Link>
+      }
     >
-      <form method="get">
+      <PlanPicksBar />
+      <form method="get" role="search" className="relative max-w-xl">
         {active.size > 0 && <input type="hidden" name="chips" value={[...active].join(",")} />}
         <label className="sr-only" htmlFor="recipe-search">Search recipes</label>
+        <MagnifyingGlass size={20} aria-hidden className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-subtle" />
         <input
           id="recipe-search"
           name="q"
           type="search"
           defaultValue={q}
-          placeholder={`Search ${cards.length} recipes, ingredients, cuisines`}
-          className={field}
+          placeholder="Search dishes, ingredients, cuisines"
+          className={`${field} !rounded-full !pl-11`}
         />
       </form>
 
-      <nav aria-label="Quick filters" className={`mt-3 ${chipRow}`}>
+      <nav aria-label="Quick filters" className={`mt-4 ${chipRow}`}>
         {CHIPS.map((c) => (
           <Link key={c.key} href={href(c.key)} aria-pressed={active.has(c.key)} className={`${chip} ${active.has(c.key) ? chipOn : chipOff}`}>
             {c.label}
           </Link>
         ))}
       </nav>
-      <p className="mt-3 text-xs text-zinc-500">{shown.length} of {cards.length} recipes</p>
+      <p className="mt-4 text-sm text-muted" aria-live="polite">
+        {shown.length === cards.length ? `All ${cards.length} recipes` : `${shown.length} of ${cards.length} recipes`}
+      </p>
 
       {shown.length === 0 ? (
-        <BaoSays mood="thinking" pose="hold" prop="spoon" className="mt-6">
-          {cards.length === 0 ? (
-            <>The recipe library is empty. Load the seed data with <code>npm run seed</code>.</>
-          ) : active.has("fridge") || active.has("cooknow") ? (
-            <>Nothing in the fridge matches yet. <Link className={btnText} href="/fridge">Stock the fridge</Link> or <Link className={btnText} href="/recipes">clear the filters</Link> and I&apos;ll look again.</>
-          ) : (
-            <>Nothing by that name. I checked twice. <Link className={btnText} href="/recipes">Clear the filters</Link>.</>
-          )}
-        </BaoSays>
+        cards.length > 0 && active.has("mine") && !cards.some((c) => c.custom) ? (
+          <EmptyState
+            className="mt-6"
+            mood="encouraging"
+            pose="hold"
+            prop="spoon"
+            title="No recipes of your own yet"
+            action={<><Link className={btnPrimary} href="/recipes/import">Add a recipe</Link><Link className={btnSecondary} href="/recipes">Clear the filters</Link></>}
+          >
+            Tell me what you feel like eating and I&apos;ll write it up for your library.
+          </EmptyState>
+        ) : (
+          <EmptyState
+            className="mt-6"
+            mood={cards.length === 0 ? "confused" : "thinking"}
+            title={cards.length === 0 ? "The library is empty" : active.has("fridge") || active.has("cooknow") ? "Nothing in the fridge fits yet" : "Nothing by that name"}
+            action={cards.length === 0 ? undefined : active.has("fridge") || active.has("cooknow") ? (
+              <><Link className={btnPrimary} href="/fridge">Stock the fridge</Link><Link className={btnSecondary} href="/recipes">Clear the filters</Link></>
+            ) : (
+              <Link className={btnSecondary} href="/recipes">Clear the filters</Link>
+            )}
+          >
+            {cards.length === 0 ? <>Load the seed data with <code>npm run seed</code>.</> : "I checked twice. Try fewer filters or another word."}
+          </EmptyState>
+        )
       ) : (
-        <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+        <ul className="mt-5 grid grid-cols-2 gap-x-4 gap-y-9 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">
           {shown.map((r, i) => (
-            <li key={r.id} className={`flex flex-col rounded-2xl p-3 transition hover:-translate-y-0.5 ${tiles[tileFor(i)]}`}>
-              <Link href={`/recipes/${r.id}`} className="flex flex-1 flex-col">
-                <RecipeImage imageUrl={r.imageUrl} title={r.title} shape={i} />
-                <h2 className="mt-3 font-display text-lg font-semibold leading-tight tracking-tight">{r.title}</h2>
-                <p className="mt-1 flex flex-wrap gap-1.5 text-xs">
-                  <span className="rounded-full bg-surface/80 px-2 py-0.5">{r.minutes} min</span>
-                  {r.perServingCents !== null && <span className="rounded-full bg-surface/80 px-2 py-0.5">about {formatUsd(r.perServingCents)} each</span>}
+            <li key={r.id} className="rise-in relative" style={{ animationDelay: `${Math.min(i, 12) * 30}ms` }}>
+              <Link href={`/recipes/${r.id}`} className="group block">
+                <RecipeImage id={r.id} imageUrl={r.imageUrl} title={r.title} className="aspect-[4/3] w-full transition duration-300 group-hover:-translate-y-1" />
+                <h2 className={`mt-3 line-clamp-2 ${h3} !text-[17px] sm:!text-lg`}>{r.title}</h2>
+                <p className="mt-1 text-sm text-muted">
+                  {r.minutes} min{r.perServingCents !== null && <> · about {formatUsd(r.perServingCents)} a serving</>}
                 </p>
+                {r.custom && <p className={`mt-2 ${tagNeutral}`}>Yours</p>}
                 {r.usesFridge && (
-                  <p className={`mt-2 w-fit ${tag}`}>
-                    Uses your {r.usesFridge.name.toLowerCase()}
-                    {daysLabel(r.usesFridge.daysLeft)}
+                  <p className={`mt-2 ${r.usesFridge.daysLeft !== null && r.usesFridge.daysLeft < 0 ? tagPast : tag}`}>
+                    Uses your {r.usesFridge.name.toLowerCase()}{daysLabel(r.usesFridge.daysLeft)}
                   </p>
                 )}
               </Link>
-              <Link href={`/plan?recipes=${r.id}`} className={`mt-3 text-xs ${btnText}`}>Put it in a plan</Link>
+              <PlanPickButton dish={{ id: r.id, title: r.title }} className="absolute right-2 top-2" />
             </li>
           ))}
         </ul>

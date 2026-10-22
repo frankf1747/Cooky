@@ -23,6 +23,8 @@ export default async function ShopPage(props: PageProps<"/shop/[planId]">) {
   return (
     <Page
       back={{ href: `/plan/${planId}`, label: "Back to the plan" }}
+      kicker="Step 2 · Shop"
+      tone="shop"
       title="Shopping list"
       description={view.plan.meals.map((m) => m.title).join(" · ")}
     >

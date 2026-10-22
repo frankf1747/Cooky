@@ -1,14 +1,15 @@
 "use client";
 // Owner: Plan & Shop. Tick items in the store; each tick is saved on the plan so it follows you
 // across devices (PATCH /api/plans/{id}/checklist). A failed save puts the tick back and says so.
-// Bao keeps score in the sticky bar and cheers when the cart is full.
+// Bao keeps score in the sticky bar and hops when the cart is full.
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { Check } from "@phosphor-icons/react";
+import { ArrowRight, Check } from "@phosphor-icons/react";
 import type { ShoppingItem } from "@spec/contract";
 import { formatUsd } from "@/platform/money";
-import { Bao, BaoSays } from "@/ui/Bao";
-import { alert, btnText, panel } from "@/ui/styles";
+import { Bao } from "@/ui/Bao";
+import { EmptyState, Kicker } from "@/ui/Page";
+import { alert, btnSecondary, rows, tick, tickOff, tickOn, tones } from "@/ui/styles";
 import { formatQty } from "../../plan/ui";
 
 type Props = {
@@ -67,25 +68,31 @@ export function ShopList({ planId, aisles, initialChecked, covered, titles, tota
 
   if (items.length === 0) {
     return (
-      <BaoSays mood="proud" pose="hold" prop="basket" className="mt-6">
-        Nothing to buy. Your fridge and staples cover every meal. <Link href={`/plan/${planId}`} className={btnText}>Back to the plan</Link>
-      </BaoSays>
+      <EmptyState
+        mood="celebrating"
+        pose="hold"
+        prop="basket"
+        title="Nothing to buy"
+        action={<Link href={`/plan/${planId}`} className={btnSecondary}>Back to the plan</Link>}
+      >
+        Your fridge and staples cover every meal. Rare, and very satisfying.
+      </EmptyState>
     );
   }
 
   return (
     <>
-      <div className="sticky top-14 z-10 -mx-4 border-b border-zinc-200 bg-background/95 px-4 py-3 backdrop-blur sm:mx-0 sm:px-0 dark:border-zinc-800">
+      <div className="sticky top-14 z-10 -mx-4 border-b border-line bg-background/95 px-4 py-3 backdrop-blur-md sm:top-16 sm:mx-0 sm:px-0">
         <div className="flex items-center gap-3">
-          <Bao key={done ? "done" : "going"} mood={done ? "cheer" : "happy"} pose="hold" prop="basket" motion={done ? "wiggle" : "none"} size={40} className="shrink-0" />
+          <Bao key={done ? "done" : "going"} mood={done ? "celebrating" : "welcoming"} pose="hold" prop="basket" motion={done ? "hop" : "none"} size={44} className="shrink-0" />
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-3 text-sm">
-              <p><span className="font-display text-lg font-semibold">{inCart.length} of {items.length}</span> in the cart</p>
-              <p className="text-zinc-600 dark:text-zinc-400" aria-live="polite">
-                {done ? "All in. Bao approves." : <>About <span className="font-semibold text-foreground">{formatUsd(leftCents)}</span> to go{unknownLeft && ", plus unpriced items"}</>}
+              <p><span className="font-display text-xl font-semibold tabular-nums">{inCart.length} of {items.length}</span> <span className="text-muted">in the cart</span></p>
+              <p className="text-muted" aria-live="polite">
+                {done ? <span className="font-medium text-foreground">All in. Bao approves.</span> : <>About <span className="font-semibold text-foreground tabular-nums">{formatUsd(leftCents)}</span> to go{unknownLeft && ", plus unpriced items"}</>}
               </p>
             </div>
-            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Items in the cart">
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-sunken" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Items in the cart">
               <div className="h-full rounded-full bg-accent transition-[width] duration-300" style={{ width: `${progress}%` }} />
             </div>
           </div>
@@ -94,47 +101,62 @@ export function ShopList({ planId, aisles, initialChecked, covered, titles, tota
       {error && <p role="alert" className={`mt-3 ${alert}`}>{error}</p>}
 
       {aisles.map((a) => (
-        <div key={a.category} className="mt-6">
-          <h2 className="font-display text-base font-semibold tracking-tight">{AISLE_LABEL[a.category] ?? a.category}</h2>
-          <ul className={`mt-2 divide-y divide-zinc-200 dark:divide-zinc-800 ${panel}`}>
+        <section key={a.category} className="mt-8" aria-labelledby={`aisle-${a.category}`}>
+          <h2 id={`aisle-${a.category}`} className="flex items-center gap-2 text-[13px] font-medium text-muted">
+            <span aria-hidden className="h-2 w-2 rounded-full bg-crust" />
+            {AISLE_LABEL[a.category] ?? a.category}
+            <span className="tabular-nums">· {a.items.filter((i) => checked.includes(i.ingredientId)).length}/{a.items.length}</span>
+          </h2>
+          <ul className={`mt-2.5 ${rows}`}>
             {a.items.map((i) => {
               const on = checked.includes(i.ingredientId);
               const busy = saving.includes(i.ingredientId);
               return (
                 <li key={`${i.ingredientId}|${i.unit}`}>
-                  <label className={`flex cursor-pointer items-center gap-3 px-3 py-3 transition active:bg-zinc-50 dark:active:bg-zinc-800/50 ${busy ? "opacity-70" : ""}`}>
-                    <input type="checkbox" className="sr-only" checked={on} disabled={busy} onChange={(e) => toggle(i.ingredientId, e.target.checked)} />
-                    <span aria-hidden className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition ${on ? "tick-pop border-accent bg-accent text-on-accent" : "border-zinc-400 dark:border-zinc-600"}`}>
+                  <label className={`flex min-h-16 cursor-pointer items-center gap-3 px-4 py-3 transition active:bg-sunken/60 ${busy ? "opacity-70" : ""}`}>
+                    <input type="checkbox" className="peer sr-only" checked={on} disabled={busy} onChange={(e) => toggle(i.ingredientId, e.target.checked)} />
+                    <span aria-hidden className={`${tick} peer-focus-visible:ring-2 peer-focus-visible:ring-accent ${on ? tickOn : tickOff}`}>
                       {on && <Check size={16} weight="bold" />}
                     </span>
-                    <span className={`min-w-0 flex-1 transition ${on ? "text-zinc-500" : ""}`}>
-                      <span className="relative inline-block">
+                    <span className={`min-w-0 flex-1 transition ${on ? "text-subtle" : ""}`}>
+                      <span className="relative inline-block text-[15px] font-medium">
                         {i.name}
                         <span aria-hidden className="absolute left-0 top-1/2 h-[2px] w-full origin-left bg-current transition-transform duration-300" style={{ transform: on ? "scaleX(1)" : "scaleX(0)" }} />
                       </span>
-                      <span className="block text-xs text-zinc-500">for {i.forRecipeIds.map((r) => titles[r] ?? r).join(", ")}</span>
+                      <span className="block text-sm text-muted">for {i.forRecipeIds.map((r) => titles[r] ?? r).join(", ")}</span>
                     </span>
-                    <span className={`shrink-0 whitespace-nowrap text-right text-sm ${on ? "text-zinc-500" : ""}`}>
+                    <span className={`shrink-0 whitespace-nowrap text-right text-[15px] tabular-nums ${on ? "text-subtle" : ""}`}>
                       {i.packageSize !== null ? `${i.packages} × ${formatQty(i.packageSize, i.unit)}` : formatQty(i.buyQty, i.unit)}
-                      <span className="block text-xs text-zinc-500">{formatUsd(i.costCents)}</span>
+                      <span className="block text-sm text-muted">{formatUsd(i.costCents)}</span>
                     </span>
                   </label>
                 </li>
               );
             })}
           </ul>
-        </div>
+        </section>
       ))}
 
       {covered.length > 0 && (
-        <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-8 text-sm leading-relaxed text-muted">
           Already at home (fridge or staples): {covered.map((i) => i.name).join(", ")}.
         </p>
       )}
-      <p className="mt-4 text-xs text-zinc-500">
-        Prices are typical package prices checked on {priceAsOf}; taxes are not included. Plan total {formatUsd(totalCents)}. When you&apos;re home,{" "}
-        <Link href="/receipts/new" className={btnText}>scan the receipt</Link> and Bao stocks the fridge.
+      <p className="mt-4 text-sm leading-relaxed text-muted">
+        Prices are typical package prices checked on {priceAsOf}; taxes are not included. Plan total <span className="tabular-nums">{formatUsd(totalCents)}</span>.
       </p>
+
+      {/* the next step, as big as this one: home from the store, stock the fridge */}
+      <Link href={`/receipts/new?planId=${planId}`} className={`group mt-8 flex items-center gap-4 rounded-[24px] p-5 transition active:scale-[0.99] sm:p-6 ${tones.scan.tint}`}>
+        <span className="min-w-0 flex-1">
+          <Kicker tone="scan" className="!text-foreground/70">Step 3 · Stock</Kicker>
+          <span className="mt-2 block font-display text-2xl font-semibold leading-tight">Stock the fridge</span>
+          <span className="mt-1 block text-[15px] text-foreground/75">Home from the store? Scan the receipt: prices get logged and the food goes in.</span>
+        </span>
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface transition group-hover:translate-x-0.5">
+          <ArrowRight size={20} weight="bold" aria-hidden />
+        </span>
+      </Link>
     </>
   );
 }

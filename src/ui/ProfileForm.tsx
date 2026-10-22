@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import type { Profile } from "@spec/contract";
 import type { ProfileFormData } from "@/modules/account";
-import { btnPrimary, chip, chipOff, chipOn, field as input } from "./styles";
+import { alert, btnPrimary, btnText, chip, chipOff, chipOn, field as input, h2, label as labelClass, notice } from "./styles";
 
 const noSubscribe = () => () => {};
 
@@ -20,33 +20,50 @@ function errorText(status: number, body: { error?: string; code?: string }): str
   return "Cooky couldn't save your settings. Nothing changed; try again.";
 }
 
-function Chips({ label, hint, all, picked, onChange, disabled }: {
-  label: string; hint: string; all: Ingredient[]; picked: string[]; onChange: (ids: string[]) => void; disabled: boolean;
+/** How many foods show before "Show all", so the picker is a short list and not a wall. */
+const FOODS_SHOWN = 12;
+
+function Chips({ title, hint, all, picked, onChange, disabled }: {
+  title: string; hint: string; all: Ingredient[]; picked: string[]; onChange: (ids: string[]) => void; disabled: boolean;
 }) {
   const [q, setQ] = useState("");
-  const shown = all.filter((i) => picked.includes(i.id) || i.name.toLowerCase().includes(q.trim().toLowerCase()));
+  const [showAll, setShowAll] = useState(false);
+  const query = q.trim().toLowerCase();
+  // Picked foods first, then the rest; without a search, only the first few until "Show all".
+  const ordered = [...all].sort((a, b) => Number(picked.includes(b.id)) - Number(picked.includes(a.id)));
+  const matching = ordered.filter((i) => picked.includes(i.id) || i.name.toLowerCase().includes(query));
+  const shown = query || showAll ? matching : matching.slice(0, Math.max(FOODS_SHOWN, picked.length));
   return (
-    <fieldset className="flex flex-col gap-2 text-sm">
-      <legend className="mb-1 font-medium">{label} <span className="font-normal text-zinc-500">{hint}</span></legend>
-      {all.length > 12 && (
-        <input type="search" aria-label={`Search ${label.toLowerCase()}`} placeholder="Search foods" value={q} onChange={(e) => setQ(e.target.value)} className={`${input} max-w-xs`} />
-      )}
+    <fieldset className="border-t border-line pt-8">
+      <legend className="sr-only">{title}</legend>
+      <h2 className={h2} aria-hidden>{title}</h2>
+      <p className="mt-1.5 text-[15px] text-muted">{hint}{picked.length > 0 && <> · <span className="font-medium text-foreground">{picked.length} picked</span></>}</p>
       {all.length === 0 ? (
-        <p className="text-zinc-500">The ingredient catalog is empty, so there is nothing to pick yet.</p>
+        <p className="mt-4 text-[15px] text-muted">The ingredient catalog is empty, so there is nothing to pick yet.</p>
       ) : (
-        <div className="flex flex-wrap gap-2">
-          {shown.map((i) => {
-            const on = picked.includes(i.id);
-            return (
-              <label key={i.id} className={`relative cursor-pointer ${chip} ${on ? chipOn : chipOff}`}>
-                <input type="checkbox" className="sr-only" checked={on} disabled={disabled}
-                  onChange={(e) => onChange(e.target.checked ? [...picked, i.id] : picked.filter((x) => x !== i.id))} />
-                {i.name}
-              </label>
-            );
-          })}
-          {shown.length === 0 && <p className="text-zinc-500">No food matches “{q}”.</p>}
-        </div>
+        <>
+          {all.length > FOODS_SHOWN && (
+            <input type="search" aria-label={`Search ${title.toLowerCase()}`} placeholder="Search foods" value={q} onChange={(e) => setQ(e.target.value)} className={`${input} mt-4 max-w-xs`} />
+          )}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {shown.map((i) => {
+              const on = picked.includes(i.id);
+              return (
+                <label key={i.id} className={`relative cursor-pointer ${chip} ${on ? chipOn : chipOff}`}>
+                  <input type="checkbox" className="sr-only" checked={on} disabled={disabled}
+                    onChange={(e) => onChange(e.target.checked ? [...picked, i.id] : picked.filter((x) => x !== i.id))} />
+                  {i.name}
+                </label>
+              );
+            })}
+            {shown.length === 0 && <p className="text-[15px] text-muted">No food matches “{q}”.</p>}
+          </div>
+          {!query && matching.length > FOODS_SHOWN && (
+            <button type="button" onClick={() => setShowAll((v) => !v)} className={`mt-3 text-[15px] ${btnText}`}>
+              {showAll ? "Show fewer" : `Show all ${all.length} foods`}
+            </button>
+          )}
+        </>
       )}
     </fieldset>
   );
@@ -109,7 +126,7 @@ export function ProfileForm({ data, limits, mode }: { data: ProfileFormData; lim
       const res = await fetch("/api/profile", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) return setError(errorText(res.status, await res.json().catch(() => ({}))));
       if (mode === "onboarding") {
-        router.push("/plan");
+        router.push("/fridge");
         router.refresh();
       } else {
         setSaved(true);
@@ -123,42 +140,49 @@ export function ProfileForm({ data, limits, mode }: { data: ProfileFormData; lim
   }
 
   return (
-    <form onSubmit={submit} className="mt-6 flex flex-col gap-6">
-      <div className="grid gap-4 sm:grid-cols-3">
-        <label className="flex flex-col gap-1 text-sm">
-          People you cook for
-          <select className={input} value={household} disabled={busy} onChange={(e) => edit(setHousehold)(Number(e.target.value))}>
-            {Array.from({ length: limits.servingsMax - limits.servingsMin + 1 }, (_, i) => limits.servingsMin + i).map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Weekly grocery budget ($)
-          <input className={input} inputMode="decimal" value={budget} disabled={busy} onChange={(e) => edit(setBudget)(e.target.value)} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Most minutes per meal
-          <input className={input} inputMode="numeric" value={minutes} disabled={busy} onChange={(e) => edit(setMinutes)(e.target.value)} />
-        </label>
-      </div>
+    <form onSubmit={submit} className="flex flex-col gap-10">
+      <fieldset>
+        <legend className="sr-only">Your household</legend>
+        <h2 className={h2} aria-hidden>Your household</h2>
+        <p className="mt-1.5 text-[15px] text-muted">Every new plan starts from these. A plan can still change them.</p>
+        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          <label className={labelClass}>
+            People you cook for
+            <select className={input} value={household} disabled={busy} onChange={(e) => edit(setHousehold)(Number(e.target.value))}>
+              {Array.from({ length: limits.servingsMax - limits.servingsMin + 1 }, (_, i) => limits.servingsMin + i).map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </label>
+          <label className={labelClass}>
+            Weekly grocery budget ($)
+            <input className={input} inputMode="decimal" value={budget} disabled={busy} onChange={(e) => edit(setBudget)(e.target.value)} />
+          </label>
+          <label className={labelClass}>
+            Most minutes per meal
+            <input className={input} inputMode="numeric" value={minutes} disabled={busy} onChange={(e) => edit(setMinutes)(e.target.value)} />
+          </label>
+        </div>
+      </fieldset>
 
-      <Chips label="Foods you never eat" hint="(never in a plan)" all={data.ingredients} picked={excluded} onChange={edit(setExcluded)} disabled={busy} />
-      <Chips label="Staples you always have" hint="(never on a shopping list)" all={data.ingredients} picked={staples} onChange={edit(setStaples)} disabled={busy} />
+      <Chips title="Foods you never eat" hint="Never in a plan" all={data.ingredients} picked={excluded} onChange={edit(setExcluded)} disabled={busy} />
+      <Chips title="Staples you always have" hint="Never on a shopping list" all={data.ingredients} picked={staples} onChange={edit(setStaples)} disabled={busy} />
 
-      <label className="flex max-w-xs flex-col gap-1 text-sm">
-        Your timezone <span className="text-zinc-500">(for “today” and use-by dates)</span>
-        <select className={input} value={timezone} disabled={busy} onChange={(e) => edit(setTimezone)(e.target.value)}>
+      <fieldset className="border-t border-line pt-8">
+        <legend className="sr-only">Your timezone</legend>
+        <h2 className={h2} aria-hidden>Your timezone</h2>
+        <p className="mt-1.5 text-[15px] text-muted">For &ldquo;today&rdquo; and use-by dates.</p>
+        <select aria-label="Your timezone" className={`${input} mt-4 max-w-xs`} value={timezone} disabled={busy} onChange={(e) => edit(setTimezone)(e.target.value)}>
           {zones.map((z) => <option key={z} value={z}>{z.replaceAll("_", " ")}</option>)}
         </select>
-      </label>
+      </fieldset>
 
-      <div className="flex flex-col items-stretch gap-2 sm:items-start">
+      <div className="flex flex-col items-stretch gap-3 border-t border-line pt-8 sm:items-start">
         <button type="submit" disabled={busy} className={btnPrimary}>
-          {busy ? "Saving…" : error ? "Try again" : mode === "onboarding" ? "Save and plan my week" : "Save settings"}
+          {busy ? "Saving…" : error ? "Try again" : mode === "onboarding" ? "Save and open my fridge" : "Save settings"}
         </button>
-        {error && <p role="alert" className="text-sm text-red-700 dark:text-red-300">{error}</p>}
-        {saved && <p role="status" className="text-sm text-emerald-700 dark:text-emerald-300">Saved. Your next plan uses these settings.</p>}
+        {error && <p role="alert" className={alert}>{error}</p>}
+        {saved && <p role="status" className={notice}>Saved. Your next plan uses these settings.</p>}
       </div>
     </form>
   );

@@ -4,7 +4,7 @@ import { ImportRequest } from "@spec/contract";
 import { route } from "@/platform/handler";
 import * as recipes from "@/modules/recipes";
 
-// POST /api/recipes/import · v2 · SPEC RCP4-RCP7
+// POST /api/recipes/import · v1 for text (describe a dish, paste a recipe; Pro), v2 for links and photos · SPEC RCP4-RCP7
 export const POST = route({
   auth: "pro",
   body: ImportRequest,

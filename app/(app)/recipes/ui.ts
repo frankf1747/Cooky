@@ -42,3 +42,24 @@ export function cookErrorMessage(status: number, body: ApiErrorBody): { message:
       return { message: "Something went wrong on our side. Nothing was changed. Please try again.", retry: true };
   }
 }
+
+/** One honest sentence for each error adding a recipe can return (SPEC §8, RCP5–RCP7). */
+export function importErrorMessage(status: number, body: ApiErrorBody): { message: string; retry: boolean; upgrade?: boolean } {
+  switch (body.code) {
+    case "not_pro":
+      return { message: "Writing recipes is a Cooky Pro feature.", retry: false, upgrade: true };
+    case "quota_exhausted":
+      return { message: `You've added today's recipes${body.resetAt ? `; more from ${new Date(body.resetAt).toLocaleString()}` : ""}.`, retry: false };
+    case "ai_paused":
+      return { message: "Bao is resting for today because the team's AI budget is used up. The library still works.", retry: false };
+    case "ai_refused":
+      return { message: "Bao won't write that one. Try describing a dish you'd like to cook.", retry: false };
+    case "not_a_recipe":
+      return { message: "That doesn't read as a dish to cook. Try something like \"a cozy soup with white beans\".", retry: false };
+    case "invalid_input":
+      return { message: body.error && body.error !== "Invalid input" ? body.error : "Something in the recipe isn't valid yet. Check the flagged rows.", retry: false };
+    default:
+      if (status === 401) return { message: "Your session ended. Sign in again.", retry: false };
+      return { message: "Bao couldn't finish that. Nothing was saved. Try again.", retry: true };
+  }
+}

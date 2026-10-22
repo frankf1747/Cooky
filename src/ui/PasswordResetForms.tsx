@@ -7,9 +7,9 @@ import { useState } from "react";
 import { browserClient } from "@/platform/db-browser";
 import { AuthShell } from "./AuthShell";
 import { PASSWORD_MIN_CHARS, passwordProblem } from "./password";
-import { alert, btnPrimary, btnText, field as input } from "./styles";
+import { alert, btnPrimary, btnText, field as input, label, notice } from "./styles";
 
-const button = `mt-2 ${btnPrimary}`;
+const button = `mt-2 w-full ${btnPrimary}`;
 
 export function ForgotPasswordForm({ expired }: { expired: boolean }) {
   const [email, setEmail] = useState("");
@@ -44,10 +44,10 @@ export function ForgotPasswordForm({ expired }: { expired: boolean }) {
     >
       {expired && <p role="alert" className={`mb-4 ${alert}`}>That reset link has expired or was already used. Ask for a new one.</p>}
       {sent ? (
-        <p role="status" className="rounded-xl bg-accent-soft p-3 text-sm">If an account exists for {email}, Cooky sent it a link to set a new password. Check your email.</p>
+        <p role="status" className={notice}>If an account exists for {email}, Cooky sent it a link to set a new password. Check your email.</p>
       ) : (
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1.5 text-sm font-medium">
+        <form onSubmit={submit} className="flex flex-col gap-5">
+          <label className={label}>
             Email
             <input className={input} type="email" required autoComplete="email" value={email} disabled={busy} onChange={(e) => setEmail(e.target.value)} />
           </label>
@@ -95,12 +95,12 @@ export function ResetPasswordForm({ email }: { email: string | null }) {
 
   return (
     <AuthShell title="Set a new password" lead={`For ${email}`}>
-      <form onSubmit={submit} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1.5 text-sm font-medium">
-          New password <span className="font-normal text-zinc-500">(at least {PASSWORD_MIN_CHARS} characters)</span>
+      <form onSubmit={submit} className="flex flex-col gap-5">
+        <label className={label}>
+          <span>New password <span className="font-normal text-subtle">(at least {PASSWORD_MIN_CHARS} characters)</span></span>
           <input className={input} type="password" autoComplete="new-password" required minLength={PASSWORD_MIN_CHARS} value={next} disabled={busy} onChange={(e) => setNext(e.target.value)} />
         </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium">
+        <label className={label}>
           New password again
           <input className={input} type="password" autoComplete="new-password" required value={confirm} disabled={busy} onChange={(e) => setConfirm(e.target.value)} />
         </label>
