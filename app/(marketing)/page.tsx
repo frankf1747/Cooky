@@ -9,7 +9,7 @@ import { getSessionUser } from "@/platform/auth";
 import { Wordmark } from "@/ui/AppNav";
 import { DishArt } from "@/ui/DishArt";
 import { Kicker } from "@/ui/Page";
-import { btnPrimary, btnSecondary, chipRow, h2, tones, type Tone } from "@/ui/styles";
+import { btnPrimary, btnSecondary, h2, tones, type Tone } from "@/ui/styles";
 import { FridgeDemo } from "./FridgeDemo";
 
 /** The week, in the order and words of the app's own tabs. */
@@ -133,7 +133,8 @@ export default async function Home() {
           <Kicker tone="cook">The library</Kicker>
           <h2 className={`${h2} mt-3 max-w-md sm:!text-4xl`}>Dishes written for weeknights</h2>
         </div>
-        <ul className={`mx-auto mt-8 max-w-6xl lg:grid lg:grid-cols-6 lg:gap-6 lg:px-8 ${chipRow} !gap-4 sm:!px-6`}>
+        {/* a row that scrolls sideways on phones and sits in the page's column on wide screens */}
+        <ul className="scroll-row mx-auto mt-8 flex max-w-6xl gap-4 overflow-x-auto px-4 sm:px-6 lg:grid lg:grid-cols-6 lg:gap-6 lg:overflow-visible lg:px-8">
           {DISHES.map(([id, title]) => (
             <li key={id} className="w-36 shrink-0 lg:w-auto">
               <DishArt id={id} title={title} frame="plate" className="aspect-square w-full rounded-full" />
