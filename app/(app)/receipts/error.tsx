@@ -1,6 +1,7 @@
 "use client";
 // Owner: Receipts. A receipt page failed to load: say so and offer a retry (never made-up lines).
 import { useEffect, useState } from "react";
+import { btnPrimary } from "@/ui/styles";
 
 export default function ReceiptsError({ error, retry }: { error: unknown; retry: () => void }) {
   const [retrying, setRetrying] = useState(false);
@@ -15,7 +16,7 @@ export default function ReceiptsError({ error, retry }: { error: unknown; retry:
           setRetrying(true);
           retry();
         }}
-        className="mt-4 rounded-md bg-zinc-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+        className={`mt-4 ${btnPrimary}`}
       >
         {retrying ? "Retrying…" : "Try again"}
       </button>

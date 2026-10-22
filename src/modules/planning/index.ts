@@ -7,13 +7,15 @@ import targets from "@spec/targets.json";
 import { runAi } from "@/platform/ai";
 import { DEFAULT_TIMEZONE, localDate } from "@/platform/dates";
 import { reader, writer } from "@/platform/db";
-import { ApiError, badRequest, notFound, notImplemented, unprocessable } from "@/platform/errors";
-import { loadPlanningData } from "./data";
-import { findFeasibleSets, type RelaxHint } from "./feasible";
+import { ApiError, badRequest, conflict, notFound, unprocessable } from "@/platform/errors";
+import { log } from "@/platform/log";
+import * as preferences from "@/modules/preferences";
+import { loadPlanningData, type PlanningData } from "./data";
+import { findFeasibleSets, type DroppedPick, type FeasibleSet, type RelaxHint } from "./feasible";
 import { optionalExtras, pastUseBy, type PastUseBy } from "./notes";
 import { PLANNER_SYSTEM, expiringSoon, plannerContent, validateChoice } from "./planner";
 import { buildShoppingList } from "./shopping";
-import { findByKey, insertDraft, listSummaries, markSaved, readPlan } from "./store";
+import { findByKey, insertDraft, insertNextVersion, listSummaries, markSaved, readCurrent, readPlan, writeChecklist } from "./store";
 
 const DROP_REASON: Partial<Record<RelaxHint, string>> = {
   maxMinutes: "it takes longer than your max minutes",
@@ -23,33 +25,20 @@ const DROP_REASON: Partial<Record<RelaxHint, string>> = {
   preferences: "it goes against one of your confirmed preferences",
 };
 
-/** PLN1–PLN6: code finds and prices feasible sets, the planner picks one, the draft is stored. */
-export async function createPlan(userId: string, input: z.infer<typeof PlanCreate>, requestId: string): Promise<{ plan: PlanDraft; run: RunInfo }> {
-  const db = await reader();
+type PlanRequest = Pick<PlanCreate, "servings" | "budgetCents" | "maxMinutes" | "wishes">;
 
-  // PLN1: a repeat with the same key returns the original plan and costs nothing.
-  const earlier = await findByKey(db, userId, input.idempotencyKey);
-  if (earlier) return { plan: earlier.plan, run: { runId: earlier.runId ?? "none", terminated: "done", latencyMs: 0, costUsd: 0 } };
-
-  const data = await loadPlanningData(db, userId);
-  const mustUse = input.mustUseItemIds ?? [];
-  if (mustUse.some((id) => !data.fridge.some((f) => f.id === id))) throw notFound();
-
-  // Picked recipes (step 3): visible to this user, and no more of them than meals.
-  const picks = [...new Set(input.mustIncludeRecipeIds ?? [])];
-  if (picks.some((id) => !data.recipes.some((r) => r.id === id))) throw notFound();
-  if (picks.length > input.meals) throw badRequest("invalid_input", `You picked ${picks.length} recipes for ${input.meals} meals`);
-
-  const result = findFeasibleSets({
-    ...data, servings: input.servings, budgetCents: input.budgetCents, maxMinutes: input.maxMinutes, meals: input.meals,
-    mustUseItemIds: mustUse, mustIncludeRecipeIds: picks,
-  });
-  if (!result.ok) {
-    throw unprocessable("infeasible", "No set of recipes fits these constraints", { cheapestFeasibleCents: result.cheapestFeasibleCents, relax: result.relax });
-  }
+/**
+ * Shared by createPlan and swapMeal: show the planner the top feasible sets, validate its choice,
+ * and build the draft (meals with reasons, the set's shopping list, assumptions). Code decides which
+ * fridge items and preferences belong to each meal.
+ */
+async function choosePlan(
+  userId: string, requestId: string, data: PlanningData, input: PlanRequest,
+  feasible: FeasibleSet[], droppedPicks: DroppedPick[], picks: string[],
+): Promise<{ draft: Omit<PlanDraft, "planId" | "version" | "status">; run: RunInfo }> {
   if (!data.priceAsOf) throw new Error("planning: feasible sets exist but no product has a price date");
-
-  const sets = result.sets.slice(0, targets.limits.plannerFeasibleSetsShown);
+  const result = { droppedPicks };
+  const sets = feasible.slice(0, targets.limits.plannerFeasibleSetsShown);
   const ingredientName = new Map(data.ingredients.map((i) => [i.id, i.name]));
   const ctx = {
     servings: input.servings,
@@ -113,7 +102,7 @@ export async function createPlan(userId: string, input: z.infer<typeof PlanCreat
     meals,
     shopping: set.shopping,
     totalCents: set.totalCents,
-    priceAsOf: data.priceAsOf,
+    priceAsOf: data.priceAsOf!,
     assumptions: [
       `Prices are typical package prices checked on ${data.priceAsOf}; taxes are not included.`,
       "Fridge stock is what you confirmed in Cooky; staples you listed are assumed on hand.",
@@ -121,6 +110,34 @@ export async function createPlan(userId: string, input: z.infer<typeof PlanCreat
       ...choice.assumptions.filter((a) => a.trim()),
     ],
   };
+  return { draft, run };
+}
+
+/** PLN1–PLN6: code finds and prices feasible sets, the planner picks one, the draft is stored. */
+export async function createPlan(userId: string, input: z.infer<typeof PlanCreate>, requestId: string): Promise<{ plan: PlanDraft; run: RunInfo }> {
+  const db = await reader();
+
+  // PLN1: a repeat with the same key returns the original plan and costs nothing.
+  const earlier = await findByKey(db, userId, input.idempotencyKey);
+  if (earlier) return { plan: earlier.plan, run: { runId: earlier.runId ?? "none", terminated: "done", latencyMs: 0, costUsd: 0 } };
+
+  const data = await loadPlanningData(db, userId);
+  const mustUse = input.mustUseItemIds ?? [];
+  if (mustUse.some((id) => !data.fridge.some((f) => f.id === id))) throw notFound();
+
+  // Picked recipes (step 3): visible to this user, and no more of them than meals.
+  const picks = [...new Set(input.mustIncludeRecipeIds ?? [])];
+  if (picks.some((id) => !data.recipes.some((r) => r.id === id))) throw notFound();
+  if (picks.length > input.meals) throw badRequest("invalid_input", `You picked ${picks.length} recipes for ${input.meals} meals`);
+
+  const result = findFeasibleSets({
+    ...data, servings: input.servings, budgetCents: input.budgetCents, maxMinutes: input.maxMinutes, meals: input.meals,
+    mustUseItemIds: mustUse, mustIncludeRecipeIds: picks,
+  });
+  if (!result.ok) {
+    throw unprocessable("infeasible", "No set of recipes fits these constraints", { cheapestFeasibleCents: result.cheapestFeasibleCents, relax: result.relax });
+  }
+  const { draft, run } = await choosePlan(userId, requestId, data, input, result.sets, result.droppedPicks, picks);
   const stored = await insertDraft(writer(userId), input, draft, run);
   if (stored) return { plan: stored, run };
   // Lost a race with a concurrent request using the same key: return that request's plan.
@@ -190,12 +207,47 @@ export async function getPlan(userId: string, planId: string): Promise<PlanDraft
   return readPlan(await reader(), userId, planId);
 }
 
+/**
+ * PLN7: swap one meal. The other meals stay (unless they now break a hard constraint), the slot is
+ * refilled by the planner from code-checked sets, the whole list is recalculated, and the result
+ * is a new draft version; earlier versions are untouched. The reason, if any, goes to the planner
+ * for this swap and to preference_proposer (LRN1) as proposals the user can answer.
+ */
 export async function swapMeal(userId: string, planId: string, input: z.infer<typeof PlanSwap>, requestId: string): Promise<{ plan: PlanDraft; proposals: PreferenceProposal[]; run: RunInfo }> {
-  void userId;
-  void planId;
-  void input;
-  void requestId;
-  throw notImplemented("planning.swapMeal");
+  const db = await reader();
+  const { plan, inputs } = await readCurrent(db, userId, planId);
+  if (input.baseVersion !== plan.version) throw conflict("stale_version", { currentVersion: plan.version });
+  const out = plan.meals[input.mealIndex];
+  if (!out) throw badRequest("invalid_input", `mealIndex ${input.mealIndex} is not a meal of this plan`);
+
+  const all = await loadPlanningData(db, userId);
+  const data = { ...all, recipes: all.recipes.filter((r) => r.id !== out.recipeId) };
+  const keep = plan.meals.filter((_, i) => i !== input.mealIndex).map((m) => m.recipeId);
+  const mustUse = (inputs.mustUseItemIds ?? []).filter((id) => data.fridge.some((f) => f.id === id));
+  const reason = input.reason?.trim();
+
+  const result = findFeasibleSets({
+    ...data, servings: inputs.servings, budgetCents: inputs.budgetCents, maxMinutes: inputs.maxMinutes, meals: plan.meals.length,
+    mustUseItemIds: mustUse, mustIncludeRecipeIds: keep,
+  });
+  if (!result.ok) throw unprocessable("no_alternative", "No other dish fits this plan's budget, time and preferences");
+
+  const { draft, run } = await choosePlan(userId, requestId, data, { ...inputs, wishes: reason || inputs.wishes }, result.sets, result.droppedPicks, keep);
+  // Kept meals keep the reasons the user already read; only the new dish gets a new one.
+  const before = new Map(plan.meals.map((m) => [m.recipeId, m.reasons]));
+  draft.meals = draft.meals.map((m) => (keep.includes(m.recipeId) && before.has(m.recipeId) ? { ...m, reasons: before.get(m.recipeId)! } : m));
+  const stored = await insertNextVersion(writer(userId), planId, plan.version, inputs, draft, run);
+
+  let proposals: PreferenceProposal[] = [];
+  if (reason) {
+    try {
+      proposals = await preferences.propose(userId, reason, { recipeId: out.recipeId, requestId });
+    } catch (err) {
+      // The swap is already saved; a proposer failure only means no proposals to answer this time.
+      log("swap_proposals_failed", { requestId, error: err instanceof Error ? err.message : String(err) });
+    }
+  }
+  return { plan: stored, proposals, run };
 }
 
 export async function savePlan(userId: string, planId: string, input: z.infer<typeof PlanSave>): Promise<{ planId: string; version: number; status: "saved" }> {
@@ -219,10 +271,47 @@ export async function priceRecipes(userId: string, recipeIds: string[], servings
   });
 }
 
-// ---- v2
+/** PLN9: tick or untick an item on the plan's shopping list; returns every ticked ingredient id. */
 export async function setChecklist(userId: string, planId: string, input: z.infer<typeof ChecklistPatch>): Promise<{ checked: string[] }> {
-  void userId;
-  void planId;
-  void input;
-  throw notImplemented("planning.setChecklist (v2)");
+  const { plan, checked } = await readCurrent(await reader(), userId, planId);
+  if (!plan.shopping.items.some((i) => i.ingredientId === input.ingredientId)) {
+    throw badRequest("invalid_input", `${input.ingredientId} is not on this plan's shopping list`);
+  }
+  const next = input.checked ? [...new Set([...checked, input.ingredientId])] : checked.filter((id) => id !== input.ingredientId);
+  await writeChecklist(writer(userId), planId, plan.version, next);
+  return { checked: next };
+}
+
+/** Store-aisle order for the shopping page; anything else goes last. */
+const AISLES = ["produce", "bakery", "meat", "seafood", "dairy", "eggs", "frozen", "pantry", "prepared", "snacks", "beverages", "other"];
+
+export type ShoppingView = {
+  plan: PlanDraft;
+  checked: string[];
+  aisles: { category: string; items: PlanDraft["shopping"]["items"] }[];
+  covered: PlanDraft["shopping"]["items"];
+};
+
+/** The /shop page: the plan's list to buy grouped by aisle, what is already covered, and the ticks. */
+export async function shoppingView(userId: string, planId: string): Promise<ShoppingView> {
+  const db = await reader();
+  const { plan, checked } = await readCurrent(db, userId, planId);
+  const ids = plan.shopping.items.map((i) => i.ingredientId);
+  const res = ids.length ? await db.from("ingredients").select("id, category").in("id", ids) : { data: [], error: null };
+  if (res.error) throw new Error(`planning: loading ingredient categories failed: ${res.error.message}`);
+  const category = new Map(((res.data ?? []) as { id: string; category: string }[]).map((r) => [r.id, r.category]));
+
+  const toBuy = plan.shopping.items.filter((i) => i.packages > 0 || i.costCents === null);
+  const groups = new Map<string, PlanDraft["shopping"]["items"]>();
+  for (const i of toBuy) {
+    const c = category.get(i.ingredientId) ?? "other";
+    groups.set(c, [...(groups.get(c) ?? []), i]);
+  }
+  const rank = (c: string) => (AISLES.includes(c) ? AISLES.indexOf(c) : AISLES.length);
+  return {
+    plan,
+    checked: checked.filter((id) => toBuy.some((i) => i.ingredientId === id)),
+    aisles: [...groups.entries()].sort(([a], [b]) => rank(a) - rank(b)).map(([c, items]) => ({ category: c, items })),
+    covered: plan.shopping.items.filter((i) => !toBuy.includes(i)),
+  };
 }

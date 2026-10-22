@@ -4,8 +4,8 @@
 import { useState } from "react";
 import { browserClient } from "@/platform/db-browser";
 import { PASSWORD_MIN_CHARS, passwordProblem } from "./password";
+import { alert, btnPrimary, field as input } from "./styles";
 
-const input = "rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900";
 
 export function ChangePasswordForm({ email }: { email: string }) {
   const [current, setCurrent] = useState("");
@@ -42,23 +42,23 @@ export function ChangePasswordForm({ email }: { email: string }) {
 
   return (
     <form onSubmit={submit} className="mt-4 grid max-w-sm gap-3">
-      <label className="flex flex-col gap-1 text-sm">
+      <label className="flex flex-col gap-1.5 text-sm font-medium">
         Current password
         <input className={input} type="password" autoComplete="current-password" required value={current} disabled={busy} onChange={(e) => setCurrent(e.target.value)} />
       </label>
-      <label className="flex flex-col gap-1 text-sm">
-        New password <span className="text-zinc-500">(at least {PASSWORD_MIN_CHARS} characters)</span>
+      <label className="flex flex-col gap-1.5 text-sm font-medium">
+        New password <span className="font-normal text-zinc-500">(at least {PASSWORD_MIN_CHARS} characters)</span>
         <input className={input} type="password" autoComplete="new-password" required minLength={PASSWORD_MIN_CHARS} value={next} disabled={busy} onChange={(e) => setNext(e.target.value)} />
       </label>
-      <label className="flex flex-col gap-1 text-sm">
+      <label className="flex flex-col gap-1.5 text-sm font-medium">
         New password again
         <input className={input} type="password" autoComplete="new-password" required value={confirm} disabled={busy} onChange={(e) => setConfirm(e.target.value)} />
       </label>
-      <div className="flex flex-col items-start gap-2">
-        <button disabled={busy} className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900">
+      <div className="flex flex-col items-stretch gap-2 sm:items-start">
+        <button disabled={busy} className={btnPrimary}>
           {busy ? "Changing…" : error ? "Try again" : "Change password"}
         </button>
-        {error && <p role="alert" className="text-sm text-red-700 dark:text-red-300">{error}</p>}
+        {error && <p role="alert" className={alert}>{error}</p>}
         {done && <p role="status" className="text-sm text-emerald-700 dark:text-emerald-300">Password changed. Use the new one next time you log in.</p>}
       </div>
     </form>

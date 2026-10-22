@@ -29,9 +29,9 @@ function seed() {
       { recipe_id: "rcp_rice", ingredient_id: "ing_egg", qty: 2, unit: "count", optional: false },
     ],
     ingredients: [
-      { id: "ing_chicken", name: "Chicken", allergen_tags: [] },
-      { id: "ing_egg", name: "Egg", allergen_tags: ["egg"] },
-      { id: "ing_rice", name: "Rice", allergen_tags: [] },
+      { id: "ing_chicken", name: "Chicken", allergen_tags: [], category: "meat" },
+      { id: "ing_egg", name: "Egg", allergen_tags: ["egg"], category: "eggs" },
+      { id: "ing_rice", name: "Rice", allergen_tags: [], category: "pantry" },
     ],
     products: [
       { id: "prd_chicken", ingredient_id: "ing_chicken", package_size: 500, unit: "g", price_cents: 800, price_date: "2026-10-20" },
@@ -46,13 +46,14 @@ function seed() {
     preferences: [{ id: "prf_spicy", user_id: U1, kind: "soft", active: true, category: "flavor", value: "spicy", scope_recipe_id: null }],
     plans: [],
     plan_versions: [],
+    preference_proposals: [],
   };
-  db = fakeDb(tables, { unique: { plans: [["user_id", "idempotency_key"]] }, defaults: { plans: () => ({ created_at: new Date().toISOString() }) } });
+  db = fakeDb(tables, { unique: { plans: [["user_id", "idempotency_key"]], plan_versions: [["plan_id", "version"]] }, defaults: { plans: () => ({ created_at: new Date().toISOString() }) } });
 }
 
-const fixture = async (req: { messages: { content: unknown }[] }): Promise<ModelReply> => {
+const fixture = async (req: { unit?: string; messages: { content: unknown }[] }): Promise<ModelReply> => {
   const text = req.messages.map((m) => (Array.isArray(m.content) ? m.content.map((b: { text?: string }) => b.text ?? "").join("\n") : String(m.content))).join("\n");
-  return { parsed: aiFixtures.planner({ system: "", text }), stopReason: "end_turn", usage: { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 } };
+  return { parsed: aiFixtures[(req.unit ?? "planner") as "planner"]({ system: "", text }), stopReason: "end_turn", usage: { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 } };
 };
 let transport = vi.fn(fixture);
 const quotaUsed = vi.fn();
@@ -216,5 +217,103 @@ describe("getPlan, listPlans, savePlan", () => {
     await expect(planning.getPlan(U2, plan.planId)).rejects.toMatchObject({ status: 404 });
     await expect(planning.savePlan(U2, plan.planId, { version: 1 })).rejects.toMatchObject({ status: 404 });
     expect((await planning.listPlans(U2)).items).toEqual([]);
+  });
+});
+
+describe("swapMeal (PLN7)", () => {
+  const two = () => planning.createPlan(U1, body(), "req_1"); // chicken (fridge) + omelette
+
+  it("replaces one meal, keeps the others and their reasons, recalculates the list, adds a draft version", async () => {
+    const { plan } = await two();
+    const keptReasons = plan.meals[1].reasons;
+    const { plan: next, proposals, run } = await planning.swapMeal(U1, plan.planId, { mealIndex: 0, baseVersion: 1 }, "req_2");
+    expect(PlanDraft.safeParse(next).success).toBe(true);
+    expect(run.terminated).toBe("done");
+    expect(proposals).toEqual([]);
+    expect(next).toMatchObject({ planId: plan.planId, version: 2, status: "draft" });
+    expect(next.meals.map((m) => m.recipeId)).toEqual(["rcp_omelette", "rcp_rice"]);
+    expect(next.meals.find((m) => m.recipeId === "rcp_omelette")!.reasons).toEqual(keptReasons);
+    // omelette (3 eggs) + rice (2 eggs, 300 g rice): one dozen + one bag, no chicken any more
+    expect(next.shopping.items.map((i) => i.ingredientId).sort()).toEqual(["ing_egg", "ing_rice"]);
+    expect(next.totalCents).toBe(700);
+    // version 1 is untouched; the plan now points at version 2
+    expect(tables.plan_versions.find((v) => v.version === 1)).toMatchObject({ total_cents: 400 });
+    expect(tables.plans[0]).toMatchObject({ current_version: 2, status: "draft" });
+    expect(await planning.getPlan(U1, plan.planId)).toEqual(next);
+  });
+
+  it("swapping a saved plan makes a new draft and leaves the saved version as it was", async () => {
+    const { plan } = await two();
+    await planning.savePlan(U1, plan.planId, { version: 1 });
+    const { plan: next } = await planning.swapMeal(U1, plan.planId, { mealIndex: 0, baseVersion: 1 }, "req_2");
+    expect(next.status).toBe("draft");
+    expect(tables.plan_versions.find((v) => v.version === 1)!.saved_at).toBeTruthy();
+    expect(tables.plan_versions.find((v) => v.version === 2)!.saved_at ?? null).toBeNull();
+  });
+
+  it("a reason goes to the planner for this slot and comes back as proposals to answer", async () => {
+    const { plan } = await two();
+    const { proposals } = await planning.swapMeal(U1, plan.planId, { mealIndex: 0, baseVersion: 1, reason: "too heavy for a weeknight" }, "req_2");
+    expect(JSON.stringify(transport.mock.calls[1][0])).toContain("too heavy for a weeknight");
+    expect(proposals).toHaveLength(1);
+    expect(tables.preference_proposals[0]).toMatchObject({ user_id: U1, status: "pending", scope_recipe_id: null });
+  });
+
+  it("stale baseVersion is 409 and changes nothing", async () => {
+    const { plan } = await two();
+    await planning.swapMeal(U1, plan.planId, { mealIndex: 0, baseVersion: 1 }, "req_2");
+    await expect(planning.swapMeal(U1, plan.planId, { mealIndex: 0, baseVersion: 1 }, "req_3")).rejects.toMatchObject({ status: 409, code: "stale_version" });
+    expect(tables.plan_versions).toHaveLength(2);
+  });
+
+  it("no other dish fits: 422 no_alternative and the current version stays", async () => {
+    const { plan } = await planning.createPlan(U1, body({ meals: 3 }), "req_1"); // uses all three recipes
+    await expect(planning.swapMeal(U1, plan.planId, { mealIndex: 1, baseVersion: 1 }, "req_2")).rejects.toMatchObject({ status: 422, code: "no_alternative" });
+    expect(tables.plans[0]).toMatchObject({ current_version: 1 });
+    expect(tables.plan_versions).toHaveLength(1);
+  });
+
+  it("a meal index outside the plan is 400; another user's plan is 404", async () => {
+    const { plan } = await two();
+    await expect(planning.swapMeal(U1, plan.planId, { mealIndex: 5, baseVersion: 1 }, "req_2")).rejects.toMatchObject({ status: 400 });
+    await expect(planning.swapMeal(U2, plan.planId, { mealIndex: 0, baseVersion: 1 }, "req_3")).rejects.toMatchObject({ status: 404 });
+  });
+});
+
+describe("shopping page: shoppingView and setChecklist (PLN9)", () => {
+  // omelette + rice: eggs (eggs aisle) and rice (pantry); chicken in the fridge is not bought
+  const plan = async () => (await planning.createPlan(U1, body({ mustIncludeRecipeIds: ["rcp_omelette", "rcp_rice"] }), "req_1")).plan;
+
+  it("groups what to buy by aisle in store order, lists what is covered, nothing ticked yet", async () => {
+    const p = await plan();
+    const v = await planning.shoppingView(U1, p.planId);
+    expect(v.aisles.map((a) => [a.category, a.items.map((i) => i.ingredientId)])).toEqual([["eggs", ["ing_egg"]], ["pantry", ["ing_rice"]]]);
+    expect(v.checked).toEqual([]);
+    expect(v.plan.planId).toBe(p.planId);
+  });
+
+  it("ticks persist on the plan, untick removes, and a repeat tick is harmless", async () => {
+    const p = await plan();
+    expect(await planning.setChecklist(U1, p.planId, { ingredientId: "ing_egg", checked: true })).toEqual({ checked: ["ing_egg"] });
+    expect(await planning.setChecklist(U1, p.planId, { ingredientId: "ing_egg", checked: true })).toEqual({ checked: ["ing_egg"] });
+    await planning.setChecklist(U1, p.planId, { ingredientId: "ing_rice", checked: true });
+    expect((await planning.shoppingView(U1, p.planId)).checked).toEqual(["ing_egg", "ing_rice"]);
+    expect(await planning.setChecklist(U1, p.planId, { ingredientId: "ing_egg", checked: false })).toEqual({ checked: ["ing_rice"] });
+    // the plan itself is unchanged
+    expect(await planning.getPlan(U1, p.planId)).toEqual(p);
+  });
+
+  it("an ingredient not on the list is 400; another user's plan is 404", async () => {
+    const p = await plan();
+    await expect(planning.setChecklist(U1, p.planId, { ingredientId: "ing_lobster", checked: true })).rejects.toMatchObject({ status: 400 });
+    await expect(planning.setChecklist(U2, p.planId, { ingredientId: "ing_egg", checked: true })).rejects.toMatchObject({ status: 404 });
+    await expect(planning.shoppingView(U2, p.planId)).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("a swap starts the new version with a fresh list", async () => {
+    const p = (await planning.createPlan(U1, body(), "req_1")).plan; // chicken + omelette
+    await planning.setChecklist(U1, p.planId, { ingredientId: "ing_egg", checked: true });
+    await planning.swapMeal(U1, p.planId, { mealIndex: 0, baseVersion: 1 }, "req_2");
+    expect((await planning.shoppingView(U1, p.planId)).checked).toEqual([]);
   });
 });

@@ -6,8 +6,9 @@ import { useCallback, useRef, useState, type FormEvent } from 'react';
 import { Category, FridgeView, type FridgeItem, type Location } from '@spec/contract';
 import { filterInventory, summarizeInventory, previewExpiry, referenceDays } from '@/modules/fridge/presentation';
 import type { IngredientRow, CategoryRow } from '@/modules/fridge/data';
+import { BaoSays } from '@/ui/Bao';
 import { Page } from '@/ui/Page';
-import { field as inputClass, btnSecondary as buttonClass, btnPrimary as primaryClass } from '@/ui/styles';
+import { alert, btnPrimary as primaryClass, btnSecondarySm as buttonClass, chip, chipOff, chipOn, chipRow, field as inputClass, tag } from '@/ui/styles';
 
 type Props = { initial: FridgeView; ingredients: IngredientRow[]; categories: CategoryRow[]; today: string };
 class RequestError extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }
@@ -87,11 +88,11 @@ export default function FridgeClient({ initial, ingredients, categories, today }
       <Link href="/receipts/new" className={buttonClass}>Scan a receipt</Link>
     </>}
   >
-    {error && <div role="alert" className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"><p>{error}</p><div className="mt-2 flex items-center gap-3"><button className={buttonClass} disabled={loading || busy} onClick={() => void load()}>Try again</button><span className="text-xs">If a save failed, repeating the same action is safe.</span></div></div>}
-    {notice && <p role="status" className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">{notice}</p>}
+    {error && <div role="alert" className={`mb-4 ${alert}`}><p>{error}</p><div className="mt-2 flex items-center gap-3"><button className={buttonClass} disabled={loading || busy} onClick={() => void load()}>Try again</button><span className="text-xs">If a save failed, repeating the same action is safe.</span></div></div>}
+    {notice && <div role="status" className="pop-in mb-4"><BaoSays mood="happy">{notice}</BaoSays></div>}
 
-    {adding && <section aria-labelledby="add-heading" className="mb-8 rounded-lg border border-zinc-200 p-4 sm:p-5 dark:border-zinc-800">
-      <h2 id="add-heading" className="font-semibold">Add food</h2>
+    {adding && <section aria-labelledby="add-heading" className="mb-8 rounded-2xl border border-zinc-200 bg-surface p-4 sm:p-5 dark:border-zinc-800">
+      <h2 id="add-heading" className="font-display text-xl font-semibold tracking-tight">Add food</h2>
       <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">Pick an ingredient from the list so recipes can use it, or choose &ldquo;Other&rdquo; for anything else.</p>
       <form onSubmit={add} className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <label className="block text-sm sm:col-span-2">Ingredient<select className={`${inputClass} mt-1`} value={form.ingredientId} onChange={e => { const chosen = ingredients.find(i => i.id === e.target.value); setForm({ ...form, ingredientId: e.target.value, unit: chosen?.base_unit ?? 'count' }); }}>
@@ -109,21 +110,23 @@ export default function FridgeClient({ initial, ingredients, categories, today }
       </form>
     </section>}
 
-    <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Filter by date">
-      {tabs.map(([label, count, value]) => <button type="button" role="tab" key={value} aria-selected={dateFilter === value} onClick={() => { setDateFilter(value); setConfirmation(null); }} className={`rounded-full border px-3 py-1 text-sm ${dateFilter === value ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900' : 'border-zinc-300 hover:border-zinc-500 dark:border-zinc-700'}`}>{label} <span className="opacity-70">{count}</span></button>)}
+    <div className={chipRow} role="tablist" aria-label="Filter by date">
+      {tabs.map(([label, count, value]) => <button type="button" role="tab" key={value} aria-selected={dateFilter === value} onClick={() => { setDateFilter(value); setConfirmation(null); }} className={`${chip} ${dateFilter === value ? chipOn : chipOff}`}>{label} <span className="opacity-70">{count}</span></button>)}
     </div>
-    <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_160px_160px_auto]">
+    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1fr)_160px_160px_auto]">
+      <div className="col-span-2 sm:col-span-1">
       <label className="sr-only" htmlFor="fridge-search">Search food</label>
       <input id="fridge-search" type="search" className={inputClass} placeholder="Search food" value={search} onChange={e => setSearch(e.target.value)} />
+      </div>
       <select aria-label="Location" className={inputClass} value={filter} onChange={e => setFilter(e.target.value)}><option value="all">All locations</option>{Object.entries(locations).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select>
       <select aria-label="Category" className={inputClass} value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}><option value="all">All categories</option>{Category.options.map(c => <option key={c} value={c}>{c}</option>)}</select>
-      {filtered ? <button type="button" className={buttonClass} onClick={clearFilters}>Clear</button> : <span />}
+      {filtered ? <button type="button" className={`${buttonClass} col-span-2 sm:col-span-1`} onClick={clearFilters}>Clear</button> : <span className="hidden sm:block" />}
     </div>
 
     <section aria-label="Food on hand" className="mt-4">
-      {loading && <p role="status" className="py-6 text-sm text-zinc-500">Loading your fridge…</p>}
-      {!loading && data && shown.length === 0 && <div className="rounded-lg border border-dashed border-zinc-300 px-6 py-10 text-center dark:border-zinc-700"><p className="font-medium">{filtered ? 'No food matches these filters' : 'Your fridge is empty'}</p><p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{filtered ? 'Clear a filter or try another name.' : 'Scan a shopping receipt, or add food by hand.'}</p>{filtered ? <button type="button" className={`${buttonClass} mt-4`} onClick={clearFilters}>Clear filters</button> : <div className="mt-4 flex justify-center gap-2"><Link href="/receipts/new" className={primaryClass}>Scan a receipt</Link>{!adding && <button type="button" className={buttonClass} onClick={() => setAdding(true)}>Add food</button>}</div>}</div>}
-      {shown.length > 0 && <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+      {loading && <div role="status" className="py-4"><BaoSays mood="thinking">Checking what is in your fridge.</BaoSays></div>}
+      {!loading && data && shown.length === 0 && <div className="py-4"><BaoSays mood={filtered ? 'thinking' : 'sleepy'} pose="hold" prop="basket">{filtered ? 'Nothing matches those filters. Clear one, or try another name.' : 'The fridge is empty. Echoes, even. Scan a receipt or add food by hand and I will keep track of it.'}</BaoSays>{filtered ? <button type="button" className={`${buttonClass} mt-4`} onClick={clearFilters}>Clear filters</button> : <div className="mt-4 flex gap-2"><Link href="/receipts/new" className={primaryClass}>Scan a receipt</Link>{!adding && <button type="button" className={buttonClass} onClick={() => setAdding(true)}>Add food</button>}</div>}</div>}
+      {shown.length > 0 && <ul className="divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-surface dark:divide-zinc-800 dark:border-zinc-800">
         {shown.map(item => {
           const days = item.expiresOn ? referenceDays(item.expiresOn, today) : null;
           const needsAttention = data?.expiringSoon.includes(item.id);
@@ -133,26 +136,27 @@ export default function FridgeClient({ initial, ingredients, categories, today }
                 <p className="font-medium">{item.name}</p>
                 <p className="text-sm text-zinc-600 dark:text-zinc-400">{item.qty}{item.unit === 'count' ? '' : ` ${item.unit}`} · {locations[item.location]}{item.kind === 'dish' ? ' · leftovers' : item.kind === 'generic' ? ' · not used by recipes' : ''}</p>
               </div>
-              <span title={`Typical storage guide. Source: ${source(item)}. Added ${item.addedOn}.`} className={`rounded-full px-2.5 py-0.5 text-xs ${days !== null && days < 0 ? 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200' : needsAttention ? 'bg-amber-50 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200' : 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'}`}>{days === null ? 'No date' : days < 0 ? `Past its date (${item.expiresOn})` : days === 0 ? 'Use today' : `${days} day${days === 1 ? '' : 's'} left`}</span>
+              <span title={`Typical storage guide. Source: ${source(item)}. Added ${item.addedOn}.`} className={days !== null && days < 0 ? 'inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200' : needsAttention ? tag : 'inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'}>{days === null ? 'No date' : days < 0 ? `Past its date (${item.expiresOn})` : days === 0 ? 'Use today' : `${days} day${days === 1 ? '' : 's'} left`}</span>
               <div className="flex gap-2">
                 <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => { setConfirmation(null); setEditing({ item }); }}>Edit batch</button>
                 <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => { setEditing(null); setConfirmation({ item, status: 'used' }); }}>Used</button>
                 <button className={buttonClass} disabled={busy || loading} type="button" onClick={() => { setEditing(null); setConfirmation({ item, status: 'tossed' }); }}>Discard</button>
               </div>
             </div>
+            <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">{item.expirySource === 'user' ? 'Reference date entered by you' : 'Typical storage guide'}. Source: {source(item)}. A date is not a safety assessment.</p>
             {editing?.item.id === item.id && <ItemEditor key={`${item.id}:${editing.location ?? item.location}`} item={editing.item} initialLocation={editing.location} ingredients={ingredients} categories={categories} today={today} busy={busy || loading} onCancel={() => setEditing(null)} onSave={patch => void mutate(`/api/fridge/items/${item.id}`, 'PATCH', patch, 'Batch updated.')} />}
             {needsAttention && <div className="mt-3 space-y-2 text-sm"><p className="text-zinc-600 dark:text-zinc-400">Check the date and condition before deciding what to do.</p>{data?.cookNow.find(r => r.usesExpiringItemIds.includes(item.id)) && <Link className="block underline" href={`/recipes/${data.cookNow.find(r => r.usesExpiringItemIds.includes(item.id))!.recipeId}`}>View a recipe using this ingredient</Link>}{item.location !== 'freezer' && previewExpiry(ingredients.find(i => i.id === item.ingredientId), categories, item.category ?? 'prepared', 'freezer', '', today).expiresOn && <button type="button" className={buttonClass} disabled={busy || loading} onClick={() => { setConfirmation(null); setEditing({ item, location: 'freezer' }); }}>Review move to freezer</button>}</div>}
-            {confirmation?.item.id === item.id && <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-md bg-zinc-100 p-3 dark:bg-zinc-900" role="group" aria-label="Confirm change"><p className="text-sm">{confirmation.status === 'used' ? 'Mark' : 'Discard'} all {item.qty}{item.unit === 'count' ? '' : ` ${item.unit}`} of {item.name}{confirmation.status === 'used' ? ' as used' : ''}?</p><div className="flex gap-2"><button type="button" className={primaryClass} disabled={busy || loading} onClick={() => void mutate(`/api/fridge/items/${item.id}`, 'PATCH', { status: confirmation.status, expectedQty: confirmation.item.qty }, confirmation.status === 'used' ? 'Marked as used.' : 'Discarded.')}>{confirmation.status === 'used' ? 'Mark used' : 'Discard'}</button><button type="button" className={buttonClass} disabled={busy} onClick={() => setConfirmation(null)}>Cancel</button></div></div>}
+            {confirmation?.item.id === item.id && <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface p-3" role="group" aria-label="Confirm change"><p className="text-sm">{confirmation.status === 'used' ? 'Mark' : 'Discard'} all {item.qty}{item.unit === 'count' ? '' : ` ${item.unit}`} of {item.name}{confirmation.status === 'used' ? ' as used' : ''}?</p><div className="flex gap-2"><button type="button" className={primaryClass} disabled={busy || loading} onClick={() => void mutate(`/api/fridge/items/${item.id}`, 'PATCH', { status: confirmation.status, expectedQty: confirmation.item.qty }, confirmation.status === 'used' ? 'Marked as used.' : 'Discarded.')}>{confirmation.status === 'used' ? 'Mark used' : 'Discard'}</button><button type="button" className={buttonClass} disabled={busy} onClick={() => setConfirmation(null)}>Cancel</button></div></div>}
           </li>;
         })}
       </ul>}
-      {shown.length > 0 && <p className="mt-2 text-xs text-zinc-500" aria-live="polite">Showing {shown.length} of {summary.total}. Each purchase stays a separate entry. Hover a date to see its source.</p>}
+      {shown.length > 0 && <p className="mt-2 text-xs text-zinc-500" aria-live="polite">Showing {shown.length} of {summary.total}. Each purchase stays a separate entry. Date sources are shown with each batch.</p>}
     </section>
 
     {data && data.cookNow.length > 0 && <section aria-labelledby="cook-heading" className="mt-10">
-      <div className="flex flex-wrap items-baseline justify-between gap-2"><h2 id="cook-heading" className="text-lg font-semibold">What you can cook</h2><Link href="/recipes?chips=fridge" className="text-sm font-medium hover:underline">All matching recipes</Link></div>
+      <div className="flex flex-wrap items-baseline justify-between gap-2"><h2 id="cook-heading" className="font-display text-xl font-semibold tracking-tight">What you can cook</h2><Link href="/recipes?chips=fridge" className="text-sm font-medium hover:underline">All matching recipes</Link></div>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Best matches for what you have, starting with food to use soon.</p>
-      <ul className="mt-3 grid gap-3 sm:grid-cols-3">{data.cookNow.slice(0, 6).map(recipe => <li key={recipe.recipeId}><Link href={`/recipes/${recipe.recipeId}`} className="block h-full rounded-lg border border-zinc-200 p-4 hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600"><p className="font-medium">{recipe.title}</p><p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{recipe.missingIngredientIds.length ? `Missing: ${recipe.missingIngredientIds.map(id => ingredients.find(i => i.id === id)?.name ?? id).join(', ')}` : 'You have everything it needs.'}</p>{recipe.usesExpiringItemIds.length > 0 && <p className="mt-2 text-xs text-amber-800 dark:text-amber-300">Uses {recipe.usesExpiringItemIds.length} item{recipe.usesExpiringItemIds.length === 1 ? '' : 's'} to use soon</p>}</Link></li>)}</ul>
+      <ul className="mt-3 grid gap-3 sm:grid-cols-3">{data.cookNow.slice(0, 6).map((recipe, i) => <li key={recipe.recipeId}><Link href={`/recipes/${recipe.recipeId}`} className={`block h-full rounded-2xl p-4 transition hover:-translate-y-0.5 ${i % 2 ? 'bg-tile-mint' : 'bg-tile-sky'}`}><p className="font-display text-lg font-semibold leading-tight tracking-tight">{recipe.title}</p><p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{recipe.missingIngredientIds.length ? `Missing: ${recipe.missingIngredientIds.map(id => ingredients.find(i => i.id === id)?.name ?? id).join(', ')}` : 'You have everything it needs.'}</p>{recipe.usesExpiringItemIds.length > 0 && <p className="mt-2 text-xs text-amber-800 dark:text-amber-300">Uses {recipe.usesExpiringItemIds.length} item{recipe.usesExpiringItemIds.length === 1 ? '' : 's'} to use soon</p>}</Link></li>)}</ul>
     </section>}
   </Page>;
 }

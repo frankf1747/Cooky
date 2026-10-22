@@ -17,9 +17,10 @@ type VersionRow = {
   assumptions: string[];
   run_id: string | null;
   saved_at: string | null;
+  checklist?: string[];
 };
 
-const VERSION_COLS = "plan_id, version, inputs, meals, shopping, total_cents, price_as_of, assumptions, run_id, saved_at";
+const VERSION_COLS = "plan_id, version, inputs, meals, shopping, total_cents, price_as_of, assumptions, run_id, saved_at, checklist";
 
 function fail(what: string, error: { message: string } | null): never {
   throw new Error(`planning: ${what} failed: ${error?.message ?? "no row"}`);
@@ -134,4 +135,56 @@ export async function markSaved(db: SupabaseClient, w: { db: SupabaseClient; use
     if (p.error) fail(`saving ${planId}`, p.error);
   }
   return { planId, version, status: "saved" as const };
+}
+
+/** The plan's current version with the inputs it was made from (for swapMeal). 404 when not this user's. */
+export async function readCurrent(db: SupabaseClient, userId: string, planId: string): Promise<{ plan: PlanDraft; inputs: PlanCreate; checked: string[] }> {
+  const plan = await ownPlan(db, userId, planId);
+  const v = await currentVersion(db, userId, plan);
+  return { plan: toDraft(plan, v), inputs: v.inputs, checked: v.checklist ?? [] };
+}
+
+/**
+ * PLN9: the in-store ticks live on the plan's current version (checklist column), so they follow the
+ * user across devices. A swap starts a new version with a fresh list. Ticks are shopping state, not
+ * plan content: meals, list and prices of a saved version never change.
+ */
+export async function writeChecklist(w: { db: SupabaseClient; userId: string }, planId: string, version: number, checked: string[]): Promise<void> {
+  const res = await w.db.from("plan_versions").update({ checklist: checked })
+    .eq("user_id", w.userId).eq("plan_id", planId).eq("version", version);
+  if (res.error) fail(`saving the shopping checklist of ${planId}`, res.error);
+}
+
+/**
+ * Store version base+1 as a draft and point the plan at it (PLN7). Earlier versions are never
+ * changed. Two inserts guard against a concurrent swap: the (plan_id, version) key refuses a second
+ * version base+1, and the pointer moves only from base; either way the caller gets 409 stale_version.
+ */
+export async function insertNextVersion(
+  w: { db: SupabaseClient; userId: string },
+  planId: string,
+  base: number,
+  inputs: PlanCreate,
+  draft: Omit<PlanDraft, "planId" | "version" | "status">,
+  run: RunInfo,
+): Promise<PlanDraft> {
+  const version = base + 1;
+  const versionId = newId("plv");
+  const v = await w.db.from("plan_versions").insert({
+    id: versionId, plan_id: planId, user_id: w.userId, version, inputs,
+    meals: draft.meals, shopping: draft.shopping, total_cents: draft.totalCents,
+    price_as_of: draft.priceAsOf, assumptions: draft.assumptions, run_id: run.runId,
+  });
+  if (v.error) {
+    if ((v.error as { code?: string }).code === "23505") throw conflict("stale_version", { currentVersion: version });
+    fail(`saving version ${version} of ${planId}`, v.error);
+  }
+  const p = await w.db.from("plans").update({ current_version: version, status: "draft" })
+    .eq("user_id", w.userId).eq("id", planId).eq("current_version", base).select("id");
+  if (p.error || !p.data?.length) {
+    await w.db.from("plan_versions").delete().eq("user_id", w.userId).eq("id", versionId);
+    if (p.error) fail(`moving ${planId} to version ${version}`, p.error);
+    throw conflict("stale_version", { currentVersion: version });
+  }
+  return { planId, version, status: "draft", ...draft };
 }

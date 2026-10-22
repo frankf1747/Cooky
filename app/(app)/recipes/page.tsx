@@ -8,11 +8,10 @@ import * as recipes from "@/modules/recipes";
 import type { LibraryCard } from "@/modules/recipes";
 import { RecipeImage } from "./RecipeImage";
 import { Page } from "@/ui/Page";
+import { BaoSays } from "@/ui/Bao";
+import { btnPrimary, btnText, chip, chipOff, chipOn, chipRow, field, tag, tileFor, tiles } from "@/ui/styles";
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
-
-const CHIP_ON = "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900";
-const CHIP_OFF = "border-zinc-300 dark:border-zinc-700";
 
 /** Quick filters, each a plain test on a card. */
 const CHIPS: { key: string; label: string; test: (r: LibraryCard) => boolean }[] = [
@@ -58,9 +57,9 @@ export default async function RecipesPage(props: PageProps<"/recipes">) {
   return (
     <Page
       title="Recipes"
-      description={`${cards.length} dinners for one or two. Open one to cook it, or add it to a plan.`}
+      description={`${cards.length} dinners for one or two. Tap one to cook it, or put it in a plan.`}
       width="wide"
-      actions={<Link href="/plan" className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300">Plan dinners</Link>}
+      actions={<Link href="/plan" className={btnPrimary}>Plan dinners</Link>}
     >
       <form method="get">
         {active.size > 0 && <input type="hidden" name="chips" value={[...active].join(",")} />}
@@ -71,13 +70,13 @@ export default async function RecipesPage(props: PageProps<"/recipes">) {
           type="search"
           defaultValue={q}
           placeholder={`Search ${cards.length} recipes, ingredients, cuisines`}
-          className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className={field}
         />
       </form>
 
-      <nav aria-label="Quick filters" className="mt-3 flex flex-wrap gap-2">
+      <nav aria-label="Quick filters" className={`mt-3 ${chipRow}`}>
         {CHIPS.map((c) => (
-          <Link key={c.key} href={href(c.key)} aria-pressed={active.has(c.key)} className={`rounded-full border px-3 py-1 text-sm ${active.has(c.key) ? CHIP_ON : CHIP_OFF}`}>
+          <Link key={c.key} href={href(c.key)} aria-pressed={active.has(c.key)} className={`${chip} ${active.has(c.key) ? chipOn : chipOff}`}>
             {c.label}
           </Link>
         ))}
@@ -85,33 +84,34 @@ export default async function RecipesPage(props: PageProps<"/recipes">) {
       <p className="mt-3 text-xs text-zinc-500">{shown.length} of {cards.length} recipes</p>
 
       {shown.length === 0 ? (
-        <div className="mt-6 rounded-lg border border-dashed border-zinc-300 p-6 text-sm dark:border-zinc-700">
+        <BaoSays mood="thinking" pose="hold" prop="spoon" className="mt-6">
           {cards.length === 0 ? (
-            <p>The recipe library is empty. Load the seed data with <code>npm run seed</code>.</p>
+            <>The recipe library is empty. Load the seed data with <code>npm run seed</code>.</>
           ) : active.has("fridge") || active.has("cooknow") ? (
-            <p>Nothing matches what is in your fridge yet. <Link className="underline" href="/fridge">Stock your fridge</Link> or <Link className="underline" href="/recipes">clear filters</Link>.</p>
+            <>Nothing in the fridge matches yet. <Link className={btnText} href="/fridge">Stock the fridge</Link> or <Link className={btnText} href="/recipes">clear the filters</Link> and I&apos;ll look again.</>
           ) : (
-            <p>No recipe matches that. <Link className="underline" href="/recipes">Clear filters</Link>.</p>
+            <>Nothing by that name. I checked twice. <Link className={btnText} href="/recipes">Clear the filters</Link>.</>
           )}
-        </div>
+        </BaoSays>
       ) : (
-        <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {shown.map((r) => (
-            <li key={r.id} className="flex flex-col rounded-lg border border-zinc-200 p-2 dark:border-zinc-800">
+        <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+          {shown.map((r, i) => (
+            <li key={r.id} className={`flex flex-col rounded-2xl p-3 transition hover:-translate-y-0.5 ${tiles[tileFor(i)]}`}>
               <Link href={`/recipes/${r.id}`} className="flex flex-1 flex-col">
-                <RecipeImage imageUrl={r.imageUrl} title={r.title} />
-                <h2 className="mt-2 px-1 text-sm font-medium leading-snug">{r.title}</h2>
-                <p className="mt-0.5 px-1 text-xs text-zinc-500">
-                  {r.minutes} min{r.perServingCents !== null ? ` · about ${formatUsd(r.perServingCents)} per serving` : ""}
+                <RecipeImage imageUrl={r.imageUrl} title={r.title} shape={i} />
+                <h2 className="mt-3 font-display text-lg font-semibold leading-tight tracking-tight">{r.title}</h2>
+                <p className="mt-1 flex flex-wrap gap-1.5 text-xs">
+                  <span className="rounded-full bg-surface/80 px-2 py-0.5">{r.minutes} min</span>
+                  {r.perServingCents !== null && <span className="rounded-full bg-surface/80 px-2 py-0.5">about {formatUsd(r.perServingCents)} each</span>}
                 </p>
                 {r.usesFridge && (
-                  <p className="mx-1 mt-2 w-fit rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                  <p className={`mt-2 w-fit ${tag}`}>
                     Uses your {r.usesFridge.name.toLowerCase()}
                     {daysLabel(r.usesFridge.daysLeft)}
                   </p>
                 )}
               </Link>
-              <Link href={`/plan?recipes=${r.id}`} className="mt-2 px-1 text-xs font-medium underline">Add to a plan</Link>
+              <Link href={`/plan?recipes=${r.id}`} className={`mt-3 text-xs ${btnText}`}>Put it in a plan</Link>
             </li>
           ))}
         </ul>

@@ -3,11 +3,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { Preference } from "@spec/contract";
+import { alert, btnPrimary as btn, btnSecondarySm as btnGhost, btnText, field as input } from "@/ui/styles";
 
 const CATEGORIES = ["flavor", "texture", "ingredient", "effort", "cleanup", "cuisine"] as const;
-const input = "rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900";
-const btn = "rounded-md bg-zinc-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900";
-const btnGhost = "rounded-md border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-zinc-700";
 
 async function call(path: string, method: string, body?: unknown): Promise<{ ok: true; data: unknown } | { ok: false; message: string }> {
   try {
@@ -69,15 +67,15 @@ export function PreferencesClient({ initial, titles }: { initial: Preference[]; 
   return (
     <>
       {items.length === 0 ? (
-        <div className="mt-6 rounded-lg border border-dashed border-zinc-300 p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
+        <div className="rounded-2xl border border-dashed border-zinc-300 bg-surface p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
           <p>No preferences yet.</p>
           <p className="mt-1">
             After you cook, tell Cooky how it was (for example &ldquo;a bit dry&rdquo;) and choose <span className="font-medium">Always</span> to keep it.
-            Or add one below. <Link href="/recipes" className="underline">Find something to cook</Link>.
+            Or add one below. <Link href="/recipes" className={btnText}>Find something to cook</Link>.
           </p>
         </div>
       ) : (
-        <ul className="mt-6 divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+        <ul className="divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-surface dark:divide-zinc-800 dark:border-zinc-800">
           {items.map((p) => (
             <li key={p.id} className={`p-4 ${p.active ? "" : "opacity-60"}`}>
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -112,13 +110,13 @@ export function PreferencesClient({ initial, titles }: { initial: Preference[]; 
                   </div>
                 )}
               </div>
-              {error?.id === p.id && <p role="alert" className="mt-2 text-sm text-red-700 dark:text-red-300">{error.message}</p>}
+              {error?.id === p.id && <p role="alert" className={`mt-2 ${alert}`}>{error.message}</p>}
             </li>
           ))}
         </ul>
       )}
 
-      <form onSubmit={add} className="mt-8 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+      <form onSubmit={add} className="mt-8 rounded-2xl border border-zinc-200 bg-surface p-4 dark:border-zinc-800">
         <h2 className="font-semibold">Add a preference</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-[auto_auto_1fr]">
           <label className="flex flex-col gap-1 text-sm">
@@ -143,8 +141,8 @@ export function PreferencesClient({ initial, titles }: { initial: Preference[]; 
         {draft.kind === "hard" && draft.category === "ingredient" && (
           <p className="mt-2 text-xs text-zinc-500">Use the ingredient&apos;s name as it appears in recipes; plans will leave out every dish that uses it.</p>
         )}
-        {error?.id === "new" && <p role="alert" className="mt-2 text-sm text-red-700 dark:text-red-300">{error.message}</p>}
-        <button className={`mt-3 ${btn}`} disabled={busy === "new" || !draft.value.trim()}>{busy === "new" ? "Adding…" : "Add"}</button>
+        {error?.id === "new" && <p role="alert" className={`mt-2 ${alert}`}>{error.message}</p>}
+        <button className={`mt-3 w-full sm:w-auto ${btn}`} disabled={busy === "new" || !draft.value.trim()}>{busy === "new" ? "Adding…" : "Add"}</button>
       </form>
     </>
   );

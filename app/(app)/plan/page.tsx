@@ -6,6 +6,7 @@ import { getSessionUser } from "@/platform/auth";
 import { formatUsd } from "@/platform/money";
 import { planFormData } from "@/modules/planning";
 import { Page } from "@/ui/Page";
+import { btnSecondary } from "@/ui/styles";
 import { PlanForm } from "./PlanForm";
 
 export default async function PlanPage(props: PageProps<"/plan">) {
@@ -23,6 +24,7 @@ export default async function PlanPage(props: PageProps<"/plan">) {
       title="Plan dinners"
       description="Cooky picks dinners around your fridge, budget and time, then gives you one shopping list in real package sizes."
       width="narrow"
+      actions={<Link href="/preferences" className={btnSecondary}>Your preferences</Link>}
     >
 
       <PlanForm
@@ -35,10 +37,10 @@ export default async function PlanPage(props: PageProps<"/plan">) {
       {data.recentPlans.length === 0 ? (
         <p className="mt-2 text-sm text-zinc-500">No plans yet. Your first one will show up here.</p>
       ) : (
-        <ul className="mt-2 divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+        <ul className="mt-2 divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-surface dark:divide-zinc-800 dark:border-zinc-800">
           {data.recentPlans.map((p) => (
             <li key={p.planId}>
-              <Link href={`/plan/${p.planId}`} className="flex items-center justify-between gap-4 px-4 py-3 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900">
+              <Link href={`/plan/${p.planId}`} className="flex items-center justify-between gap-4 px-4 py-3 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800">
                 <span>
                   {p.mealTitles.join(" · ")}
                   <span className="ml-2 text-zinc-500">{new Date(p.createdAt).toLocaleDateString()}</span>

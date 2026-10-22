@@ -39,3 +39,9 @@ Final verification: `npm run check` passed (lint, typecheck, static); contract c
 - A teammate must verify on a deployment before merging. Changes are committed and pushed on the Fridge feature branch for a draft PR; no deployment or merge into main was performed.
 
 Latest main UI integration: preserved the shared Page layout and compact inventory rows from Platform, added the editor/conflict guards to those rows, and imported shared field/button styles. Post-integration checks: 41 test files / 405 tests passed; contract remains 39 routes.
+
+## Latest shared UI integration (2026-10-21)
+
+Merged main through 1c621f2 into the existing feature branch. Kept the Bao empty state, shared colour tokens, phone navigation and recipe tiles. Item editing, confirmation snapshots, expectedQty and conflict refresh remain in place. The editor uses shared pill buttons, fields and panels; loading and save notices use Bao. Date guide sources are visible per batch for touch/keyboard users.
+
+Installed the lockfile dependencies with npm ci (including @phosphor-icons/react 2.1.10); package files unchanged. Restarted dev after moving the stale .next cache aside. Static/type checks and 39-route contract passed; 41 files / 415 unit tests passed. Gate still stops at local database ECONNREFUSED (Supabase/Docker not running). A 375px browser check verified layout, add and quantity edit; preview and teammate verification remain required.

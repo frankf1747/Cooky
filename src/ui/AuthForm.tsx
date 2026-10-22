@@ -4,12 +4,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { browserClient } from "@/platform/db-browser";
+import { AuthBao, type AuthAttention } from "./AuthBao";
+import { AuthShell } from "./AuthShell";
+import { alert, btnPrimary, btnText, field } from "./styles";
 import { PASSWORD_MIN_CHARS } from "./password";
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [attention, setAttention] = useState<AuthAttention>("none");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -38,33 +42,43 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center p-6">
-      <h1 className="text-2xl font-semibold">{mode === "login" ? "Log in to Cooky" : "Create your Cooky account"}</h1>
-      <form onSubmit={submit} className="mt-6 flex flex-col gap-3">
-        <label className="flex flex-col gap-1 text-sm">
+    <AuthShell
+      title={mode === "login" ? "Welcome back" : "Create your account"}
+      lead={mode === "login" ? "Your fridge, plans and lists are where you left them. Bao kept an eye on them." : "Two minutes to set up. Bao does the maths from then on."}
+      mascot={<AuthBao attention={attention} />}
+      footer={
+        mode === "login" ? (
+          <>New here? <Link className={btnText} href="/signup">Create an account</Link></>
+        ) : (
+          <>Already have an account? <Link className={btnText} href="/login">Log in</Link></>
+        )
+      }
+    >
+      <form onSubmit={submit} className="flex flex-col gap-4">
+        <label className="flex flex-col gap-1.5 text-sm font-medium">
           Email
-          <input className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input
+            className={field} type="email" required autoComplete="email" placeholder="you@example.com" value={email}
+            onChange={(e) => setEmail(e.target.value)} onFocus={() => setAttention("email")} onBlur={() => setAttention("none")}
+          />
         </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Password
-          <input className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900" type="password" required minLength={PASSWORD_MIN_CHARS} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} />
+        <label className="flex flex-col gap-1.5 text-sm font-medium">
+          <span className="flex items-baseline justify-between">
+            Password
+            {mode === "login" && <Link className={`text-xs ${btnText}`} href="/forgot-password">Forgot it?</Link>}
+          </span>
+          <input
+            className={field} type="password" required minLength={PASSWORD_MIN_CHARS} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password}
+            onChange={(e) => setPassword(e.target.value)} onFocus={() => setAttention("password")} onBlur={() => setAttention("none")}
+          />
+          {mode === "signup" && <span className="font-normal text-zinc-500">At least {PASSWORD_MIN_CHARS} characters.</span>}
         </label>
-        {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-        {notice && <p className="text-sm text-green-700">{notice}</p>}
-        <button disabled={busy} className="mt-2 rounded-md bg-zinc-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900">
-          {busy ? "Please wait…" : mode === "login" ? "Log in" : "Sign up"}
+        {error && <p role="alert" className={alert}>{error}</p>}
+        {notice && <p role="status" className="rounded-xl bg-accent-soft p-3 text-sm">{notice}</p>}
+        <button disabled={busy} className={`mt-1 ${btnPrimary}`}>
+          {busy ? "One moment…" : mode === "login" ? "Log in" : "Create account"}
         </button>
       </form>
-      <p className="mt-4 text-sm text-zinc-500">
-        {mode === "login" ? (
-          <>
-            New here? <Link className="underline" href="/signup">Create an account</Link>
-            <span className="mt-2 block"><Link className="underline" href="/forgot-password">Forgot your password?</Link></span>
-          </>
-        ) : (
-          <>Already have an account? <Link className="underline" href="/login">Log in</Link></>
-        )}
-      </p>
-    </main>
+    </AuthShell>
   );
 }

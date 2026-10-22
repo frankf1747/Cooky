@@ -6,10 +6,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import type { Profile } from "@spec/contract";
 import type { ProfileFormData } from "@/modules/account";
-
-const CHIP_ON = "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900";
-const CHIP_OFF = "border-zinc-300 dark:border-zinc-700";
-const input = "rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900";
+import { btnPrimary, chip, chipOff, chipOn, field as input } from "./styles";
 
 const noSubscribe = () => () => {};
 
@@ -41,7 +38,7 @@ function Chips({ label, hint, all, picked, onChange, disabled }: {
           {shown.map((i) => {
             const on = picked.includes(i.id);
             return (
-              <label key={i.id} className={`relative flex cursor-pointer items-center rounded-full border px-3 py-1 ${on ? CHIP_ON : CHIP_OFF}`}>
+              <label key={i.id} className={`relative cursor-pointer ${chip} ${on ? chipOn : chipOff}`}>
                 <input type="checkbox" className="sr-only" checked={on} disabled={disabled}
                   onChange={(e) => onChange(e.target.checked ? [...picked, i.id] : picked.filter((x) => x !== i.id))} />
                 {i.name}
@@ -156,8 +153,8 @@ export function ProfileForm({ data, limits, mode }: { data: ProfileFormData; lim
         </select>
       </label>
 
-      <div className="flex flex-col items-start gap-2">
-        <button type="submit" disabled={busy} className="rounded-md bg-zinc-900 px-5 py-2 text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900">
+      <div className="flex flex-col items-stretch gap-2 sm:items-start">
+        <button type="submit" disabled={busy} className={btnPrimary}>
           {busy ? "Saving…" : error ? "Try again" : mode === "onboarding" ? "Save and plan my week" : "Save settings"}
         </button>
         {error && <p role="alert" className="text-sm text-red-700 dark:text-red-300">{error}</p>}
