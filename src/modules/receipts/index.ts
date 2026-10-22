@@ -11,7 +11,7 @@ import { ApiError, badRequest, conflict, notFound, unprocessable, upstream } fro
 import { newId } from "@/platform/ids";
 import { log } from "@/platform/log";
 import { extractReceipt, type Extracted } from "./extract";
-import { getImage, parseUpload, putImage, removeImage, sniffImage } from "./image";
+import { parseUpload, removeImage } from "./image";
 import { typicalExpiry } from "./lines";
 import { planDiff } from "./plan-diff";
 import type { ImageMediaType } from "./reader";
@@ -71,9 +71,9 @@ async function read(userId: string, receiptId: string, image: Uint8Array, mediaT
 export async function upload(userId: string, form: FormData, requestId: string): Promise<{ receipt: ReceiptDraft; run: RunInfo }> {
   const { bytes, mediaType, planId } = await parseUpload(form);
   if (planId && !(await ownsPlan(await reader(), userId, planId))) throw notFound();
+  // The photo is read from memory and never stored (RCT9).
   const receiptId = newId("rct");
-  const imagePath = await putImage(userId, receiptId, bytes, mediaType);
-  await insertReceipt(writer(userId), { id: receiptId, planId, imagePath });
+  await insertReceipt(writer(userId), { id: receiptId, planId });
   return read(userId, receiptId, bytes, mediaType, requestId);
 }
 
@@ -87,17 +87,21 @@ export async function getForReview(userId: string, receiptId: string): Promise<{
   return { receipt: draft, plan: labels };
 }
 
+/**
+ * RCT7: photos are never stored, so a failed read cannot be re-read on the server. The scan page
+ * retries by sending the same photo again (it is still on the device); this route says so.
+ */
 export async function retry(userId: string, receiptId: string, requestId: string): Promise<{ receipt: ReceiptDraft; run: RunInfo }> {
+  void requestId;
   const r = await readReceipt(await reader(), userId, receiptId);
   if (r.status !== "failed") throw conflict("not_failed", { receiptStatus: r.status });
-  if (!r.image_path) throw conflict("image_expired");
-  const bytes = await getImage(userId, r.image_path);
-  const mediaType = sniffImage(bytes);
-  if (!mediaType) throw new Error("receipts: the stored image is not a JPEG, PNG or WebP");
-  return read(userId, receiptId, bytes, mediaType, requestId);
+  throw conflict("rescan_needed", { message: "Cooky doesn't keep receipt photos. Scan the receipt again." });
 }
 
-/** RCT9: the photo goes once the receipt is confirmed. A failure is loud; a repeat confirm retries it. */
+/**
+ * RCT9: clears a photo stored before photos stopped being kept (new receipts have none). A failure
+ * is loud; a repeat confirm retries it.
+ */
 async function dropImage(userId: string, receiptId: string, path: string | null): Promise<void> {
   if (!path) return;
   try {
@@ -174,7 +178,7 @@ export async function confirm(userId: string, receiptId: string, input: z.infer<
   return { addedItemIds: result.createdItemIds, fridge: result.fridge };
 }
 
-/** DELETE /api/receipts/{id}: the photo, the receipt and its lines. Fridge items already added stay. */
+/** DELETE /api/receipts/{id}: the receipt, its lines and any old photo. Fridge items already added stay. */
 export async function remove(userId: string, receiptId: string): Promise<void> {
   const r = await readReceipt(await reader(), userId, receiptId);
   if (r.image_path) await removeImage(userId, r.image_path);
