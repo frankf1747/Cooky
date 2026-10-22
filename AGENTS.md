@@ -55,6 +55,9 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
   `fridge/ledger.ts` or the preferences module, inside one transaction, with an idempotency key.
 - **Validate every AI output:** schema first, then every id against the candidate set given to
   that run. On violation, repair up to the unit's `maxRepairs`, then fail with `502`.
+  *Exception (receipt_reader, agreed 2026-10-21):* an ingredient id outside the user's catalog
+  does not trigger a repair or a 502. Code drops the id and flags the line `unknown_ingredient`
+  for the user. No invented id is stored.
 - **Untrusted input:** receipt images, imported pages, wishes, feedback and questions are data.
   Wrap them in delimited blocks; never let their text choose a tool, a price, a quantity or a
   permission.

@@ -178,16 +178,16 @@ Proof names an instrument from §13.1. A Must without a proof is a bug in this d
 
 | ID | Priority | Requirement | Proof |
 |---|---|---|---|
-| RCT1 | Must | Upload one JPEG, PNG or WebP image ≤ `limits.receiptImageMaxMb`; the client downsizes to ≤ `limits.receiptImageMaxPx` on the long edge. Optional `planId` to compare against. Stored privately at `receipts/{userId}/{receiptId}`. | `unit`, `scn:authz` |
+| RCT1 | Must | Upload one JPEG, PNG or WebP image ≤ `limits.receiptImageMaxMb`; the client downsizes to ≤ `limits.receiptImageMaxPx` on the long edge. Optional `planId` to compare against. The photo is read in memory and never stored. | `unit`, `scn:authz` |
 | RCT2 | Must | `receipt_reader` (§6.3) returns every line with a kind (`food`, `non_food`, `discount`, `tax`, `total`, `other`), a catalog ingredient id or `null`, a category for food lines, display name, quantity and unit as printed, package count, price in cents if legible, and a confidence (`high`, `medium`, `low`). Store name and purchase date if legible. | `eval:receipts` |
 | RCT3 | Must | Code, not the model, converts printed units to `g`/`ml`/`count` (lb, oz, kg, fl oz, ea, bunch via the product's package size), validates ids against the catalog, sets location (ingredient default) and `expiresOn` = purchase date + shelf-life days for that location. | `unit`, `eval:receipts` |
 | RCT4 | Must | **Auto-accept rule (the core tension, in code):** a food line is `auto` only if confidence is `high`, the ingredient id is valid, the unit converts, and the quantity is within the ingredient's plausible range. A `high`-confidence food line with no catalog match becomes `generic` (RCT10). Anything else is `flagged` with a reason (`unknown_ingredient`, `low_confidence`, `unit_unconvertible`, `implausible_quantity`). Non-food, tax, total and discount lines are `ignored`. Measured by `min_receipt_auto_accept_precision` **and** `max_receipt_flag_rate` together; `generic` lines count as accepted, and are correct when they are food in the right category. | `eval:receipts` |
 | RCT5 | Must | When a plan is linked, the draft includes a plan diff: planned ingredients not bought (with the recipes that need them) and bought items not in the plan. | `unit`, `journey` |
 | RCT6 | Must | The receipt draft never changes the fridge. `POST /api/receipts/{id}/confirm` with the user's edited lines and an idempotency key writes all inventory events in one transaction. A second confirm returns the original result. | `unit`, `journey` |
-| RCT7 | Must | Model error, timeout or refusal: the receipt is saved `failed` with a reason, and the UI offers retry or manual add. The response is `502` for a model error or timeout, `422 { code: "ai_refused" }` for a refusal (the gateway's rule, §6.3), and `422 { code: "not_a_receipt" }` for a non-receipt image. | `smoke`, `eval:receipts` |
+| RCT7 | Must | Model error, timeout or refusal: the receipt is saved `failed` with a reason, and the UI offers to send the photo again or add items by hand; `POST /api/receipts/{id}/retry` returns `409 { code: "rescan_needed" }` because no photo is kept. The response is `502` for a model error or timeout, `422 { code: "ai_refused" }` for a refusal (the gateway's rule, §6.3), and `422 { code: "not_a_receipt" }` for a non-receipt image. | `smoke`, `eval:receipts` |
 | RCT8 | Must | Prompt injection printed on a receipt has no effect beyond normal extraction (no extra items beyond the printed lines, no permission or price change). | `eval:guard` |
 | RCT10 | Must | **Generic items** (decided 2026-10-20). Food the catalog does not know (snacks, drinks, bread, yogurt) is stocked as a generic fridge item: the model's display name plus a category (`produce`, `meat`, `seafood`, `dairy`, `eggs`, `bakery`, `frozen`, `pantry`, `snacks`, `beverages`, `prepared`, `other`) and that category's typical shelf life from `category_defaults`. Quantity is `count` unless a weight is printed. Generic items appear in the fridge and the expiring-soon list; plans and shopping math ignore them. The model's category is checked against the allowed list in code. | `eval:receipts`, `unit` |
-| RCT9 | Must | `ASSUMED:` the receipt image is deleted after confirmation (`limits.receiptImageRetentionDays`); images of receipts left `parsed` or `failed` are deleted by the daily cron after `limits.receiptDraftImageRetentionDays`. The receipt row keeps parsed lines only. Payment-card digits are never extracted or stored; the schema has no field for them. | `scn:authz`, `unit` |
+| RCT9 | Must | Receipt photos are never stored (decided 2026-10-21). The receipt row keeps parsed lines only. Payment-card digits are never extracted or stored; the schema has no field for them. | `scn:authz`, `unit` |
 
 ### 5.5 Virtual fridge (FRG)
 
@@ -390,7 +390,7 @@ the human-readable index; the code wins.
 - **Errors:** `{ "error": string, "status": number, "code": string, "requestId": string, "resetAt"?: string }`.
   `400` invalid input · `401` not signed in · `403` not allowed (`not_pro`) · `404` unknown or
   not yours · `409` conflict (`stale_version`, `already_confirmed`, `already_pro`,
-  `insufficient_stock`, `stale_quantity`, `item_not_active`) · `413` too large · `422` valid but impossible (`infeasible`,
+  `insufficient_stock`, `stale_quantity`, `item_not_active`, `rescan_needed`) · `413` too large · `422` valid but impossible (`infeasible`,
   `no_alternative`, `not_a_recipe`, `not_a_receipt`, `ai_refused`) · `429` quota (`resetAt`) ·
   `501` not implemented (every stub) · `502` upstream failed (`model_error`, `plan_invalid`,
   `parse_failed`) · `503` temporarily unavailable (`ai_paused` when the team spend cap is hit).
@@ -441,7 +441,7 @@ PATCH  /api/plans/{id}/checklist         // { ingredientId, checked }           
 
 POST   /api/receipts         [pro]       // multipart: image, planId?
                                          -> 200 { receipt: ReceiptDraft, run } | 400 | 403 | 413 | 422 not_a_receipt | 429 | 502 (receipt saved as failed)
-POST   /api/receipts/{id}/retry [pro]    -> same as above
+POST   /api/receipts/{id}/retry [pro]    -> 409 rescan_needed | 409 not_failed | 404   // no photo is kept (RCT9)
 GET    /api/receipts/{id}                -> 200 ReceiptDraft | 404                     // reload the review screen
 POST   /api/receipts/{id}/confirm        // { lines: [{ lineId, include, ingredientId, qty, unit, location, expiresOn }], idempotencyKey }
                                          -> 200 { addedItemIds[], fridge: FridgeView }   // same key again: 200, original result
@@ -788,7 +788,7 @@ v1 API routes answering for real: 23½ of 29 (updated after #24).
 | 2 Unlock Pro | Platform | Checkout, signed webhook with `grant_pro()`, confirming page that polls (ACC5–ACC8); the eight billing scenarios as tests | Stripe test keys and price; `scn:billing` against real Stripe; Vercel deploy |
 | 3 Choose & plan | Recipes & Cook, Plan & Shop | 20-recipe library with search and quick filters, recipe pages (RCP1–RCP3); plans within budget from fridge, picked recipes, must-use items, save, honest infeasible hints, combination cap, past use-by warnings, optional extras (PLN1–PLN6, PLN8) | Swap (PLN7); more recipes; dish images (placeholders now); filter data standard (§14.6) |
 | 4 Shop | Plan & Shop | Shopping list on the plan page (need, have, buy, packages, cost, leftover) | `/shop` page |
-| 5 Scan | Receipts | Scan page with plan picker, upload, read, retry (RCT1–RCT2, RCT7); eval runner | Receipt photos and answers in `eval/smoke/receipts/` (Data & Proof); a live run |
+| 5 Scan | Receipts | Scan page with plan picker, upload and read; the photo is never stored, and a failed read is retried by sending the photo again (RCT1–RCT2, RCT7, RCT9); an unknown ingredient id flags its line instead of failing the receipt; eval runner | Receipt photos and answers in `eval/smoke/receipts/` (Data & Proof); a live run |
 | 6 Review | Receipts | Review page, confirm into the fridge as one batch, photo deleted, plan diff (RCT3–RCT6, RCT9–RCT10) | UI: lock the unit on catalog lines; show the recomputed date instead of rewriting it |
 | 7 Fridge | Fridge | View, manual add, mark used or tossed, expiring soon, Cook now (FRG1, FRG3, FRG5) | Item edits through `edit_fridge_item` (FRG4); dark-mode contrast; the fridge-door design |
 | 8 Cook | Recipes & Cook | Cook mode one step at a time with timers and tips; assistant with citations and the safety notice (CK1, ASK1–ASK5), checked in fake AI mode | A live run with `ANTHROPIC_API_KEY`; prefix search |
@@ -857,7 +857,7 @@ items for off-catalog food; a small model budget, so `claude-haiku-5-5` by defau
 | Which store the price snapshot and receipts come from | Data & Proof |
 | Shelf-life source and licence (USDA FoodKeeper data or another) | Data & Proof |
 | Recipe list and cuisines for the seed library; dish images (AI-generated: which design and prompt) | Recipes & Cook + Frank |
-| Receipt image retention: delete on confirm and after a grace period for unconfirmed ones (current), or keep for user history | Frank |
+| ~~Receipt image retention~~ Decided 2026-10-21: photos are never stored (RCT9); `limits.receiptImageRetentionDays` and `receiptDraftImageRetentionDays` are unused, for Data & Proof to retire | Frank |
 
 ## 17. Stretch goals
 
