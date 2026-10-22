@@ -1,3 +1,4 @@
+"use client";
 // Owner: Platform. Bao, Cooky's chef bun and the voice of the app (docs/BRAND.md).
 //
 // Construction, on a 120-unit square:
@@ -13,12 +14,60 @@
 // Eight states (welcoming, curious, thinking, encouraging, confused, celebrating, reassuring,
 // resting), six poses, four props. Motion is a CSS class (globals.css) and always stops under
 // reduced motion. Character colours are fixed, so Bao looks the same in both schemes.
-import { useId, type ReactNode } from "react";
+//
+// Bao is alive wherever it appears: it sways a little when it has nothing else to do, blinks,
+// follows the pointer with its eyes (or glances around when nobody is pointing), and a tap
+// makes it hop and beam. All of that is decoration: it never blocks an action or hides text.
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 export type BaoMood = "welcoming" | "curious" | "thinking" | "encouraging" | "confused" | "celebrating" | "reassuring" | "resting";
 export type BaoPose = "rest" | "wave" | "cheer" | "hold" | "think" | "cover";
 export type BaoProp = "none" | "spoon" | "basket" | "receipt" | "timer";
 export type BaoMotion = "none" | "breathe" | "hop" | "nod";
+
+/** How long a tap reaction lasts, in ms (the hop animation is 0.9s). */
+const REACT_MS = 950;
+/** Bao looks around on its own after this long without the pointer moving. */
+const IDLE_MS = 4000;
+
+/**
+ * Where Bao's eyes point, each axis -1..1: towards the pointer while it moves, now and then a
+ * glance somewhere else when it doesn't. Only while Bao is on screen; nothing under reduced motion.
+ */
+function useGaze(ref: React.RefObject<SVGSVGElement | null>, enabled: boolean) {
+  const [gaze, setGaze] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    if (!enabled || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let frame = 0;
+    let lastMove = 0;
+    const onMove = (e: PointerEvent) => {
+      lastMove = Date.now();
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const r = ref.current?.getBoundingClientRect();
+        if (!r || r.bottom < 0 || r.top > window.innerHeight) return;
+        const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+        setGaze({ x: clamp((e.clientX - (r.left + r.width / 2)) / 260), y: clamp((e.clientY - (r.top + r.height / 2)) / 260) });
+      });
+    };
+    // Every few seconds without the pointer, a glance to one side and back.
+    const glance = window.setInterval(() => {
+      if (Date.now() - lastMove < IDLE_MS || document.hidden) return;
+      setGaze({ x: Math.random() * 1.6 - 0.8, y: Math.random() * 0.8 - 0.3 });
+      window.setTimeout(() => {
+        if (Date.now() - lastMove >= IDLE_MS) setGaze({ x: 0, y: 0 });
+      }, 1300);
+    }, 5200 + Math.round(Math.random() * 2400));
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.clearInterval(glance);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [ref, enabled]);
+  return gaze;
+}
 
 const LABEL: Record<BaoMood, string> = {
   welcoming: "Bao, waving hello",
@@ -72,11 +121,24 @@ export function Bao({
   decorative?: boolean;
 }) {
   const id = useId().replace(/:/g, "");
-  const lx = Math.max(-1, Math.min(1, look?.x ?? 0)) * 3;
-  const ly = Math.max(-1, Math.min(1, look?.y ?? 0)) * 2.5;
+  const svg = useRef<SVGSVGElement>(null);
+  // A tap: Bao hops and beams for a moment. `tap` remounts the svg so the hop replays every tap.
+  const [tap, setTap] = useState(0);
+  const [beaming, setBeaming] = useState(false);
+  useEffect(() => {
+    if (!beaming) return;
+    const t = window.setTimeout(() => setBeaming(false), REACT_MS);
+    return () => window.clearTimeout(t);
+  }, [tap, beaming]);
+  const shown: BaoMood = beaming ? "celebrating" : mood;
+  // Eyes follow the pointer unless the page says where to look (or the eyes are shut).
+  const gaze = useGaze(svg, !look && OPEN_EYES.includes(mood) && size >= 28);
+  const eye = look ?? gaze;
+  const lx = Math.max(-1, Math.min(1, eye.x)) * 3;
+  const ly = Math.max(-1, Math.min(1, eye.y)) * 2.5;
   const covered = pose === "cover";
-  const blink = OPEN_EYES.includes(mood) && size >= 48 && !covered;
-  const tilt = TILT[mood] ?? 0;
+  const blink = OPEN_EYES.includes(shown) && size >= 28 && !covered;
+  const tilt = TILT[shown] ?? 0;
   const stroke = { stroke: BAO.ink, strokeWidth: 3, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, fill: "none" };
 
   const oval = (cx: number, cy: number, rx = 3.6, ry = 4.7) => <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill={BAO.ink} />;
@@ -117,11 +179,27 @@ export function Bao({
     <ellipse cx={x} cy={y} rx={rx} ry={ry} fill={BAO.crust} transform={`rotate(${angle} ${x} ${y})`} />
   );
 
-  const motionClass = motion === "breathe" ? "bun-breathe" : motion === "hop" ? "bun-hop" : motion === "nod" ? "bun-nod" : "";
+  // A tap wins; otherwise the page's motion; otherwise a slow idle sway, so Bao is never a sticker.
+  const motionClass = beaming ? "bun-hop" : motion === "breathe" ? "bun-breathe" : motion === "hop" ? "bun-hop" : motion === "nod" ? "bun-nod" : size >= 28 ? "bun-idle" : "";
   const a11y = decorative ? { "aria-hidden": true } : { role: "img", "aria-label": LABEL[mood] };
+  // Idle Baos start at different points of the sway, so two on a page never move in step.
+  const phase = [...id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 997, 7);
 
   return (
-    <svg width={size} height={size} viewBox="0 0 120 120" className={`${motionClass} ${className}`} {...a11y}>
+    <svg
+      key={tap}
+      ref={svg}
+      width={size}
+      height={size}
+      viewBox="0 0 120 120"
+      className={`${motionClass} ${className}`}
+      style={motionClass === "bun-idle" ? { animationDelay: `-${phase * 7}ms` } : undefined}
+      onPointerDown={() => {
+        setTap((n) => n + 1);
+        setBeaming(true);
+      }}
+      {...a11y}
+    >
       <defs>
         <clipPath id={`${id}-body`}>
           <path d={BODY} />
@@ -162,9 +240,9 @@ export function Bao({
         </g>
 
         {/* face */}
-        {!covered && <g className={blink ? "bun-blink" : undefined}>{eyes[mood]}</g>}
-        {!covered && brows[mood]}
-        {mouth[mood]}
+        {!covered && <g className={blink ? "bun-blink" : undefined}>{eyes[shown]}</g>}
+        {!covered && brows[shown]}
+        {mouth[shown]}
 
         {mood === "thinking" && pose !== "think" && (
           <g fill={BAO.ink} opacity="0.28">

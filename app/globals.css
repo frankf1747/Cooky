@@ -37,6 +37,10 @@
   --cobalt-deep: #2b4bd8;
   /* text and marks on cobalt-deep, in both schemes */
   --on-brand: #ffffff;
+  /* a sheet of paper on the cobalt ground (the note on the fridge door, Bao's speech bubble):
+     paper stays paper in both schemes, a little dimmer at night */
+  --paper: #fffdf8;
+  --on-paper: #1e1b24;
   --crust: #e8a33d;
   --crust-tint: #f7e5bf;
   --crust-ink: #74470c;
@@ -83,6 +87,7 @@
     --cobalt-tint: #222a4d;
     --cobalt-ink: #c6d0ff;
     --cobalt-deep: #1f2b6e;
+    --paper: #ece4d4;
     --crust: #edb054;
     --crust-tint: #3b2e17;
     --crust-ink: #f6d9a0;
@@ -122,6 +127,8 @@
   --color-cobalt-ink: var(--cobalt-ink);
   --color-cobalt-deep: var(--cobalt-deep);
   --color-on-brand: var(--on-brand);
+  --color-paper: var(--paper);
+  --color-on-paper: var(--on-paper);
   --color-crust: var(--crust);
   --color-crust-tint: var(--crust-tint);
   --color-crust-ink: var(--crust-ink);
@@ -189,6 +196,16 @@ p {
   outline-offset: 2px;
 }
 
+/* Fields the browser filled in keep the field's own colours instead of the browser's pale blue,
+   which is unreadable at night. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--foreground);
+  box-shadow: 0 0 0 1000px var(--surface) inset;
+  caret-color: var(--foreground);
+}
+
 /* A row of chips that scrolls sideways on phones, without a scrollbar. */
 .scroll-row {
   scrollbar-width: none;
@@ -242,6 +259,17 @@ p {
   40% { transform: translateY(-5px) rotate(-7deg); }
   70% { transform: translateY(1px) rotate(3deg); }
 }
+@keyframes bun-idle {
+  0%, 100% { transform: rotate(0) scale(1, 1); }
+  25% { transform: rotate(-2deg) scale(0.99, 1.012); }
+  50% { transform: rotate(0) scale(1, 1); }
+  75% { transform: rotate(2deg) scale(0.99, 1.012); }
+}
+@keyframes hat-sway {
+  0%, 100% { transform: rotate(0); }
+  30% { transform: rotate(2.5deg); }
+  80% { transform: rotate(-2.5deg); }
+}
 @keyframes bun-blink {
   0%, 94%, 100% { transform: scaleY(1); }
   96.5% { transform: scaleY(0.1); }
@@ -266,6 +294,9 @@ p {
 }
 
 .bun-breathe { transform-origin: 50% 88%; animation: bun-breathe 4.8s ease-in-out infinite; }
+/* Bao with nothing to do: a slow rock on its base with a breath in it, the hat a beat behind. */
+.bun-idle { transform-origin: 50% 88%; animation: bun-idle 6.4s ease-in-out infinite; }
+.bun-idle .bun-hat { transform-box: fill-box; transform-origin: 50% 100%; animation: hat-sway 6.4s ease-in-out infinite; }
 .bun-hop { transform-origin: 50% 88%; animation: bun-hop 0.9s var(--ease-out) 1; }
 .bun-nod { transform-origin: 50% 88%; animation: bun-nod 0.6s ease-in-out 1; }
 .bun-hop .bun-hat, .bun-nod .bun-hat { transform-box: fill-box; transform-origin: 50% 100%; animation: hat-lag 0.9s var(--ease-out) 0.08s 1; }

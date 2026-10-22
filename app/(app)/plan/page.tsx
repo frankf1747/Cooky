@@ -27,8 +27,8 @@ export default async function PlanPage(props: PageProps<"/plan">) {
     <Page
       kicker="Step 1 · Plan"
       tone="plan"
-      title="Plan dinners"
-      description={<>Bao picks dinners around your fridge, budget and time, then writes one shopping list. <Link href="/preferences" className={btnText}>Your preferences</Link></>}
+      title="Plan dishes"
+      description={<>Bao picks dishes around your fridge, budget and time, then writes one shopping list. <Link href="/preferences" className={btnText}>Your preferences</Link></>}
       width="narrow"
     >
       {current && (

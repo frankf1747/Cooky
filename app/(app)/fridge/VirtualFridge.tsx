@@ -4,15 +4,17 @@
 // missing one or two things), and the crisper drawer with what you have, use-soon first. Tap a
 // plate to put it in your plan (src/ui/planPicks); the count follows you to the Plan tab.
 // The doors are decoration: everything inside is a real button or text that works without
-// them, and under reduced motion the fridge is simply open.
+// them, and under reduced motion the fridge is simply open. The person can close it again (the
+// button under it, or a tap on the closed doors opens it), and while it is shut the shelves are
+// inert, so nothing behind the doors takes focus.
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Check, Plus } from "@phosphor-icons/react";
+import { Check, Door as DoorIcon, DoorOpen, Plus } from "@phosphor-icons/react";
 import type { CookNowEntry, FridgeItem } from "@spec/contract";
 import { Bao } from "@/ui/Bao";
 import { DishArt } from "@/ui/DishArt";
 import { PICKS_MAX, planPicks, usePlanPicks } from "@/ui/planPicks";
-import { btnPrimary, btnSecondary, btnText, tag, tagNeutral, tagPast } from "@/ui/styles";
+import { btnPrimary, btnSecondary, btnSecondarySm, btnText, tag, tagNeutral, tagPast } from "@/ui/styles";
 
 /** How many plates fit on each shelf. */
 const READY_MAX = 6;
@@ -51,7 +53,7 @@ export function VirtualFridge({ cookNow, items, expiringSoon, today, onAddByHand
             {/* the fridge light comes on as the doors open */}
             <div aria-hidden className={`pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(ellipse_at_top,var(--accent-soft),transparent_70%)] transition-opacity duration-700 ${open ? "opacity-100" : "opacity-0"}`} />
 
-            <div className="relative px-3 pb-3 pt-5 sm:px-5 sm:pt-6">
+            <div className="relative px-3 pb-3 pt-5 sm:px-5 sm:pt-6" inert={!open}>
               {empty ? (
                 <div className="flex flex-col items-center px-2 pb-4 pt-2 text-center">
                   <Bao mood="welcoming" pose="wave" motion={open ? "nod" : "none"} size={128} />
@@ -92,14 +94,15 @@ export function VirtualFridge({ cookNow, items, expiringSoon, today, onAddByHand
             </div>
           </div>
 
-          {/* the doors: decoration only, so hidden from assistive tech and never in the way */}
-          <div aria-hidden className="pointer-events-none absolute inset-0 flex [perspective:1800px]">
+          {/* the doors: decoration, so hidden from assistive tech; out of the way while open, and a
+              tap on them while shut opens them (the button below does the same for everyone) */}
+          <div aria-hidden onClick={() => setOpen(true)} className={`absolute inset-0 flex [perspective:1800px] ${open ? "pointer-events-none" : "cursor-pointer"}`}>
             <Door side="left" open={open}>
               <span className="absolute left-5 top-6 font-display text-sm font-semibold text-on-brand/70">cooky</span>
               <Bao mood="welcoming" size={58} ground={false} decorative className="absolute left-1/2 top-[28%] -translate-x-1/2 -rotate-6" />
             </Door>
             <Door side="right" open={open}>
-              <span className="absolute left-1/2 top-[30%] w-[64%] -translate-x-1/2 rotate-3 rounded-md bg-surface px-3 py-3 text-center font-display text-[15px] italic leading-snug text-foreground shadow-float">
+              <span className="absolute left-1/2 top-[30%] w-[64%] -translate-x-1/2 rotate-3 rounded-md bg-paper px-3 py-3 text-center font-display text-[15px] italic leading-snug text-on-paper shadow-float">
                 {empty ? "Empty. Stock me." : ready.length ? `${ready.length} ${ready.length === 1 ? "dinner" : "dinners"} ready` : "What's for dinner?"}
               </span>
             </Door>
@@ -109,6 +112,12 @@ export function VirtualFridge({ cookNow, items, expiringSoon, today, onAddByHand
         <div aria-hidden className="mx-auto flex w-[72%] justify-between">
           <span className="h-2.5 w-7 rounded-b-lg bg-cobalt-deep" />
           <span className="h-2.5 w-7 rounded-b-lg bg-cobalt-deep" />
+        </div>
+        <div className="mt-3 flex justify-center">
+          <button type="button" onClick={() => setOpen((o) => !o)} className={btnSecondarySm}>
+            {open ? <DoorIcon size={18} aria-hidden /> : <DoorOpen size={18} aria-hidden />}
+            {open ? "Close the fridge" : "Open the fridge"}
+          </button>
         </div>
       </div>
     </div>

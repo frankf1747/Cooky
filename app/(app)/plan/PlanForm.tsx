@@ -2,28 +2,39 @@
 // Owner: Plan & Shop. The plan request form (PLN1). Posts to /api/plans and opens the draft.
 // Dishes are picked elsewhere, by tapping plates in the fridge or + on a recipe (src/ui/planPicks);
 // here they are listed, can be taken out, and go in as `mustIncludeRecipeIds`. "Whatever's good"
-// plans without any picks: Bao chooses every dinner within the budget and time above.
+// plans without any picks: Bao chooses every dish within the budget and time above.
+// The basics are set with − and + steppers and a row of times, never typed or picked from a list.
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Shuffle, X } from "@phosphor-icons/react";
+import { CurrencyDollar, ForkKnife, Shuffle, Timer, Users, X } from "@phosphor-icons/react";
 import { formatUsd } from "@/platform/money";
 import type { PlanFormData } from "@/modules/planning";
 import { BaoSays } from "@/ui/Bao";
 import { DishArt } from "@/ui/DishArt";
+import { Stepper } from "@/ui/Stepper";
 import { planPicks, usePlanPicks } from "@/ui/planPicks";
-import { alert, btnPrimary, btnSecondarySm, btnText, chip, chipOff, chipOn, field as input, h2, label } from "@/ui/styles";
+import { alert, btnPrimary, btnSecondarySm, btnText, chip, chipOff, chipOn, chipRow, field as input, h2 } from "@/ui/styles";
 import { formatQty, planErrorMessage, type ApiErrorBody } from "./ui";
 
 type Limits = { servingsMin: number; servingsMax: number; mealsMin: number; mealsMax: number; wishesMaxChars: number };
 
 /** How many fridge foods show before "Show all". */
 const FRIDGE_SHOWN = 6;
+/** The budget steps by $5, from $5 up to $300 a week. */
+const BUDGET_STEP_CENTS = 500;
+const BUDGET_MIN_CENTS = 500;
+const BUDGET_MAX_CENTS = 30000;
+/** Cooking times on offer, in minutes per dish. */
+const MINUTE_CHOICES = [15, 20, 30, 45, 60];
+
+/** $40, or $37.50 when there are cents. */
+const usd = (cents: number) => (cents % 100 ? formatUsd(cents) : `$${cents / 100}`);
 
 /** One numbered part of the form: a Fraunces heading with its step number, a note, the fields. */
 function Group({ n, title, note, children }: { n: number; title: string; note?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <fieldset className="border-t border-line pt-8 first:border-t-0 first:pt-0">
+    <fieldset className="min-w-0 border-t border-line pt-8 first:border-t-0 first:pt-0">
       <legend className="sr-only">{title}</legend>
       <h2 className={`${h2} flex items-center gap-3`} aria-hidden>
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cobalt-tint font-sans text-sm font-semibold tracking-normal text-cobalt-ink">{n}</span>
@@ -39,14 +50,16 @@ export function PlanForm({ data, limits, preselected = [] }: { data: PlanFormDat
   const router = useRouter();
   const d = data.defaults;
   const [servings, setServings] = useState(d.servings);
-  const [budget, setBudget] = useState((d.budgetCents / 100).toFixed(2));
+  const [budgetCents, setBudgetCents] = useState(d.budgetCents);
+  const budget = usd(budgetCents);
   const [maxMinutes, setMaxMinutes] = useState(d.maxMinutes);
   // Picks live in the browser and follow the person around; only dishes still in the library count.
   const picks = usePlanPicks().filter((p) => data.recipes.some((r) => r.id === p.id));
   const picked = picks.map((p) => p.id);
   const [meals, setMeals] = useState(Math.min(limits.mealsMax, Math.max(d.meals, preselected.length)));
-  // Never fewer dinners than picked dishes.
-  const dinners = Math.min(limits.mealsMax, Math.max(meals, picked.length));
+  // Never fewer dishes than picked ones.
+  const dishes = Math.min(limits.mealsMax, Math.max(meals, picked.length));
+  const minuteChoices = [...new Set([...MINUTE_CHOICES, d.maxMinutes])].sort((a, b) => a - b);
   const [wishes, setWishes] = useState("");
   const [mustUse, setMustUse] = useState<string[]>([]);
   const [allFridge, setAllFridge] = useState(false);
@@ -73,8 +86,6 @@ export function PlanForm({ data, limits, preselected = [] }: { data: PlanFormDat
   async function submit(e?: React.FormEvent) {
     e?.preventDefault();
     if (busy) return;
-    const budgetCents = Math.round(Number(budget) * 100);
-    if (!Number.isFinite(budgetCents) || budgetCents < 0) return setError({ message: "Enter a budget in dollars, like 40 or 35.50.", retry: false });
     setBusy(true);
     setError(null);
     try {
@@ -82,7 +93,7 @@ export function PlanForm({ data, limits, preselected = [] }: { data: PlanFormDat
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          servings, budgetCents, maxMinutes, meals: dinners,
+          servings, budgetCents, maxMinutes, meals: dishes,
           ...(wishes.trim() ? { wishes: wishes.trim() } : {}),
           ...(mustUse.length ? { mustUseItemIds: mustUse } : {}),
           ...(picked.length ? { mustIncludeRecipeIds: picked } : {}),
@@ -103,31 +114,62 @@ export function PlanForm({ data, limits, preselected = [] }: { data: PlanFormDat
   return (
     <form onSubmit={submit} className="flex flex-col gap-8" aria-busy={busy}>
       <Group n={1} title="The basics">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <label className={label}>
-            People
-            <select className={input} value={servings} onChange={(e) => changed(setServings)(Number(e.target.value))} disabled={busy}>
-              {Array.from({ length: limits.servingsMax - limits.servingsMin + 1 }, (_, i) => limits.servingsMin + i).map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-          </label>
-          <label className={label}>
-            Dinners
-            <select className={input} value={dinners} onChange={(e) => changed(setMeals)(Number(e.target.value))} disabled={busy}>
-              {Array.from({ length: limits.mealsMax - limits.mealsMin + 1 }, (_, i) => limits.mealsMin + i).map((n) => (
-                <option key={n} value={n} disabled={n < picked.length}>{n}</option>
-              ))}
-            </select>
-          </label>
-          <label className={label}>
-            Budget ($)
-            <input className={`${input} tabular-nums`} inputMode="decimal" value={budget} onChange={(e) => changed(setBudget)(e.target.value)} disabled={busy} required />
-          </label>
-          <label className={label}>
-            Max minutes
-            <input className={`${input} tabular-nums`} type="number" min={5} step={5} value={maxMinutes} onChange={(e) => changed(setMaxMinutes)(Number(e.target.value))} disabled={busy} required />
-          </label>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Stepper
+            label="People"
+            icon={<Users size={16} weight="bold" />}
+            value={servings}
+            min={limits.servingsMin}
+            max={limits.servingsMax}
+            unit={servings === 1 ? "person" : "people"}
+            less="Fewer people"
+            more="More people"
+            onChange={changed(setServings)}
+            disabled={busy}
+          />
+          <Stepper
+            label="Dishes"
+            icon={<ForkKnife size={16} weight="bold" />}
+            value={dishes}
+            min={limits.mealsMin}
+            max={limits.mealsMax}
+            unit={dishes === 1 ? "dish" : "dishes"}
+            less="Fewer dishes"
+            more="More dishes"
+            onChange={changed(setMeals)}
+            disabled={busy}
+            floor={{ value: picked.length, note: `You picked ${picked.length}` }}
+          />
+          <div className="col-span-2 sm:col-span-1">
+            <Stepper
+              label="Budget"
+              icon={<CurrencyDollar size={16} weight="bold" />}
+              value={budgetCents}
+              min={BUDGET_MIN_CENTS}
+              max={BUDGET_MAX_CENTS}
+              step={BUDGET_STEP_CENTS}
+              format={usd}
+              unit="for the week"
+              less="Lower the budget by $5"
+              more="Raise the budget by $5"
+              onChange={changed(setBudgetCents)}
+              disabled={busy}
+            />
+          </div>
+        </div>
+        <div role="radiogroup" aria-label="Most minutes per dish" className="mt-5">
+          <p className="flex items-center gap-1.5 text-[13px] font-medium text-muted">
+            <Timer size={16} weight="bold" aria-hidden className="text-subtle" />
+            Time per dish, at most
+          </p>
+          <div className={`mt-2 ${chipRow}`}>
+            {minuteChoices.map((m) => (
+              <label key={m} className={`relative cursor-pointer ${chip} ${maxMinutes === m ? chipOn : chipOff} tabular-nums`}>
+                <input type="radio" name="maxMinutes" className="sr-only" checked={maxMinutes === m} onChange={() => changed(setMaxMinutes)(m)} disabled={busy} />
+                {m} min
+              </label>
+            ))}
+          </div>
         </div>
       </Group>
 
@@ -135,9 +177,9 @@ export function PlanForm({ data, limits, preselected = [] }: { data: PlanFormDat
         n={2}
         title="Your dishes"
         note={picked.length
-          ? picked.length >= dinners
-            ? `${picked.length} picked, one for every dinner.`
-            : `${picked.length} picked. Bao fills the other ${dinners - picked.length} ${dinners - picked.length === 1 ? "dinner" : "dinners"}.`
+          ? picked.length >= dishes
+            ? `${picked.length} picked, one for every dish.`
+            : `${picked.length} picked. Bao fills the other ${dishes - picked.length} ${dishes - picked.length === 1 ? "dish" : "dishes"}.`
           : "Tap plates in the fridge or + on a recipe and they land here. Or let Bao choose."}
       >
         {picks.length > 0 && (
@@ -175,7 +217,7 @@ export function PlanForm({ data, limits, preselected = [] }: { data: PlanFormDat
             </span>
             <span className="min-w-0">
               <span className="block font-display text-lg font-semibold">Whatever&apos;s good</span>
-              <span className="block text-sm text-muted">Bao picks all {dinners} dinners within {budget ? `$${budget}` : "your budget"} and {maxMinutes} minutes each.</span>
+              <span className="block text-sm text-muted">Bao picks all {dishes} dishes within {budget} and {maxMinutes} minutes each.</span>
             </span>
           </button>
         )}
@@ -251,13 +293,13 @@ export function PlanForm({ data, limits, preselected = [] }: { data: PlanFormDat
       <div className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-10 rounded-2xl border border-line bg-surface/95 p-3 shadow-float backdrop-blur-md sm:bottom-4 sm:p-4">
         {busy && (
           <BaoSays mood="thinking" pose="think" motion="breathe" size={48} className="mb-3">
-            Weighing {data.recipes.length} dinners against your fridge and {budget ? `$${budget}` : "the budget"}. A few seconds.
+            Weighing {data.recipes.length} dishes against your fridge and {budget}. A few seconds.
           </BaoSays>
         )}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          {!busy && <span className="order-2 text-center text-sm text-muted sm:order-1 sm:text-left">Up to {budget ? `$${budget}` : "your budget"}, {maxMinutes} minutes each</span>}
+          {!busy && <span className="order-2 text-center text-sm text-muted sm:order-1 sm:text-left">Up to {budget}, {maxMinutes} minutes each</span>}
           <button disabled={busy} className={`order-1 w-full sm:order-2 sm:ml-auto sm:w-auto ${btnPrimary}`}>
-            {busy ? "Planning…" : `Plan ${dinners} dinners for ${servings}`}
+            {busy ? "Planning…" : `Plan ${dishes} dishes for ${servings}`}
           </button>
         </div>
       </div>
