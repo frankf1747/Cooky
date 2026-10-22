@@ -7,7 +7,7 @@ import { ApiError } from "@/platform/errors";
 import { formatUsd } from "@/platform/money";
 import { getPlan, planNotes } from "@/modules/planning";
 import { Page } from "@/ui/Page";
-import { btnSecondary } from "@/ui/styles";
+import { btnSecondary, btnText, panel, tag } from "@/ui/styles";
 import { formatQty } from "../ui";
 import { SaveButton } from "./SaveButton";
 import { SwapMeal } from "./SwapMeal";
@@ -46,7 +46,7 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
     >
       <div className="grid gap-3">
         {plan.meals.map((m, i) => (
-          <article key={i} className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+          <article key={i} className={`p-4 ${panel}`}>
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
               <h2 className="font-semibold">
                 <span className="mr-2 text-zinc-400">{i + 1}.</span>
@@ -54,11 +54,11 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
               </h2>
               <span className="flex shrink-0 items-center gap-3">
                 {m.usesFridgeItemIds.length > 0 && (
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+                  <span className={tag}>
                     uses {m.usesFridgeItemIds.length} from your fridge
                   </span>
                 )}
-                <Link href={`/cook/${m.recipeId}`} className="text-sm font-medium hover:underline">Cook</Link>
+                <Link href={`/cook/${m.recipeId}`} className={`text-sm ${btnText}`}>Cook</Link>
               </span>
             </div>
             <ul className="mt-2 list-disc pl-5 text-sm text-zinc-600 dark:text-zinc-400">
@@ -77,7 +77,7 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
       <div id="shopping" className="mt-10 flex scroll-mt-20 flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h2 className="text-lg font-semibold">
           Shopping list
-          {toBuy.length > 0 && <Link href={`/shop/${plan.planId}`} className="ml-3 text-sm font-normal underline">Open in the store</Link>}
+          {toBuy.length > 0 && <Link href={`/shop/${plan.planId}`} className={`ml-3 text-sm font-normal ${btnText}`}>Open in the store</Link>}
         </h2>
         <p className={`text-sm ${over ? "text-red-700 dark:text-red-300" : "text-zinc-600 dark:text-zinc-400"}`}>
           <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{formatUsd(plan.totalCents)}</span> of {formatUsd(plan.budgetCents)} budget
@@ -90,7 +90,7 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
           Nothing to buy: your fridge and staples cover every meal.
         </p>
       ) : (
-        <div className="mt-3 overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
+        <div className={`mt-3 overflow-x-auto ${panel}`}>
           <table className="w-full text-sm">
             <thead className="bg-zinc-50 text-left text-xs font-medium text-zinc-500 dark:bg-zinc-900">
               <tr>
@@ -128,7 +128,7 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
       )}
 
       {plan.status === "saved" && toBuy.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-800">
+        <div className={`mt-4 flex flex-wrap items-center justify-between gap-3 p-4 text-sm ${panel}`}>
           <p className="text-zinc-600 dark:text-zinc-400">Back from the store? Scan the receipt to stock your fridge and see anything you missed.</p>
           <Link href={`/receipts/new?planId=${plan.planId}`} className={btnSecondary}>Scan the receipt</Link>
         </div>
@@ -143,7 +143,7 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
               {notes.extras.unpricedIngredientIds.length > 0 && " (some prices unknown)"}
             </p>
           </div>
-          <ul className="mt-3 divide-y divide-zinc-200 rounded-lg border border-zinc-200 text-sm dark:divide-zinc-800 dark:border-zinc-800">
+          <ul className={`mt-3 divide-y divide-zinc-200 text-sm dark:divide-zinc-800 ${panel}`}>
             {notes.extras.items.map((i) => (
               <li key={`${i.ingredientId}|${i.unit}`} className="flex items-center justify-between gap-4 px-3 py-2">
                 <span>

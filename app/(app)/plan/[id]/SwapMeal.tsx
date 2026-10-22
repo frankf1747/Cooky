@@ -6,10 +6,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { PreferenceProposal } from "@spec/contract";
 import { formatUsd } from "@/platform/money";
+import { alert, btnSecondarySm as btnGhost, btnText, field as input, panel } from "@/ui/styles";
 import { planErrorMessage, type ApiErrorBody } from "../ui";
-
-const btnGhost = "rounded-md border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-zinc-700";
-const input = "rounded-md border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900";
 
 type Answer = "always" | "once" | "dismiss";
 
@@ -81,11 +79,11 @@ export function SwapMeal({ planId, version, mealIndex, title, maxChars }: { plan
       )}
 
       {error && (
-        <div role="alert" className="mt-2 text-sm text-red-700 dark:text-red-300">
+        <div role="alert" className={`mt-2 ${alert}`}>
           <p>{error.message}</p>
           <div className="mt-1 flex gap-3">
-            {error.retry && <button type="button" className="underline disabled:opacity-50" disabled={busy} onClick={() => swap()}>Try again</button>}
-            {error.upgrade && <Link className="underline" href="/billing">Unlock Pro</Link>}
+            {error.retry && <button type="button" className={btnText} disabled={busy} onClick={() => swap()}>Try again</button>}
+            {error.upgrade && <Link className={btnText} href="/billing">Unlock Pro</Link>}
           </div>
         </div>
       )}
@@ -93,8 +91,8 @@ export function SwapMeal({ planId, version, mealIndex, title, maxChars }: { plan
       {proposals.map((p) => {
         const a = answers[p.id];
         return (
-          <div key={p.id} className="mt-3 rounded-md border border-zinc-200 p-3 text-sm dark:border-zinc-800">
-            <p className="text-xs uppercase tracking-wide text-zinc-500">Remember this for next time?</p>
+          <div key={p.id} className={`mt-3 p-3 text-sm ${panel}`}>
+            <p className="text-zinc-600 dark:text-zinc-400">Remember this for next time?</p>
             <p className="mt-1 font-medium">{p.value}</p>
             <p className="text-xs text-zinc-500">{p.reason}</p>
             {a === "always" || a === "once" || a === "dismiss" ? (
@@ -106,7 +104,7 @@ export function SwapMeal({ planId, version, mealIndex, title, maxChars }: { plan
                 <button className={btnGhost} disabled={a === "saving"} onClick={() => answer(p, "dismiss")}>Don&apos;t save</button>
               </div>
             )}
-            {a === "error" && <p className="mt-2 text-red-700 dark:text-red-300">That didn&apos;t save. You can add it on the <Link className="underline" href="/preferences">Preferences</Link> page.</p>}
+            {a === "error" && <p className="mt-2 text-red-700 dark:text-red-300">That didn&apos;t save. You can add it on the <Link className={btnText} href="/preferences">Preferences</Link> page.</p>}
           </div>
         );
       })}

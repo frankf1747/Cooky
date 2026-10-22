@@ -9,6 +9,7 @@ import { getForReview, type PlanLabels } from "@/modules/receipts";
 import { PlanDiffPanel } from "./PlanDiffPanel";
 import { ReviewForm } from "./ReviewForm";
 import { Page } from "@/ui/Page";
+import { btnPrimary, btnText } from "@/ui/styles";
 
 export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">) {
   const { id } = await props.params;
@@ -45,21 +46,21 @@ export default async function ReceiptsIdPage(props: PageProps<"/receipts/[id]">)
             Cooky couldn&apos;t read this receipt. Nothing was added to your fridge, and Cooky doesn&apos;t keep receipt photos, so scan it again to retry.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-4">
-            <Link href="/receipts/new" className="rounded-md bg-zinc-900 px-4 py-2 text-white dark:bg-zinc-100 dark:text-zinc-900">Scan again</Link>
-            <Link href="/fridge" className="text-sm font-medium underline">Add groceries by hand</Link>
+            <Link href="/receipts/new" className={btnPrimary}>Scan again</Link>
+            <Link href="/fridge" className={`text-sm ${btnText}`}>Add groceries by hand</Link>
           </div>
         </div>
       )}
 
       {receipt.status === "parsing" && (
         <p className="mt-6 text-zinc-600 dark:text-zinc-400" aria-live="polite">
-          Cooky is still reading this receipt. <Link href={`/receipts/${receipt.receiptId}`} className="underline">Refresh</Link> in a moment.
+          Cooky is still reading this receipt. <Link href={`/receipts/${receipt.receiptId}`} className={btnText}>Refresh</Link> in a moment.
         </p>
       )}
 
       {receipt.status === "confirmed" && (
         <p className="mt-6 text-zinc-600 dark:text-zinc-400">
-          These items are already in your fridge. <Link href="/fridge" className="font-medium underline">Open the fridge</Link>
+          These items are already in your fridge. <Link href="/fridge" className={btnText}>Open the fridge</Link>
         </p>
       )}
     </Page>

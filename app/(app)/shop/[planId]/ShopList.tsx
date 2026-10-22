@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import type { ShoppingItem } from "@spec/contract";
 import { formatUsd } from "@/platform/money";
+import { alert, btnText, panel } from "@/ui/styles";
 import { formatQty } from "../../plan/ui";
 
 type Props = {
@@ -61,15 +62,15 @@ export function ShopList({ planId, aisles, initialChecked, covered, titles, tota
 
   if (items.length === 0) {
     return (
-      <p className="mt-6 rounded-lg border border-dashed border-zinc-300 p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
-        Nothing to buy: your fridge and staples cover every meal. <Link href={`/plan/${planId}`} className="underline">Back to the plan</Link>
+      <p className="mt-6 rounded-lg border border-dashed border-zinc-300 bg-surface p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
+        Nothing to buy: your fridge and staples cover every meal. <Link href={`/plan/${planId}`} className={btnText}>Back to the plan</Link>
       </p>
     );
   }
 
   return (
     <>
-      <div className="sticky top-14 z-10 flex items-baseline justify-between gap-4 border-b border-zinc-200 bg-[var(--background)] py-3 dark:border-zinc-800">
+      <div className="sticky top-14 z-10 flex items-baseline justify-between gap-4 border-b border-zinc-200 bg-background py-3 dark:border-zinc-800">
         <p className="text-sm">
           <span className="font-semibold">{inCart.length} of {items.length}</span> in your cart
         </p>
@@ -78,12 +79,12 @@ export function ShopList({ planId, aisles, initialChecked, covered, titles, tota
           <span className="text-zinc-500"> · plan {formatUsd(totalCents)}</span>
         </p>
       </div>
-      {error && <p role="alert" className="mt-3 text-sm text-red-700 dark:text-red-300">{error}</p>}
+      {error && <p role="alert" className={`mt-3 ${alert}`}>{error}</p>}
 
       {aisles.map((a) => (
         <div key={a.category} className="mt-6">
           <h2 className="text-xs font-medium uppercase tracking-wide text-zinc-500">{AISLE_LABEL[a.category] ?? a.category}</h2>
-          <ul className="mt-2 divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+          <ul className={`mt-2 divide-y divide-zinc-200 dark:divide-zinc-800 ${panel}`}>
             {a.items.map((i) => {
               const on = checked.includes(i.ingredientId);
               return (
@@ -91,7 +92,7 @@ export function ShopList({ planId, aisles, initialChecked, covered, titles, tota
                   <label className="flex cursor-pointer items-center gap-3 px-3 py-3">
                     <input
                       type="checkbox"
-                      className="h-5 w-5 shrink-0 accent-zinc-900 dark:accent-zinc-100"
+                      className="h-5 w-5 shrink-0 accent-accent"
                       checked={on}
                       disabled={saving.includes(i.ingredientId)}
                       onChange={(e) => toggle(i.ingredientId, e.target.checked)}
@@ -121,7 +122,7 @@ export function ShopList({ planId, aisles, initialChecked, covered, titles, tota
       )}
       <p className="mt-4 text-xs text-zinc-500">
         Prices are typical package prices checked on {priceAsOf}; taxes are not included. When you&apos;re home,{" "}
-        <Link href="/receipts/new" className="underline">scan the receipt</Link> to stock your fridge.
+        <Link href="/receipts/new" className={btnText}>scan the receipt</Link> to stock your fridge.
       </p>
     </>
   );
