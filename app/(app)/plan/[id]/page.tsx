@@ -10,6 +10,8 @@ import { Page } from "@/ui/Page";
 import { btnSecondary } from "@/ui/styles";
 import { formatQty } from "../ui";
 import { SaveButton } from "./SaveButton";
+import { SwapMeal } from "./SwapMeal";
+import targets from "@spec/targets.json";
 
 export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
   const { id } = await props.params;
@@ -35,7 +37,7 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
     <Page
       back={{ href: "/plan", label: "All plans" }}
       title={`${plan.meals.length} dinners for ${plan.servings}`}
-      description={<>Prices as of {plan.priceAsOf}. {plan.status === "saved" ? "Saved: this is your plan for the week." : "Save the plan to keep it and shop from its list."}</>}
+      description={<>Version {plan.version}, prices as of {plan.priceAsOf}. {plan.status === "saved" ? "Saved: this is your plan for the week." : "Save the plan to keep it and shop from its list."}</>}
       actions={plan.status === "saved" ? (
         <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">Saved</span>
       ) : (
@@ -44,7 +46,7 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
     >
       <div className="grid gap-3">
         {plan.meals.map((m, i) => (
-          <article key={m.recipeId} className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+          <article key={i} className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
               <h2 className="font-semibold">
                 <span className="mr-2 text-zinc-400">{i + 1}.</span>
@@ -67,6 +69,7 @@ export default async function PlanIdPage(props: PageProps<"/plan/[id]">) {
                 Uses your {p.name}, which is past its typical use-by date ({p.expiresOn}). Check it before cooking; dates are a typical guide, not safety advice.
               </p>
             ))}
+            <SwapMeal planId={plan.planId} version={plan.version} mealIndex={i} title={m.title} maxChars={targets.limits.feedbackMaxChars} />
           </article>
         ))}
       </div>

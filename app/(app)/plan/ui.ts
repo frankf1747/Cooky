@@ -33,10 +33,12 @@ export function planErrorMessage(status: number, body: ApiErrorBody, usd: (c: nu
       return { message: `You've reached your plan limit for now${body.resetAt ? `; it resets ${new Date(body.resetAt).toLocaleString()}` : ""}.`, retry: false };
     case "ai_paused":
       return { message: "Planning is paused for today because the team's AI budget is used up. Please try again tomorrow.", retry: false };
+    case "no_alternative":
+      return { message: "No other dish fits this plan's budget, time and preferences, so the plan is unchanged. Try a bigger budget or more minutes in a new plan.", retry: false };
     case "plan_invalid":
       return { message: "The planner couldn't produce a valid plan this time. Nothing was saved.", retry: true };
     case "stale_version":
-      return { message: "This plan changed since you opened it. Reload to see the latest version.", retry: false };
+      return { message: "This plan changed since you opened it (maybe in another tab). Reload to see the latest version.", retry: false };
     case "not_found":
       return { message: "That plan or fridge item no longer exists.", retry: false };
     default:
