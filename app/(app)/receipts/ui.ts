@@ -24,7 +24,7 @@ export function receiptErrorMessage(status: number, body: ApiErrorBody): Receipt
     case "quota_exhausted":
       return { message: `You've scanned the most receipts your plan allows for now${body.resetAt ? `; it resets ${new Date(body.resetAt).toLocaleString()}` : ""}.`, retry: false, manualAdd: true };
     case "ai_paused":
-      return { message: "Receipt scanning is paused for today because the team's AI budget is used up. You can add groceries by hand.", retry: false, manualAdd: true };
+      return { message: "Receipt scanning is paused for today because Cooky's daily AI budget is used up. You can add groceries by hand.", retry: false, manualAdd: true };
     case "rescan_needed":
       return { message: "Cooky doesn't keep receipt photos. Scan the receipt again.", retry: false, manualAdd: true };
     case "not_failed":

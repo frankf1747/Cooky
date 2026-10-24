@@ -32,7 +32,7 @@ export function planErrorMessage(status: number, body: ApiErrorBody, usd: (c: nu
     case "quota_exhausted":
       return { message: `You've reached your plan limit for now${body.resetAt ? `; it resets ${new Date(body.resetAt).toLocaleString()}` : ""}.`, retry: false };
     case "ai_paused":
-      return { message: "Planning is paused for today because the team's AI budget is used up. Please try again tomorrow.", retry: false };
+      return { message: "Planning is paused for today because Cooky's daily AI budget is used up. Please try again tomorrow.", retry: false };
     case "no_alternative":
       return { message: "No other dish fits this plan's budget, time and preferences, so the plan is unchanged. Try a bigger budget or more minutes in a new plan.", retry: false };
     case "plan_invalid":

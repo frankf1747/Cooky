@@ -1,6 +1,6 @@
 // The Cooky contract: every request, response, record and AI output, as zod schemas.
 // Pages, routes, modules and tests import from here. SPEC §8 is the prose index; this file wins.
-// Changing a shape here changes it for every teammate: only the Platform owner edits it.
+// Changing a shape here changes it for every module: changes go through Platform review.
 import { z } from "zod";
 import targets from "./targets.json";
 

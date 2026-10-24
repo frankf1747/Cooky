@@ -28,7 +28,7 @@ export function cookErrorMessage(status: number, body: ApiErrorBody): { message:
     case "quota_exhausted":
       return { message: `You've reached today's limit for questions${body.resetAt ? `; it resets ${new Date(body.resetAt).toLocaleString()}` : ""}.`, retry: false };
     case "ai_paused":
-      return { message: "The assistant is paused for today because the team's AI budget is used up. The recipe steps still work.", retry: false };
+      return { message: "The assistant is paused for today because Cooky's daily AI budget is used up. The recipe steps still work.", retry: false };
     case "ai_refused":
       return { message: "The assistant declined that question. Try asking about this recipe's steps or ingredients.", retry: false };
     case "insufficient_stock":
@@ -51,7 +51,7 @@ export function importErrorMessage(status: number, body: ApiErrorBody): { messag
     case "quota_exhausted":
       return { message: `You've added today's recipes${body.resetAt ? `; more from ${new Date(body.resetAt).toLocaleString()}` : ""}.`, retry: false };
     case "ai_paused":
-      return { message: "Bao is resting for today because the team's AI budget is used up. The library still works.", retry: false };
+      return { message: "Bao is resting for today because Cooky's daily AI budget is used up. The library still works.", retry: false };
     case "ai_refused":
       return { message: "Bao won't write that one. Try describing a dish you'd like to cook.", retry: false };
     case "not_a_recipe":

@@ -85,7 +85,7 @@ describe("runAi", () => {
     await expect(call()).rejects.toMatchObject({ status: 422, code: "ai_refused" });
   });
 
-  it("refuses to call the model past the team's daily spend cap", async () => {
+  it("refuses to call the model past the global daily spend cap", async () => {
     let called = false;
     setup([reply({ pick: "set_1" })], {
       spentTodayUsd: async () => targets.limits.globalDailySpendCapUsd,

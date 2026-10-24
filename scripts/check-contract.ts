@@ -1,4 +1,4 @@
-// Check 1 (contract): the pieces every teammate builds against still agree with each other.
+// Check 1 (contract): the pieces every module builds against still agree with each other.
 //   - every route in spec/routes.ts has a route file exporting that method, and no route file is unregistered
 //   - spec/targets.json is coherent (positive budgets, shares in 0..1, a note per target)
 //   - seed CSV headers match the columns documented in supabase/seed/README.md

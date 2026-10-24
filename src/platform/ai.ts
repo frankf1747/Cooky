@@ -164,7 +164,7 @@ export async function runAi<T>(call: AiCall<T>): Promise<{ output: T; run: RunIn
     log("ai_unpriced_model", { unit: call.unit, model, requestId: call.requestId });
 
   if ((await deps.spentTodayUsd()) >= targets.limits.globalDailySpendCapUsd)
-    throw unavailable("ai_paused", "AI features are paused for today: the team spend cap was reached");
+    throw unavailable("ai_paused", "AI features are paused for today: the daily spend cap was reached");
   const quota = await deps.consumeQuota(call.userId, call.quotaFeature ?? UNIT_QUOTA[call.unit]);
 
   const rec: RunRecord & { userId: string } = {

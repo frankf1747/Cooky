@@ -1,4 +1,4 @@
-// Every API route in SPEC §8.2, with who owns it and whether it is built for demo day (v1).
+// Every API route in SPEC §8.2, with who owns it and whether it is in the v1 release.
 // The skeleton creates one route file per entry; `npm run check:contract` keeps them in sync.
 
 export type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";

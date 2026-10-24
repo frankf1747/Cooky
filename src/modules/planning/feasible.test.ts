@@ -230,7 +230,7 @@ describe("findFeasibleSets on a large library (combination cap)", () => {
   });
 
   it("keeps a recipe for every must-use item, not just the cheapest users of one", () => {
-    // Frank's probe on #14: 20 cheap recipes share ing_a; only the priciest covers ing_big_39.
+    // The probe from #14: 20 cheap recipes share ing_a; only the priciest covers ing_big_39.
     const recipes = big.map((n) => r(`rcp_big_${n}`, 20, n < 20 ? [[`ing_big_${n}`, 100, "g"], ["ing_a", 10, "g"]] : [[`ing_big_${n}`, 100, "g"]]));
     const fridge = [
       { id: "itm_a", ingredientId: "ing_a", qty: 50, unit: "g" as const, expiresOn: "2026-10-22" },

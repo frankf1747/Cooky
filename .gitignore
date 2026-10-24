@@ -35,7 +35,7 @@ next-env.d.ts
 # agent scratch
 /.superpowers/
 
-# course materials never belong in the repo
+# documents and exports never belong in the repo
 *.pdf
 *.docx
 *.pptx

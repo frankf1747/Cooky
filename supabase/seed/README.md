@@ -67,7 +67,7 @@ and questions a beginner asks; say what does *not* work, too.
 
 - **Prices:** Trader Joe's list prices on traderjoes.com, read on 2026-10-21 (`store_label`
   says so). Prices can differ slightly by store. Two items have no price online, so their rows
-  carry the team's estimate and say so in `store_label`: `prd_spinach_170g` ($2.29) and
+  carry an estimate and say so in `store_label`: `prd_spinach_170g` ($2.29) and
   `prd_garlic_bulb_10ct` ($0.50 a bulb).
 - **Package counts that are estimates:** meat, fish and peppers are sold by weight; the row uses
   the 1 lb list price for a 454 g pack. `prd_lemon_bag_6ct` is a 2 lb bag counted as about 6

@@ -22,7 +22,7 @@ export function NotImplemented({ title, owner, spec, purpose, v = 1, back = { hr
         {purpose}
       </EmptyState>
       <p className="mt-4 text-xs text-subtle">
-        For the team: {owner} owns this page ({spec}{v === 2 ? ", after demo day" : ""}).
+        Coming in {v === 2 ? "a later release" : "this release"} ({spec}, {owner}).
       </p>
     </Page>
   );
