@@ -36,7 +36,34 @@ The AI does the reading: receipt lines, free-text wishes, cooking questions. Cod
 
 ## Architecture
 
-![How Cooky is built](docs/architecture.png)
+```mermaid
+flowchart TB
+    user["Browser<br/>phone or desktop"]
+    stripe["Stripe Checkout<br/>test mode"]
+
+    subgraph vercel["Vercel: Next.js app"]
+        pages["Pages<br/>app/(app), app/(auth)"]
+        api["API routes<br/>app/api/*"]
+        handler["Request handler<br/>session, validation, Pro check, errors"]
+        modules["Feature modules<br/>recipes, planning, preferences,<br/>receipts, fridge, cook, billing"]
+        gateway["AI gateway<br/>src/platform/ai.ts<br/>quotas, spend cap, output checks"]
+        db["Database clients<br/>read as user, write from server"]
+    end
+
+    claude["Claude API<br/>Haiku 5.5"]
+    supabase[("Supabase<br/>Postgres with row-level security, Auth")]
+
+    user --> pages
+    user -. "checkout" .-> stripe
+    pages --> api
+    stripe -- "signed webhook" --> api
+    api --> handler
+    handler --> modules
+    modules --> gateway
+    modules --> db
+    gateway --> claude
+    db --> supabase
+```
 
 | Layer | Where | What it does |
 |---|---|---|
