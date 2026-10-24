@@ -1,8 +1,7 @@
 # Cooky — design
 
-> The five design questions, answered for the choices actually made. Drafted with an AI coding
-> assistant from the team's decisions; the team reviews and owns these answers (AI use is
-> disclosed in the write-up). Details and diagrams: [`SPEC.md`](SPEC.md) §6.
+> The five design questions, answered for the choices actually made. Details and diagrams:
+> [`SPEC.md`](SPEC.md) §6; the picture is [`architecture.png`](architecture.png).
 
 ## Components
 
@@ -14,8 +13,8 @@
   (including the inventory ledger), cook, alerts, billing.
 - **AI units**, all called through `ai.ts`, each one structured call on a small, cheap model:
   `receipt_reader`, `planner` (chooses among options code has already found and priced),
-  `cook_assistant` (retrieval-grounded), `preference_proposer`, and `recipe_importer` after
-  demo day.
+  `cook_assistant` (retrieval-grounded), `preference_proposer`, and `recipe_importer`
+  (describe a dish; import from a link or photo is v2).
 - **Supabase**: Postgres with row-level security (all records, the inventory ledger, run
   records, quota counters), Auth, private Storage for receipt and recipe images.
 - **Stripe** (test mode) for checkout and the payment webhook.
@@ -76,23 +75,23 @@
   breaks.
 - **The planner is one model call over options code already found, not a tool-using agent.**
   Code enumerates and prices every feasible set of meals; the model only picks one and
-  explains it. This is fast, cheap and hard to get wrong in two days. We give up letting the
+  explains it. This is fast, cheap and hard to get wrong. We give up letting the
   model explore trade-offs on its own. **We are unsure the model adds much over a simple
   rule** ("cheapest set that uses the most expiring food"); SPEC §13.6 compares them and we
-  will report the answer either way. A tool-using agent is the first thing to try after demo day.
-- **A small, cheap model everywhere.** The team's model budget is small, and the hard parts
+  will report the answer either way. A tool-using agent is the first thing to try next.
+- **A small, cheap model everywhere.** The model budget is small, and the hard parts
   (math, filtering, permissions) are code anyway. We risk weaker receipt reading; if the smoke
   set shows it, only the receipt unit moves to a larger model.
 - **Generic items for food the catalog doesn't know.** Snacks, drinks and bread are stocked by
   category with a typical shelf life, so the fridge stays complete and the catalog stays small.
   Plans ignore them, so the fridge and the plan see slightly different worlds.
 - **Synchronous receipt parsing instead of a background job.** Simpler to build and to reason
-  about with five people and little time. We risk serverless timeouts on slow vision calls;
+  about. We risk serverless timeouts on slow vision calls;
   the latency target and the budget cap watch for it, and the async-job pattern is the
   documented fallback.
 - **One-time test price instead of a subscription.** Simplest Stripe flow to get right. It does
-  not cover the ongoing model cost of an active user; the write-up will show the numbers and
-  argue for a subscription or cheaper models per feature.
+  not cover the ongoing model cost of an active user (at most about US$0.19 a week at the cost
+  caps), so the next step is a subscription or cheaper models per feature.
 - **User confirms every fridge change.** Costs a tap per receipt and per meal, and caps how
   "magic" it feels. In exchange the fridge stays trustworthy, which every other feature
   depends on.

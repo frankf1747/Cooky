@@ -1,7 +1,5 @@
 # Cooky — product requirements
 
-*Owner: Frank Fu and team · 2026-10-20 · Tier L*
-
 > Read this one. The exhaustive version is [`SPEC.md`](SPEC.md). No thresholds appear here;
 > they live in `spec/targets.json`. A number restated in prose is a number that will be wrong
 > next month.
@@ -65,7 +63,7 @@ bought by trading away the other.
 - **Fail loud.** If the model is down, the user sees "we couldn't read this receipt, retry or
   add by hand", never an invented list.
 - **Bounded and honest.** Caps on time, cost and retries; hitting one is reported as such.
-- **Evidence over vibes.** Every claim in the write-up comes from a run on the deployed app.
+- **Evidence over vibes.** Every claim about quality comes from a run, with its target declared first.
 - **Controls live in code, not prompts.** Payments, permissions, quotas and personal data.
 
 **Red lines:** no live payment keys; no secret in the browser or the repository; no user ever
@@ -79,7 +77,7 @@ Vercel hosting and scheduled jobs, Resend for email, a published food-storage ta
 shelf life (source to confirm).
 
 **We build:** the contract, the platform layer, the feature modules and pages, the seed
-catalog and recipes, the evaluation sets, and the team's coding-agent setup.
+catalog and recipes, the evaluation sets, and the coding-agent setup (`AGENTS.md`).
 
 ## Architecture in one picture
 
@@ -106,20 +104,19 @@ quantities in the fridge ledger, Pro in billing, and all data in one database.
   passes.
 - Fast enough on the deployed app that nobody wonders whether it froze, and cheap enough per
   feature to make sense against the Pro price.
-- A small classmate pilot: less over-buying and less time planning than doing it by hand.
+- A small user pilot: less over-buying and less time planning than doing it by hand.
 
 Every one of these is a key in `spec/targets.json`, measured as the proof section of
 [`SPEC.md`](SPEC.md) describes.
 
-## What ships for demo day
+## What ships first (v1)
 
-The presentation is days away, so the first version is the core loop and nothing else: sign
-up and pay in test mode, plan meals from the fridge with an exact shopping list, scan a
-receipt into the fridge (food Cooky doesn't know is stocked by category), see what expires
-first and what you can cook now, cook with the assistant, and confirm what you used. Recipe
-import, email alerts, the weekly fridge check and the classmate pilot come after; they are the
-roadmap in the write-up. Every AI feature runs on a small, inexpensive model, because code
-already does the parts that must be exact.
+The core loop and nothing else: sign up and pay in test mode, plan meals from the fridge with an
+exact shopping list, scan a receipt into the fridge (food Cooky doesn't know is stocked by
+category), see what expires first and what you can cook now, cook with the assistant, and
+confirm what you used. Recipe import from links, email alerts, the weekly fridge check and a
+user pilot come after. Every AI feature runs on a small, inexpensive model, because code already
+does the parts that must be exact.
 
 ## What is out, and the cut
 
@@ -129,9 +126,9 @@ shared household accounts, multiple regions or currencies, real payments.
 **The cut:** the earlier proposal's private photo gallery of finished dishes. It served neither
 user pain. That effort moved to receipt scanning and the virtual fridge, which serve both.
 
-**The business question we will answer honestly:** a one-time Pro price does not cover the
-ongoing model cost of an active user. The write-up will show the measured cost per feature and
-argue for a subscription, cheaper models where evals allow, or both.
+**The business question:** a one-time Pro price does not cover the ongoing model cost of an
+active user. At the cost caps an active week costs at most about US$0.19 in model calls, so the
+price should become a subscription, with cheaper models where evals allow.
 
 ## Where to go next
 

@@ -1,101 +1,150 @@
 # Cooky
 
-> A meal-planning web app with a virtual fridge: plan meals from what you already have, buy
-> exactly what the recipes need, snap the receipt to stock the fridge, and cook the right dish
-> before food goes off. MGMT 298E capstone; Next.js, Supabase, Claude and Stripe test mode.
+**Plan dinners from what is already in your fridge, buy exactly what the recipes need, and cook it before it goes off.**
 
-## Start here
+**Live app: https://cooky-lake.vercel.app**
 
-**Status: walking skeleton.** Every route answers `501 not implemented` and every page shows a
-"Not implemented" panel; sign-up, log-in, the database and the checks work. Only the v1 scope in
-[SPEC §0](docs/SPEC.md#0-demo-day-scope-v1) gets built before demo day.
+Cooky is a meal planner with a virtual fridge, built for people who cook for one or two and shop once a week. You plan a few dinners and get one shopping list rounded to real package sizes. Back home, you photograph the receipt and Cooky stocks the fridge, with a typical use-by date for every item. The fridge then shows what you can cook now, soonest-expiring food first, and cook mode answers questions from the recipe itself.
 
-Needs Node 22 (`.nvmrc`) and Docker (for the local database).
+The AI does the reading: receipt lines, free-text wishes, cooking questions. Code does everything that must be exact: quantities, package counts, prices and dates. Nothing changes your fridge until you confirm it.
+
+## Try it
+
+1. Open https://cooky-lake.vercel.app and create an account.
+2. Set up your household, budget and the foods you never eat.
+3. **Unlock Pro** on the Billing page. Payments run in Stripe test mode, so use card `4242 4242 4242 4242` with any future expiry date and any CVC. Nothing is charged.
+4. Plan three dinners, open the shopping list, then go to **Stock** and photograph a grocery receipt.
+5. Open the fridge, pick a dish under **Cook now**, and ask Bao a question while you cook.
+
+| | Free | Pro (US$4.99, test mode) |
+|---|---|---|
+| Recipe library, fridge, cook mode, Cook now | Yes | Yes |
+| AI meal plans | 1 | 10 a day |
+| Swap a meal | | 30 a day |
+| Receipt scanning | | 5 a day |
+| Cooking assistant | | 60 questions a day |
+| Describe a dish to add a recipe | | 10 a day |
+
+## Features
+
+- **Plan.** Pick dishes yourself or let Cooky choose. Plans respect your budget, time per meal and the foods you never eat, and start from what is already in your fridge. If no plan fits, Cooky says which limit to relax instead of inventing one.
+- **Shop.** One list merged across meals, in real package sizes, with the cost and what will be left over. Ticks are saved, so the list follows you from laptop to phone.
+- **Stock.** Snap the receipt. Lines Cooky is sure of are accepted; the rest are flagged for you to check; items from the plan that are missing are pointed out. The photo is never stored.
+- **Fridge.** Every item carries a typical use-by date with its source (USDA FoodKeeper). **Use soon** and **Cook now** rank what to make first.
+- **Cook.** One step at a time, with timers. Bao, the assistant, answers only from the recipe and cites the step, or says the recipe does not cover your question.
+- **Learn.** Rate a dish or leave a note; Cooky proposes a preference, and keeps it only if you choose to.
+
+## Architecture
+
+```mermaid
+flowchart TB
+    user["Browser<br/>phone or desktop"]
+    stripe["Stripe Checkout<br/>test mode"]
+
+    subgraph vercel["Vercel: Next.js app"]
+        pages["Pages<br/>app/(app), app/(auth)"]
+        api["API routes<br/>app/api/*"]
+        handler["Request handler<br/>session, validation, Pro check, errors"]
+        modules["Feature modules<br/>recipes, planning, preferences,<br/>receipts, fridge, cook, billing"]
+        gateway["AI gateway<br/>src/platform/ai.ts<br/>quotas, spend cap, output checks"]
+        db["Database clients<br/>read as user, write from server"]
+    end
+
+    claude["Claude API<br/>Haiku 5.5"]
+    supabase[("Supabase<br/>Postgres with row-level security, Auth")]
+
+    user --> pages
+    user -. "checkout" .-> stripe
+    pages --> api
+    stripe -- "signed webhook" --> api
+    api --> handler
+    handler --> modules
+    modules --> gateway
+    modules --> db
+    gateway --> claude
+    db --> supabase
+```
+
+| Layer | Where | What it does |
+|---|---|---|
+| Pages | `app/(app)/`, `app/(auth)/`, `app/(marketing)/` | Next.js App Router screens, phone first |
+| API | `app/api/<feature>/route.ts` | Thin routes: parse, call one module function, return |
+| Request handler | `src/platform/handler.ts` | Session user, request id, validation against the contract, Pro check, one error body |
+| Feature modules | `src/modules/<feature>/` | Domain logic with unit tests beside it |
+| AI gateway | `src/platform/ai.ts` | The only code that calls Claude: quotas, spend cap, schema and id checks, repairs, run records |
+| Data | Supabase Postgres | Row-level security on every user table; clients read, the server writes |
+| Payments | Stripe Checkout (test mode) | A signed webhook grants Pro; the redirect never does |
+
+**Four AI units, each one structured call on Claude Haiku 5.5:**
+
+| Unit | The model | Code |
+|---|---|---|
+| `planner` | Picks one meal set and explains why | Finds and prices every feasible set first, so no choice can break a constraint |
+| `receipt_reader` | Reads each line into an ingredient, quantity and confidence | Decides auto-accept or flag, converts units, computes use-by dates |
+| `cook_assistant` | Answers from the recipe's retrieved steps, with citations | Retrieves the chunks; rejects citations outside them |
+| `preference_proposer` | Turns "a bit dry" into a preference | Saves it only after you choose |
+
+More: [design decisions and trade-offs](docs/DESIGN.md), the [full specification](docs/SPEC.md), and the [interface and brand](docs/BRAND.md).
+
+## Tech stack
+
+Next.js 16 (App Router, TypeScript), React 19, Tailwind CSS 4, zod · Supabase (Postgres, Auth, Storage) · Claude API (`@anthropic-ai/sdk`, Haiku 5.5) · Stripe Checkout in test mode · Vercel · Vitest and pgTAP.
+
+## Run it locally
+
+Needs Node 22 and Docker.
 
 ```bash
 nvm use && npm install
-npx supabase start                    # local Postgres, Auth, Storage on ports 563xx
-cp .env.example .env.local            # then paste API_URL, PUBLISHABLE_KEY, SECRET_KEY from:
+npx supabase start                  # local Postgres, Auth and Storage
+cp .env.example .env.local          # then paste the keys printed by the next command
 npx supabase status -o env
-npm run seed                          # loads supabase/seed/*.csv
-npm run dev                           # http://localhost:3000 → sign up → click around
-npm run dev:grant-pro -- you@example.com   # local only: unlock Pro features before billing exists
+npm run seed                        # recipes, ingredients, products, shelf life
+npm run dev                         # http://localhost:3000
 ```
 
-**Shared live database.** The team's hosted Supabase is already set up and seeded. Build
-against your local database day to day; to run against the live one, copy
-`.env.hosted.example` to `.env.hosted`, add the secret key Frank sends you privately, then run
-`npm run dev:hosted`. Details: [TECHNICAL](docs/TECHNICAL.md#shared-hosted-database).
+Without `ANTHROPIC_API_KEY`, every AI feature runs in fake mode with recorded fixtures, so you can use the whole app for free. To try Pro locally without Stripe: `npm run dev:grant-pro -- you@example.com`. Stripe, deploy and every environment variable: [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
-Every panel that says "Not implemented" is the progress bar. AI runs in fake mode until
-`ANTHROPIC_API_KEY` is set, so you can build pages without spending the team budget.
-Building a feature with Claude Code? It loads `AGENTS.md`; ask it to use the `cooky-module` skill.
-
-## Read, in this order
-
-| # | Read | Why | Minutes |
-|---|---|---|---|
-| 0 | [`docs/PROPOSAL.md`](docs/PROPOSAL.md) | **Start here:** the plan, who does what, and your first hour | 10 |
-| 0b | [`docs/ROLES.md`](docs/ROLES.md) | How data moves between roles, handoffs, what each role can grow into | 10 |
-| 1 | [`docs/PRD.md`](docs/PRD.md) | What we are building, the journey without and with Cooky, the core tension | 10 |
-| 2 | [`docs/DESIGN.md`](docs/DESIGN.md) | The five design questions and our trade-offs | 8 |
-| 3 | [`docs/TECHNICAL.md`](docs/TECHNICAL.md) | Architecture by owner, env vars, commands, troubleshooting | 12 |
-| 4 | `spec/targets.json` | What "working" means, in numbers | 5 |
-| 5 | [`docs/SPEC.md`](docs/SPEC.md) | Every requirement, route, table and check (reference, not cover to cover) | as needed |
-
-Coding agents load [`AGENTS.md`](AGENTS.md) (via `CLAUDE.md`) and work from `docs/SPEC.md`.
-
-## What is yours
-
-Split by ownership of files; each owner builds *and* verifies their folders. Names are
-placeholders until the team assigns them.
-
-| Owner | Folders | Others may edit? |
-|---|---|---|
-| Platform (Frank) | `src/platform/`, `src/ui/`, `spec/contract.ts`, `supabase/migrations/`, `src/modules/{billing,alerts}/`, landing, auth, onboarding, settings, billing and alerts pages, `.claude/`, CI, deploy | No: propose changes |
-| Recipes & Cook | `src/modules/{recipes,cook}/`, recipe library and cook pages, catalog CSVs in `supabase/seed/` | No |
-| Plan & Shop (Richard) | `src/modules/{planning,preferences}/`, plan, shop and preferences pages | No |
-| Receipts (Hanson) | `src/modules/receipts/`, camera and receipt review pages | No |
-| Fridge (Una) | `src/modules/fridge/`, fridge page, stats | No |
-| Data & Proof (non-coders) | `eval/` cases, `docs/PRD.md`, write-up, slides; seed rows by PR | No |
-| Everyone, with review | `spec/targets.json` (Data & Proof owner approves), `package.json` (Platform owner approves) | Only through the owner |
-
-## Where we are
-
-What works on `main` today, step by step through the journey, and what is next: SPEC §14.5.
-Review requests follow `.github/CODEOWNERS`.
-
-## Build order (two days)
-
-1. **Day 0 → Day 1 morning:** Frank lands the walking skeleton (every route `501`, deployed);
-   Data & Proof fill the seed CSVs and photograph receipts (SPEC §14.1).
-2. **Day 1:** accounts and Stripe; fridge ledger and page; shopping math; then the planner and
-   receipt scan, in parallel by owner (SPEC §14.2).
-3. **Day 1 gate:** a new account on the public URL signs up, pays in test mode, gets a plan,
-   saves it, and stocks the fridge from a receipt. Shown live, not described.
-4. **Day 2 morning:** cook deductions, *Cook now*, cooking assistant; swap and preferences only
-   if the gate passed.
-5. **Day 2 afternoon:** feature freeze, smoke evals, billing and authorization scenarios,
-   classmate test, write-up, slides, two rehearsals.
-
-If behind, cut in the order in SPEC §14.4. Never cut login, Stripe, the planner, shopping math,
-receipt → fridge, or the live URL.
-
-## How to prove it
+## Quality checks
 
 ```bash
-npm run check                                  # static: lint, types, secrets, live-key guard
-npm run check:contract                         # schemas, seed and reference sets validate
-npm run test                                   # unit tests
-npm run gate -- --upto 2 --base-url "$PREVIEW_URL"   # before merging: checks 0-2
-npm run gate -- --base-url "$PREVIEW_URL"            # milestones: checks 0-4, every target
+npm run check            # lint, types, secret scan, live-key guard
+npm run check:contract   # schemas compile; seed and eval sets validate
+npm run test             # unit and module tests
+npm run eval -- calc     # also: plans, cook
+npm run gate -- --upto 2 --base-url http://localhost:3000   # everything above, plus smoke requests
 ```
 
-Exit codes: `0` pass, `1` warnings, `2` fail. What each check measures, and against which
-target: SPEC §13.
+Targets are declared in `spec/targets.json` before any run. Current results on `main`:
 
-## Stuck?
+| Check | Target | Result |
+|---|---|---|
+| Shopping list matches hand-computed answers | 100% | 10 / 10 |
+| Plans that respect every exclusion, allergen, budget and time limit | 100% | 8 / 8 |
+| Impossible requests answered as infeasible | 100% | 2 / 2 |
+| Cooking assistant retrieves the right step (recall@5) | 90% | 12 / 12 |
+| Unit and database tests | all pass | 441 / 441 |
 
-- Troubleshooting table (webhooks, RLS, email limits, timeouts, model errors): [`docs/TECHNICAL.md`](docs/TECHNICAL.md#troubleshooting).
-- Need a change in a folder you do not own: ask its owner; do not edit it.
-- A target looks wrong: raise it with the Data & Proof owner; never loosen it to pass.
+The planner eval runs on recorded fixtures by default; set `ANTHROPIC_API_KEY` for a live run. The receipt-accuracy set is not labelled yet.
+
+## Repository layout
+
+```
+app/              pages and API routes
+src/platform/     request handler, AI gateway, database clients, money, units, dates
+src/modules/      recipes, planning, preferences, receipts, fridge, cook, billing, alerts
+src/ui/           the shared design system: Page, Bao, styles
+spec/             contract.ts (API shapes) and targets.json (every number)
+supabase/         migrations, seed CSVs, database tests
+eval/             eval sets and rules
+scripts/          seed, smoke, eval, gate
+docs/             PRD, SPEC, DESIGN, TECHNICAL, BRAND
+```
+
+## Contributing
+
+Every change goes through a pull request from a branch named `<area>/<topic>`, and the gate must pass before it merges. [AGENTS.md](AGENTS.md) holds the rules for contributors and coding agents: module boundaries, the contract, and the requirements every AI feature must meet.
+
+## Limits
+
+Payments are Stripe test mode only, prices are a dated snapshot from one store, shelf-life dates are a typical storage guide and not a food-safety check, and Cooky never certifies a dish as allergen-free.

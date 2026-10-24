@@ -1,10 +1,10 @@
 # Cooky — technical guide
 
 Open this while building. Intent is in [`PRD.md`](PRD.md); every requirement is in
-[`SPEC.md`](SPEC.md); numbers are in `spec/targets.json`. Commands below are the planned
-interface of the skeleton (SPEC §14.1); until the skeleton lands, they do not exist yet.
+[`SPEC.md`](SPEC.md); numbers are in `spec/targets.json`; the picture is
+[`architecture.png`](architecture.png).
 
-## Architecture, by owner
+## Architecture, by area
 
 ```
                     ┌──────────────────────── Vercel (Next.js) ────────────────────────┐
@@ -16,25 +16,25 @@ interface of the skeleton (SPEC §14.1); until the skeleton lands, they do not e
                     │                                                                  │
                     │ app/api/**  ──► src/platform/handler.ts      [Platform]          │
                     │                   │                                              │
-                    │                   ├─► src/modules/<feature>  [feature owner]     │
+                    │                   ├─► src/modules/<feature>  [feature area]      │
                     │                   │      └─► src/platform/ai.ts ──► Claude API   │
                     │                   └─► src/platform/db.ts ──► Supabase (Postgres, │
                     │                                              Auth, Storage)      │
                     │ app/api/stripe/webhook ◄── Stripe (test)     [Platform]          │
                     │ app/api/cron/alerts ◄── Vercel Cron ──► Resend [Platform]        │
                     └──────────────────────────────────────────────────────────────────┘
- eval/, e2e/ run against the deployed preview URL                    [Data & Proof]
+ eval/, e2e/ run against the deployed preview URL                    [Evals]
 ```
 
 ## What exists and what we build
 
 | Exists (we configure it) | Constraint to remember |
 |---|---|
-| Supabase Auth, Postgres, Storage | Default auth email sending is heavily rate-limited; set custom SMTP before the pilot. RLS returns empty results, not errors, when a policy denies. |
+| Supabase Auth, Postgres, Storage | Default auth email sending is heavily rate-limited; set custom SMTP for production. RLS returns empty results, not errors, when a policy denies. |
 | Stripe Checkout (test mode) | Webhooks need the raw body and a public URL; local dev uses the Stripe CLI. |
-| Claude API (`@anthropic-ai/sdk`) | Default model `claude-haiku-5-5` (cheap; step a unit up to `claude-sonnet-5-5` only if it misses its smoke targets). Use structured outputs for JSON, set `effort` explicitly, check `stop_reason` for `refusal` (Haiku has no server-side refusal fallback). Team budget is small: `limits.globalDailySpendCapUsd`, and `AI_MODE=fake` for tests and local UI work. |
+| Claude API (`@anthropic-ai/sdk`) | Default model `claude-haiku-5-5` (cheap; step a unit up to `claude-sonnet-5-5` only if it misses its smoke targets). Use structured outputs for JSON, set `effort` explicitly, check `stop_reason` for `refusal` (Haiku has no server-side refusal fallback). The model budget is small: `limits.globalDailySpendCapUsd`, and `AI_MODE=fake` for tests and local UI work. |
 | Vercel hosting + Cron | Function duration limits depend on the plan; cron frequency limits on the free plan. Check both before relying on them. |
-| Resend | Free tier daily send limit; verify a sending domain or use the test sender for the demo. |
+| Resend | Free tier daily send limit; verify a sending domain or use the test sender. |
 
 | We build | Path |
 |---|---|
@@ -47,9 +47,9 @@ interface of the skeleton (SPEC §14.1); until the skeleton lands, they do not e
 | Seed data: ingredients, products, shelf life, recipes, chunks | `supabase/seed/` |
 | Reference sets, eval scripts, rules | `eval/` |
 | End-to-end journey | `e2e/` |
-| Team agent harness | `.claude/skills/cooky-module/`, `.claude/agents/` |
+| Coding-agent harness | `.claude/skills/cooky-module/`, `.claude/agents/` |
 
-## Planned layout
+## Layout
 
 ```
 app/
@@ -62,7 +62,7 @@ app/
 src/
   platform/  handler.ts auth.ts db.ts ai.ts quotas.ts units.ts money.ts ids.ts errors.ts email.ts config.ts
   modules/<feature>/  index.ts (exported functions) · *.ts · prompts/ · *.test.ts
-  ui/        shared components (Platform owns; others add their own under their pages)
+  ui/        the shared design system: Page, Bao, DishArt, styles
 spec/        contract.ts targets.json
 supabase/    migrations/ seed/
 eval/        rules.md reference/<set>/{dev,test}/ scripts/ runs/ (gitignored)
@@ -71,7 +71,7 @@ e2e/         journey.spec.ts
 
 ## Contract rules that matter
 
-See SPEC §8.3. The three that break teammates most often: AI endpoints never write records;
+See SPEC §8.3. The three that break other modules most often: AI endpoints never write records;
 every id in AI output is validated against the run's candidates; money is integer cents with
 `null` for unknown.
 
@@ -119,41 +119,28 @@ npx supabase db reset         # wipe local data and re-apply migrations (then np
 Local email confirmation is off (`supabase/config.toml`), so sign-up logs you straight in.
 Local auth emails, if turned on, land in Mailpit at http://127.0.0.1:56324.
 
-## Shared hosted database
+## Hosted database
 
-The team's live Supabase project is `jrkhuohfhqyzwkwrcvii` (US West). It has the full schema and
-the seed data, and the same access rules as local (checked: with only the public key, user tables
-read empty and every write is refused).
-
-| What | Where it lives | Who has it |
-|---|---|---|
-| Project URL and publishable key | `.env.hosted.example` (committed; public by design, RLS protects data) | everyone |
-| Secret key | `.env.hosted` (gitignored), Vercel env vars | Frank shares it privately, never in chat or git |
-| Database password | Supabase dashboard | Frank only (needed for schema changes) |
+To run the app on your machine against a hosted Supabase project instead of the local one:
 
 ```bash
-cp .env.hosted.example .env.hosted    # then paste SUPABASE_SECRET_KEY from Frank
-npm run dev:hosted                    # the app on http://localhost:3000 against the live database
-npm run seed:hosted                   # reload seed data (Recipes & Cook, after CSV changes)
-npx supabase db push                  # schema changes: Platform only; asks for the database password
+cp .env.hosted.example .env.hosted    # fill in the project URL, publishable key and secret key
+npm run dev:hosted                    # the app on http://localhost:3000 against the hosted database
+npm run seed:hosted                   # load or reload the seed data
+npx supabase db push                  # apply migrations (asks for the database password)
 ```
 
-Rules for the live database: it is shared, so use your own test account (`you+cooky@...`), never
-delete other people's rows, and keep day-to-day development on the local database. Schema
-changes are Platform-only: a new file in `supabase/migrations/`, tested locally with
-`npx supabase db reset && npx supabase test db`, then `npx supabase db push`.
+Test a migration locally first (`npx supabase db reset && npx supabase test db`), then push.
+`npm run dev:grant-pro` refuses hosted URLs; Pro on a hosted database comes only from Stripe.
 
-Hosted auth settings live in the Supabase dashboard (Authentication → URL Configuration): add
-`http://localhost:3000` and the Vercel URL as redirect URLs. Email confirmation is on by
-default and Supabase's built-in email sender is rate-limited; turn confirmation off for the
-demo or connect Resend SMTP.
+In the Supabase dashboard (Authentication → URL Configuration), add `http://localhost:3000` and
+the deployed URL as redirect URLs. Email confirmation is on by default and Supabase's built-in
+sender is rate-limited; connect an SMTP provider such as Resend for real use.
 
-## Build order, with commands
+## Deploy
 
-The skeleton (SPEC §14.1) is in place; the critical path is SPEC §14.2.
-
-1. **Deploy (Platform, once).** Supabase is done (see above). Import the GitHub repo in Vercel, set the env vars below for Preview and
-   Production, deploy. In Stripe (test mode), create the Pro price (one-time, USD, the amount in
+1. **Deploy once.** Create a Supabase project and push the migrations (above). Import the GitHub
+   repo in Vercel, set the env vars below for Preview and Production, deploy. In Stripe (test mode), create the Pro price (one-time, USD, the amount in
    `spec/targets.json` → `costModel.proPriceUsd`; the webhook refuses any other amount), then a
    webhook endpoint `https://<url>/api/stripe/webhook` for `checkout.session.completed` and
    `checkout.session.async_payment_succeeded`; put its signing secret in Vercel.
@@ -161,9 +148,8 @@ The skeleton (SPEC §14.1) is in place; the critical path is SPEC §14.2.
    `stripe listen --forward-to localhost:3000/api/stripe/webhook` and use the `whsec_…` it prints
    as `STRIPE_WEBHOOK_SECRET`. Pay with card `4242 4242 4242 4242`. Without Stripe keys,
    *Unlock Pro* says payments aren't set up; `npm run dev:grant-pro -- <email>` still works locally.
-2. **Feature work** in each owner's folders: replace `notImplemented(...)` in
-   `src/modules/<m>/index.ts`, test first, then the page. Merge small and often to an
-   always-runnable `main`.
+2. **Feature work** in one area's folders (`AGENTS.md`): module function and its tests first, then
+   the page. Merge small and often to an always-runnable `main`.
 3. **Before each merge:** `npm run gate -- --upto 2 --base-url <preview URL>`.
 4. **Add signed-in smoke cases** to `scripts/smoke.ts` as features land; add each eval runner to
    `scripts/eval.ts`.
@@ -208,7 +194,7 @@ npm run gate -- --base-url "$URL"         # milestones and nightly: checks 0-4; 
 
 Live evals spend real API money; run `dev/` splits while tuning and the full set at milestones.
 
-Results go to `eval/runs/<date>-<set>.json` (gitignored); the write-up quotes the final `test` run.
+Results go to `eval/runs/<set>-<date>.json` (gitignored).
 
 ## Self-verify, before saying "done"
 
@@ -217,7 +203,7 @@ Results go to `eval/runs/<date>-<set>.json` (gitignored); the write-up quotes th
 3. Push; on the preview URL, `npm run smoke -- --base-url "$PREVIEW_URL"`.
 4. Click through your feature on the preview as a fresh user: loading, empty, error and retry
    states all appear when forced (use `AI_MODE=fake` with a failing fixture).
-5. Ask another owner to run steps 1–3 and confirm.
+5. Ask a reviewer to run steps 1–3 and confirm.
 
 ## Troubleshooting
 
@@ -229,9 +215,9 @@ Results go to `eval/runs/<date>-<set>.json` (gitignored); the write-up quotes th
 | Query returns `[]` instead of an error | RLS policy denies | Check the session is passed to the server client; check the policy for that table |
 | Receipt parse times out on Vercel | Large image or slow call exceeds the function limit | Downsize client-side to `limits.receiptImageMaxPx`; confirm the route's max duration; see DESIGN trade-off on async jobs |
 | Model returns `400` about `tool_choice` or `thinking` | A setting the chosen model rejects (forced tool choice, disabled thinking on some models) | Use structured outputs for JSON; omit `thinking` and lower `effort`; check the model notes in the claude-api docs |
-| AI routes return `503 ai_paused` | Team-wide daily spend cap reached | Expected; switch to `AI_MODE=fake` for UI work, or raise `limits.globalDailySpendCapUsd` with a note |
+| AI routes return `503 ai_paused` | The global daily spend cap is reached | Expected; switch to `AI_MODE=fake` for UI work, or raise `limits.globalDailySpendCapUsd` with a note |
 | iPhone photo rejected | HEIC upload | Convert to JPEG in the browser before upload (canvas re-encode) |
-| Two teammates' migrations conflict | New migration created outside the skeleton | Ask the Platform owner; migrations are owned in one place |
+| Two migrations conflict | Two branches added a migration at once | Rebase and renumber; migrations go through Platform review |
 | `Node.js detected but native WebSocket not found` | Running a script on Node 20 | `nvm use` (Node 22) |
 | `supabase start`: port is already allocated | Another local Supabase project uses the same ports | Cooky uses 563xx; stop the other project or change ports in `supabase/config.toml` |
 | A write returns `permission denied` | Writing with `reader()`; clients may only read (SPEC §9) | Use `writer(userId).db` from server code |

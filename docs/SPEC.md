@@ -10,8 +10,7 @@
 | | |
 |---|---|
 | Project | Cooky |
-| Owner | Frank Fu (integrator) with the team in §14.3 |
-| Tier | L: five builders, a payment flow, personal data (receipts, preferences) and AI acting on a user's records |
+| Tier | L: a payment flow, personal data (receipts, preferences) and AI acting on a user's records |
 | Stack | Next.js (App Router, TypeScript) on Vercel · Supabase (Auth, Postgres with row-level security, private Storage) · Claude API via `@anthropic-ai/sdk` · Stripe Checkout in test mode · Resend for email · Vercel Cron. Why: one deployable full-stack app with short request/response routes fits Vercel; Supabase gives auth, a relational store and private files in one service, so one record can hold everything an answer needs. |
 
 > **Core tension:** trust the AI's reading of receipts and recipes too much, and the virtual
@@ -20,31 +19,29 @@
 > app before. Cooky lives on the threshold: auto-accept what it is sure of, flag only what it
 > is not, and never write to the fridge without the user's final tap.
 
-`ASSUMED:` marks a decision taken by default that the team has not confirmed. §16 lists them.
+`ASSUMED:` marks a decision taken by default and not yet confirmed. §16 lists the open ones.
 
-## 0. Demo-day scope (v1)
+## 0. Release scope (v1)
 
-Decided 2026-10-20. **The final presentation is about two days away** (`ASSUMED:` 2026-10-22).
-The team is Frank plus two or three teammates who can own code with Claude Code, plus one or
-two who own data, evaluation and the story. The team's model budget is small (`costModel.teamBudgetUsd`),
-so every AI unit defaults to `claude-haiku-5-5`.
+Decided 2026-10-20. The model budget is small (`costModel.teamBudgetUsd`), so every AI unit
+defaults to `claude-haiku-5-5`.
 
 §5 describes the whole product. **For v1, build only the rows marked v1 below; everything else
 is v2, whatever its priority says.** v1 proofs use *smoke sets* (sizes in
 `workload.smokeSets`), not full reference sets; the write-up says so.
 
-| Capability | v1 (demo day) | v2 (after) |
+| Capability | v1 | v2 (after) |
 |---|---|---|
 | Accounts and Pro | ACC1–ACC9; onboarding with household size, budget, excluded ingredients and staples only | ACC10, equipment and allergen tags |
 | Recipes | RCP1–RCP3 (seed library of `workload.smokeSets.seedRecipes` recipes), RCP8; RCP5 text and RCP6 (Pro: describe a dish or paste a recipe; pulled forward by Platform 2026-10-21) | Import from a link or a photo (RCP4, RCP5 image, RCP7 for pages), RCP9 custom ingredients beyond generic items |
 | Planning | PLN1–PLN4, PLN6, PLN8; PLN5 as **one structured call** choosing among code-ranked feasible sets, with repairs | Tool-using planner agent (§6.3), PLN9–PLN10 |
-| Swap and preferences | PLN7 and LRN1–LRN3 if Day 2 allows (first Should to build) | — |
+| Swap and preferences | PLN7 and LRN1–LRN3 | — |
 | Receipt to fridge | RCT1–RCT9, with generic items (RCT10) | Plan diff polish, retry UX polish |
 | Fridge | FRG1–FRG5 | FRG6–FRG7 |
 | Cook | CK1–CK3 | — |
 | Cooking assistant | ASK1–ASK5 | ASK6 streaming |
 | Rescue | In-app expiring-soon list on the fridge page (FRG3) and ALR2 actions | Daily cron, alerts page, email digest (ALR1, ALR3–ALR5) |
-| Proof | `check:static`, `contract`, `unit`, `eval:calc`, smoke sets for receipts, plans and cook, `scn:billing`, `scn:authz`, a short `journey`, a 10-minute classmate test | Full reference sets, `bench`, week-long pilot |
+| Proof | `check:static`, `contract`, `unit`, `eval:calc`, smoke sets for receipts, plans and cook, `scn:billing`, `scn:authz`, a short `journey`, a 10-minute usability test | Full reference sets, `bench`, week-long pilot |
 
 Model choice: `claude-haiku-5-5` for every unit. If a unit misses its v1 smoke targets, step
 that unit up to `claude-sonnet-5-5` and record the cost change. `ai.ts` keeps the provider
@@ -81,7 +78,7 @@ recipes. The fridge record is the product; every feature reads or writes it.
 - **G4** Every AI output is schema-checked, grounded in data Cooky supplied, bounded in cost and
   time, and fails honestly.
 - **G5** Measured evidence for every claim, against `spec/targets.json`, on the deployed system.
-- **G6** A short write-up, slides and an architecture diagram explain the problem, solution, results and next steps.
+- **G6** A short report and an architecture diagram explain the problem, solution, results and next steps.
 
 ## 3. Non-goals
 
@@ -302,7 +299,7 @@ unit; structured output enforced by schema (`messages.parse` with a zod schema, 
 content; a `refusal` ends the run `terminated: "error"` with `422 { code: "ai_refused" }` (the
 default model has no server-side refusal fallback). Stable instructions and catalogs come
 first in the prompt so they are cached. User text, receipts and pages are wrapped in delimited
-data blocks and described as data, not instructions. `ai.ts` also enforces the team-wide
+data blocks and described as data, not instructions. `ai.ts` also enforces the global
 spend cap `limits.globalDailySpendCapUsd`: past it, AI routes return `503 { code: "ai_paused" }`.
 
 | Unit | Trigger (when the code calls it) | Single responsibility | Tools | Effort | Output contract | Uncertainty |
@@ -393,7 +390,7 @@ the human-readable index; the code wins.
   `insufficient_stock`, `stale_quantity`, `item_not_active`, `rescan_needed`) · `413` too large · `422` valid but impossible (`infeasible`,
   `no_alternative`, `not_a_recipe`, `not_a_receipt`, `ai_refused`) · `429` quota (`resetAt`) ·
   `501` not implemented (every stub) · `502` upstream failed (`model_error`, `plan_invalid`,
-  `parse_failed`) · `503` temporarily unavailable (`ai_paused` when the team spend cap is hit).
+  `parse_failed`) · `503` temporarily unavailable (`ai_paused` when the global spend cap is hit).
 - **Identity:** Supabase session cookie. User id is the Supabase auth uuid.
 - **Request id:** `x-request-id` accepted or generated, returned on every response, written to
   every log line and run record.
@@ -618,7 +615,7 @@ Values live in `spec/targets.json`. This table says why each matters.
 | `journey` | Playwright end-to-end on the deployed URL: sign up → pay → plan → save → receipt → confirm → cook → confirm → fridge check → alerts; then ledger consistency | `min_fridge_consistency_rate`, ACC/PLN/RCT/CK journeys |
 | `check:runs` | scans run records: errors have messages, terminated honest, no PII patterns | run hygiene, G12 |
 | `human:review` | named person reviews screens and labels | FRG5, PLT3, faithfulness labels |
-| `human:pilot` | classmates for one week (sizes in `workload.pilot`), stopwatch and purchase diaries | pilot targets |
+| `human:pilot` | pilot users for one week (sizes in `workload.pilot`), stopwatch and purchase diaries | pilot targets |
 
 ### 13.2 Reference sets (`eval/reference/`)
 
@@ -679,7 +676,7 @@ Exit codes: `0` pass, `1` warnings only, `2` failure.
 | Push | CI | checks 0–1 plus `unit` | the push's PR |
 | Merge to `main` | `npm run gate -- --upto 2` on the PR's preview URL | checks 0–2 plus `unit`; the owner's own `eval:*` on `dev/` is reported, not blocking | the merge |
 | Milestones (MVP gate R5, freeze R12) and nightly | `npm run gate` | checks 0–4 on all splits | the milestone sign-off; failures are posted with owners |
-| Demo readiness | check 5 | the human check | demo day |
+| Release readiness | check 5 | the human check | the release |
 
 ### 13.6 Does the AI add value?
 
@@ -690,174 +687,87 @@ constraint pass rate, latency and cost. Report the result even if (a) wins.
 
 ### 13.7 Human check
 
-Before demo day, a teammate who did not build the feature reads one successful and one failing
+Before a release, a contributor who did not build the feature reads one successful and one failing
 run end to end (inputs, each step, run record, what the user saw) and writes what each taught
 them. A failing run is produced on purpose if none exists (revoke the API key, feed a
 non-receipt image).
 
-## 14. Build plan
+## 14. Status and roadmap
 
-The merge gate (checks 0–2) runs against the skeleton in fake AI mode and passes; check-static and the database tests were broken on purpose and caught it. Checks 3–4 are not built yet. Scope is §0 (v1). Day 0 is 2026-10-20;
-`ASSUMED:` the presentation is at the end of Day 2. Hours are working hours (H0 = start).
+### 14.1 Status (2026-10-23)
 
-### 14.1 Walking skeleton (Frank, Day 0 → Day 1 H2)
+Cooky is live at https://cooky-lake.vercel.app with the real model (`claude-haiku-5-5`) and
+Stripe in test mode. The v1 journey in §0 works end to end: sign up, onboarding, Pro through a
+test checkout and the signed webhook, plans with a package-sized shopping list, swap with
+preference memory, the in-store checklist, receipt scan to review to fridge, the fridge with
+typical use-by dates and Cook now, cook mode with the cooking assistant, cook confirm with
+deductions and leftovers, and describe-a-dish recipes (Pro). Every merge to `main` passes the
+gate (checks 0–2).
 
-Only what teammates need to start in parallel. Everything else waits.
+Proof (§13): `eval:calc`, `eval:plans` (fixture mode by default) and `eval:cook` (retrieval)
+have runners and smoke cases. The receipt smoke set has no labelled cases yet, the `guard` set
+has no runner, there is no `e2e/` journey, and checks 3–4 are not built.
 
-| # | Piece | Done when | Status |
-|---|---|---|---|
-| S1 | Scaffold: Next.js + TypeScript, Tailwind, lint, typecheck, vitest, `.env.example`, `.gitignore`; **every v1 dependency installed once** (Supabase SSR client, Anthropic SDK, Stripe, zod, Playwright) | `npm run dev` and `npm run check` pass | ✅ done |
-| S2 | `spec/contract.ts`: schemas for v1 routes, records and AI outputs | compiles; stubs import it | ✅ done |
-| S3 | Migrations for v1 tables (§9) with SELECT-only RLS; `consume_quota()` and `apply_inventory_batch()`; seed loader that reads the CSVs in `supabase/seed/` | a fresh Supabase project migrates and loads sample rows | ✅ done |
-| S4 | Platform: `handler.ts`, auth, `db.ts` (reader + writer), `ai.ts` with `AI_MODE=fake` fixtures, quotas, units, money, ids, errors | a stub route answers through the wrapper with a request id | ✅ done |
-| S5 | Every v1 route file returns `501`; every module's `index.ts` exports typed stubs for the joins in §14.3 | `curl` shows `501` everywhere except `/api/health` | ✅ done |
-| S6 | App shell: auth pages, nav, one page per v1 feature with "not implemented" panels | a signed-in user can click through every page | ✅ done |
-| S7 | Deployed on Vercel with Supabase and Stripe test keys; Stripe webhook endpoint registered | the public URL serves `/api/health` | ◐ Supabase hosted project live, every migration pushed, seeded (2026-10-21); Stripe code merged but no test keys yet; Vercel still to do |
-| S8 | Team harness: `.claude/skills/cooky-module/SKILL.md`, `.claude/agents/contract-reviewer.md`, seed CSV templates with a `README.md` | a teammate's Claude Code follows the skill on a stub | ✅ done |
-| S9 | CI running checks 0–1 on push | a PR shows a green check | ✅ runs `checks` and `db` on every PR |
+### 14.2 Known gaps
 
-**In parallel, no code needed (Data & Proof with Recipes & Cook, Day 0 → Day 1 H3):** fill the seed CSVs from
-`supabase/seed/README.md`: recipes with steps and FAQs, ingredients with aliases, products and
-prices from one Los Angeles store with the date, shelf life per ingredient, category defaults
-with their source. Photograph real receipts (card digits covered). Write the smoke cases:
-shopping-math answers by hand, plan scenarios, cook questions with the step that answers them.
-Sizes: `workload.smokeSets`.
+- **Measurement:** label real receipts in `eval/smoke/receipts/`; run the planner eval live;
+  measure latency and cost per feature on the deployed app (`bench`).
+- **Recipe catalog:** 20 recipes is too few to plan varied weeks. Grow it under a data standard:
+  - Tags are free text. Use a closed vocabulary: exactly one cuisine, a meal (breakfast, lunch,
+    dinner), and curated tags (rice-bowl, uses-leftovers vs makes-leftovers).
+  - Derive instead of hand-tagging, or have `check:contract` reject disagreements: vegetarian and
+    pescatarian (from ingredient categories), quick (minutes), budget (computed cost per
+    serving), one-pan, high-protein (needs a threshold or nutrition).
+  - `minutes` must include every step (egg fried rice needs cooked, chilled rice).
+  - Equipment from a closed list, every vessel listed.
+  - Allergens: `Profile.allergenTags` is free text, so "dairy" or "gluten" silently match
+    nothing. Use a closed list (egg, milk, wheat, gluten, soy, fish, shellfish, peanut,
+    tree-nut, sesame) in the contract and check store-sauce labels.
+  - Vegan needs an animal-product flag per ingredient (honey, store sauces).
+- **Search:** ingredient and recipe search do not match word prefixes ("garl", "chick").
+- **Shopping checklist:** saves are serialised in the browser; two devices ticking at once can
+  still overwrite each other. Needs an atomic add/remove on the server.
+- **Dish images:** recipes are drawn by `src/ui/DishArt.tsx` until dish photography is chosen.
+- **v2:** recipe import from a link or a photo, the daily alerts email, shared households, a
+  tool-using planner agent (§6.3).
 
-### 14.2 Day 1 and Day 2
+### 14.3 Module boundaries
 
-| When | Step | Done when | Owner |
-|---|---|---|---|
-| Day 1 H0–H2 | Skeleton lands; coders read §0 and their requirement IDs | everyone runs `main` locally and sees `501`s | Frank |
-| Day 1 H2–H5 | Accounts, onboarding, Stripe checkout and webhook | `scn:billing` success and cancel pass on the public URL | Frank |
-| | Fridge ledger, fridge page with manual add and expiry | items persist; `GET /api/fridge` sorts by expiry | Fridge |
-| | Shopping math and feasible sets, no AI | `eval:calc` smoke set passes exactly | Plan & Shop |
-| | Catalog grown past the placeholders; recipe library with search and filters; cook-mode steps | `check:seed` passes; the library lists every recipe | Recipes & Cook |
-| Day 1 H5–H8 | Planner call, plan page, save | a real plan with a correct list on the public URL | Plan & Shop |
-| | Camera and upload, receipt reader, review screen, confirm into the fridge | a real receipt stocks the fridge on the public URL | Receipts |
-| **Day 1 gate** | New account on the public URL: sign up → test payment → Pro → plan → save → read back; one receipt → fridge | shown live, not described | all |
-| Day 2 H0–H3 | Cook *Done* → deductions and leftovers confirm; *Cook now* and expiring-soon | the fridge changes only after confirm | Fridge (+ Recipes & Cook) |
-| | Cooking assistant with citations | cook smoke set meets its targets | Recipes & Cook |
-| | Swap and preferences (only if the Day 1 gate passed) | a confirmed "too dry" changes the next plan | Plan & Shop |
-| Day 2 H3–H5 | **Feature freeze.** Smoke evals, `scn:billing`, `scn:authz`; fix blockers only; 10-minute classmate tests | results saved under `eval/runs/` | Data & Proof signs off |
-| Day 2 H5–H8 | Write-up, slides, architecture diagram, evaluation and responsible-AI notes, Claude Code reflection; human check of one good and one failed run; rehearse twice from a fresh account | deck and write-up uploaded | Data & Proof + all |
+Each area owns its folders and builds and verifies them; a change in another area's folders is
+proposed to it, not made. The areas and their folders are listed in `AGENTS.md`.
 
-### 14.3 Team split (by ownership of files)
-
-`ASSUMED:` names are placeholders. The team is Frank, two or three coders, and one or two
-teammates who own data, evaluation and the story.
-
-| Owner | Owns (builds and verifies) |
-|---|---|
-| **Platform** (Frank) | `src/platform/**` (incl. `email.ts`), `src/ui/**`, `spec/contract.ts`, `supabase/migrations/**`, the seed loader script, `src/modules/{billing,alerts}/**`, `app/(marketing)/**`, `app/(auth)/**`, `app/(app)/{onboarding,settings,billing,alerts}/**`, `app/layout.tsx`, `app/api/{health,me,profile,billing,stripe,cron,alerts}/**`, `.claude/**`, `docs/{SPEC,DESIGN,TECHNICAL}.md`, `AGENTS.md`, deploy, CI |
-| **Plan & Shop** (coder) | `src/modules/{planning,preferences}/**`, `app/(app)/{plan,shop,preferences}/**`, `app/api/{plans,preferences}/**` |
-| **Recipes & Cook** (coder) | `src/modules/{recipes,cook}/**`, `app/(app)/{recipes,cook}/**`, `app/api/{recipes,ingredients,cook}/**`, catalog data `supabase/seed/*.csv` |
-| **Receipts** (coder) | `src/modules/receipts/**`, `app/(app)/receipts/**`, `app/api/receipts/**` |
-| **Fridge** (coder) | `src/modules/fridge/**`, `app/(app)/fridge/**`, `app/api/{fridge,stats}/**` |
-| **Data & Proof** (non-coders) | `eval/**` cases and results, `docs/PRD.md`, write-up, slides, classmate tests; seed rows by pull request to Recipes & Cook; signs off every other owner's checks |
-
-How data moves between these roles, the alignment rules and each role's growth options:
-[`ROLES.md`](ROLES.md).
-
-Doc changes outside your own files go through their owner, like code.
-
-Joins between owners are module functions declared as stubs in the skeleton:
+Joins between areas are module functions:
 `fridge.proposeDeductions(userId, recipeId, servings)`, `fridge.applyBatch(userId, events, batchKey)` (batch keys prefixed per sender: `rct:`, `cke_`, `man:`; see ROLES.md),
 `fridge.expiringSoon(userId)`, `recipes.retrieveChunks(recipeId, question)`,
 `planning.priceRecipes(userId, recipeIds, servings)`, `preferences.propose(userId, text, context)`,
-`fridge.cookNow(userId)`.
-
-### 14.4 If we fall behind, cut in this order (decided now)
-
-Swap and preferences → cook deductions' leftovers dish → cooking assistant → onboarding beyond
-household size and exclusions → the plan diff on receipts. **Never cut:** login, Stripe test
-checkout, the planner, exact shopping math, receipt → fridge with review, the fridge page with
-expiry, guardrails, honest errors, the live URL, the write-up.
-
-Everything marked v2 in §0 is the post-demo roadmap and goes in the write-up's next steps.
-
-### 14.5 Status on `main` (2026-10-21)
-
-What a user can do today, by journey step. "Merged" means on `main` with green CI, the merge gate
-passing and a reviewer's click-through; real Claude and real Stripe calls are not run yet (no
-`ANTHROPIC_API_KEY`, no Stripe test keys), so AI steps were checked in `AI_MODE=fake`.
-v1 API routes answering for real: 23½ of 29 (updated after #24).
-
-| Step | Owner | On `main` | Still to do for v1 |
-|---|---|---|---|
-| 1 Set up | Platform | Onboarding and settings (household, budget, minutes, never-eat, staples, timezone); `/api/me`, `/api/profile`; login goes to onboarding until saved (ACC1–ACC4) | — |
-| 2 Unlock Pro | Platform | Checkout, signed webhook with `grant_pro()`, confirming page that polls (ACC5–ACC8); the eight billing scenarios as tests | Stripe test keys and price; `scn:billing` against real Stripe; Vercel deploy |
-| 3 Choose & plan | Recipes & Cook, Plan & Shop | 20-recipe library with search and quick filters, recipe pages (RCP1–RCP3); plans within budget from fridge, picked recipes, must-use items, save, honest infeasible hints, combination cap, past use-by warnings, optional extras (PLN1–PLN6, PLN8) | Swap (PLN7); more recipes; dish images (placeholders now); filter data standard (§14.6) |
-| 4 Shop | Plan & Shop | Shopping list on the plan page (need, have, buy, packages, cost, leftover) | `/shop` page |
-| 5 Scan | Receipts | Scan page with plan picker, upload and read; the photo is never stored, and a failed read is retried by sending the photo again (RCT1–RCT2, RCT7, RCT9); an unknown ingredient id flags its line instead of failing the receipt; eval runner | Receipt photos and answers in `eval/smoke/receipts/` (Data & Proof); a live run |
-| 6 Review | Receipts | Review page, confirm into the fridge as one batch, photo deleted, plan diff (RCT3–RCT6, RCT9–RCT10) | UI: lock the unit on catalog lines; show the recomputed date instead of rewriting it |
-| 7 Fridge | Fridge | View, manual add, mark used or tossed, expiring soon, Cook now (FRG1, FRG3, FRG5) | Item edits through `edit_fridge_item` (FRG4); dark-mode contrast; the fridge-door design |
-| 8 Cook | Recipes & Cook | Cook mode one step at a time with timers and tips; assistant with citations and the safety notice (CK1, ASK1–ASK5), checked in fake AI mode | A live run with `ANTHROPIC_API_KEY`; prefix search |
-| 9 Confirm & learn | Recipes & Cook, Plan & Shop | Cook done and confirm: deductions and leftovers in one fridge batch (CK2–CK3) | Preferences (LRN1–LRN3); feedback is stored but proposals wait for `preferences.propose` |
-
-Proof (§13) has not started: no smoke cases yet, no `e2e/` journey, seed shelf-life sources are
-placeholders. Recipes & Cook is Jen (jenchen34); Data & Proof is still unassigned.
-
-### 14.6 Next phase: known gaps (2026-10-21)
-
-The team walks the journey step by step and builds from this list. UI: plain style and no emoji
-(AGENTS.md); the recipe and cook pages were moved off their custom theme, keeping all behaviour.
-
-- **Recipe catalog:** 20 recipes is too few to plan varied weeks; grow it under the data standard
-  below. Dish images: test image designs and prompts with AI before choosing; placeholders until
-  then.
-- **Recipe data standard for filtering** (audit 2026-10-21):
-  - Tags are free text. Agree a closed vocabulary: exactly one cuisine (every recipe has one as of
-    2026-10-21), meal (breakfast, lunch, dinner), and curated tags (rice-bowl, uses-leftovers vs
-    makes-leftovers).
-  - Derive instead of hand-tagging, or have `check:contract` reject disagreements: vegetarian and
-    pescatarian (from ingredient categories), quick (minutes), budget (computed cost per serving;
-    today's `budget` tag contradicts it), one-pan, high-protein (needs a threshold or nutrition).
-  - `minutes` must include every step (egg fried rice needs cooked, chilled rice).
-  - Equipment from a closed list, every vessel listed; "oven-safe skillet" vs "skillet" decides
-    whether a skillet owner can make the frittata.
-  - Allergens: `Profile.allergenTags` is free text, so "dairy" or "gluten" silently match nothing.
-    Closed list (egg, milk, wheat, gluten, soy, fish, shellfish, peanut, tree-nut, sesame) in the
-    contract; check store-sauce labels (yellow curry sauce, marinara); decide coconut.
-  - Vegan needs an animal-product flag per ingredient (honey, store sauces).
-  - `RecipesQuery` takes one `tag`; filters combine only on the page.
-- **Search:** ingredient and recipe search do not match word prefixes ("garl", "chick").
-- **Fridge:** item edits through `edit_fridge_item` (FRG4); dark-mode contrast on the fridge page.
-- **Receipts review UI:** lock the unit on catalog lines; show, not rewrite, the recomputed date.
-- **Keys and deploy:** `ANTHROPIC_API_KEY`, Stripe test keys, Vercel deploy; then live evals and
-  `scn:billing`.
-- **Proof:** smoke cases, receipt photos, `e2e/` journey; owner still unassigned.
+`fridge.cookNow(userId)`. How data moves across them, and the alignment rules at each handoff:
+[`ROLES.md`](ROLES.md).
 
 ## 15. Risks
 
 | Risk | Mitigation |
 |---|---|
-| Receipt abbreviations vary by store; auto-accept precision misses target | Start with the stores the team uses; add aliases from real receipts to the catalog; the decision rule is code and tunable on `dev/` |
+| Receipt abbreviations vary by store; auto-accept precision misses target | Start with the stores most users use; add aliases from real receipts to the catalog; the decision rule is code and tunable on `dev/` |
 | One-time Pro price does not cover an active user's ongoing model cost | Measure cost per feature; compare cheaper models per unit on its eval; discuss subscription pricing in the write-up |
 | Vercel function timeout on slow vision calls | Downsize images client-side; `low` effort; budget cap below the timeout; async job pattern is the documented fallback |
 | Supabase default email sending is rate-limited | Configure custom SMTP (Resend) for auth emails before the pilot |
 | Stripe webhook not reachable from local dev | `stripe listen --forward-to`; test on the preview deployment |
 | Shelf-life data provenance or licence unclear | Record the source per ingredient; fall back to category defaults labelled as estimates |
-| Five people editing shared files | Skeleton pre-creates every route, module stub, migration and dependency; ownership in `AGENTS.md` |
+| Several contributors editing shared files | Every route, module stub, migration and dependency exists up front; module boundaries in `AGENTS.md` |
 | Real receipts contain personal data | Blur card digits and loyalty ids before committing; images deleted after confirm in the app |
-| Two days is very little time for five people to integrate | Skeleton first with every join stubbed; Day 1 gate on the public URL; the cut order in §14.4 decided in advance |
-| The small model misreads receipts | Smoke-test Haiku on Day 1; step the receipt unit up to Sonnet if it misses; the review screen catches the rest |
+| The small model misreads receipts | Smoke-test Haiku first; step the receipt unit up to Sonnet if it misses; the review screen catches the rest |
 | The shared model budget runs out mid-demo | `limits.globalDailySpendCapUsd` returns an honest `503 ai_paused`; `AI_MODE=fake` fixtures for local work and tests |
 
 ## 16. Open questions
 
-Answered 2026-10-20: demo day is about two days out; Frank plus two or three coders; generic
-items for off-catalog food; a small model budget, so `claude-haiku-5-5` by default.
-
-| Question | Owner |
+| Question | Status |
 |---|---|
-| Exact presentation date and time (`ASSUMED:` end of Day 2) | Frank |
-| Names for the ownership roles (§14.3) | Frank |
-| Free vs Pro split (ACC4) and price (`costModel.proPriceUsd`), one-time vs subscription. **Proposal 2026-10-21 (Frank):** the AI features alone are not a clear reason to pay; candidate Pro features are the full recipe library (Free gets a limited set), recipe search, and adding your own recipes. Not built; ACC4 stays as written until decided. | Frank + team |
-| Vercel plan (function duration limits) and whether email confirmation is on for the demo | Platform |
-| Which store the price snapshot and receipts come from | Data & Proof |
-| Shelf-life source and licence (USDA FoodKeeper data or another) | Data & Proof |
-| Recipe list and cuisines for the seed library; dish images (AI-generated: which design and prompt) | Recipes & Cook + Frank |
-| ~~Receipt image retention~~ Decided 2026-10-21: photos are never stored (RCT9); `limits.receiptImageRetentionDays` and `receiptDraftImageRetentionDays` are unused, for Data & Proof to retire | Frank |
+| Free vs Pro split (ACC4) and price (`costModel.proPriceUsd`), one-time vs subscription | Open. At the cost caps an active week costs at most about US$0.19, so a one-time price does not fit an ongoing cost. Candidate Pro features beyond AI: the full recipe library, recipe search, your own recipes |
+| Vercel plan (function duration limits) and email confirmation in production | Open |
+| Which store the price snapshot and receipts come from | Open; prices are a dated snapshot from one Los Angeles store |
+| Shelf-life source and licence | USDA FoodKeeper (shorter end of each range), recorded per ingredient |
+| Dish images | Illustrations (`DishArt`) until photography is chosen |
+| Receipt image retention | Decided 2026-10-21: photos are never stored (RCT9); `limits.receiptImageRetentionDays` and `receiptDraftImageRetentionDays` are unused |
 
 ## 17. Stretch goals
 

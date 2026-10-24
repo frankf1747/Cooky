@@ -142,7 +142,7 @@ progress and no app navigation). From `src/ui/States.tsx`: `ErrorState` and
 
 ## Food pictures
 
-Until the team chooses dish photography, `DishArt` draws each recipe as a top-down still life
+Until dish photography is chosen, `DishArt` draws each recipe as a top-down still life
 from its title: a blue-rimmed enamel plate, a bowl or a cast-iron skillet on parchment, with the
 dish's own ingredients. It is deterministic per recipe id. When a recipe has `imageUrl`,
 `RecipeImage` shows the photo in the same dome, so photography drops in without layout changes.

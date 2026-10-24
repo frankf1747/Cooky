@@ -1,40 +1,40 @@
 # AGENTS.md — Cooky
 
 You are helping build Cooky, a meal-planning and virtual-fridge web app. This file is the
-contract you must satisfy. Do not relax, reinterpret or "improve" these requirements.
+contract every contributor and coding agent must satisfy. Do not relax, reinterpret or "improve" these requirements.
 
 ## Reading order
 - `docs/SPEC.md` is written for you: every requirement, once. **Start with §0: only v1 rows
-  are built before demo day.** Find the IDs (e.g. `RCT4`) for the work you are doing before
+  are in scope.** Find the IDs (e.g. `RCT4`) for the work you are doing before
   you start.
 - `spec/contract.ts` outranks prose on shapes; `spec/targets.json` outranks prose on numbers
   (targets, budgets, quotas, limits). If prose disagrees with either, say so rather than
   following the prose. Never copy a number from the JSON into code or docs; import it.
-- `docs/ROLES.md` shows how data moves between roles and the alignment rules at each handoff
+- `docs/ROLES.md` shows how data moves between modules and the alignment rules at each handoff
   (one ingredient id, three units, one category list, batch-key prefixes). Follow them.
 - `docs/TECHNICAL.md` has commands, deploy and troubleshooting.
 - `README.md` and `docs/PRD.md` are for intent, never for numbers.
 
 ## What you may and may not touch
-- **Ownership** (SPEC §14.3). Each person owns folders and builds *and* verifies them:
+- **Module boundaries** (SPEC §14.3). Each area owns its folders and builds *and* verifies them:
 
-  | Owner | Folders |
+  | Area | Folders |
   |---|---|
-  | Platform (Frank) | `src/platform/`, `src/ui/`, `spec/contract.ts`, `supabase/migrations/`, `src/modules/{billing,alerts}/`, `app/(marketing)/`, `app/(auth)/`, `app/(app)/{onboarding,settings,billing,alerts}/`, `app/layout.tsx`, `app/api/{health,me,profile,billing,stripe,cron,alerts}/`, `.claude/`, this file and `docs/{SPEC,DESIGN,TECHNICAL,BRAND}.md`, CI, deploy config |
+  | Platform | `src/platform/`, `src/ui/`, `spec/contract.ts`, `supabase/migrations/`, `src/modules/{billing,alerts}/`, `app/(marketing)/`, `app/(auth)/`, `app/(app)/{onboarding,settings,billing,alerts}/`, `app/layout.tsx`, `app/api/{health,me,profile,billing,stripe,cron,alerts}/`, `.claude/`, this file and `docs/{SPEC,DESIGN,TECHNICAL,BRAND}.md`, CI, deploy config |
   | Recipes & Cook | `src/modules/{recipes,cook}/`, `app/(app)/{recipes,cook}/`, `app/api/{recipes,ingredients,cook}/`, catalog data `supabase/seed/*.csv` (others contribute rows by PR) |
-  | Plan & Shop (Richard) | `src/modules/{planning,preferences}/`, `app/(app)/{plan,shop,preferences}/`, `app/api/{plans,preferences}/` |
-  | Receipts (Hanson) | `src/modules/receipts/`, `app/(app)/receipts/`, `app/api/receipts/` |
-  | Fridge (Una) | `src/modules/fridge/`, `app/(app)/fridge/`, `app/api/{fridge,stats}/` |
-  | Data & Proof | `eval/`, `e2e/`, `docs/PRD.md`, write-up; seed rows by PR to Recipes & Cook |
+  | Plan & Shop | `src/modules/{planning,preferences}/`, `app/(app)/{plan,shop,preferences}/`, `app/api/{plans,preferences}/` |
+  | Receipts | `src/modules/receipts/`, `app/(app)/receipts/`, `app/api/receipts/` |
+  | Fridge | `src/modules/fridge/`, `app/(app)/fridge/`, `app/api/{fridge,stats}/` |
+  | Evals | `eval/`, `e2e/`, `docs/PRD.md`; seed rows by PR to Recipes & Cook |
 
-- **Build in:** the folders your user owns. Keep route files thin (parse, call one module
+- **Build in:** the folders of the area you are working in. Keep route files thin (parse, call one module
   function, return).
-- **If a change is needed in a file you do not own, stop and tell the user.** Do not edit it,
+- **If a change is needed in another area's file, stop and tell the user.** Do not edit it,
   even to fix a typo. Propose the change instead.
-- **Do not edit** without the Platform owner: `spec/contract.ts` (every side imports it; a
-  silent change breaks teammates), `supabase/migrations/` (ordering conflicts), `package.json`
+- **Do not edit** without Platform review: `spec/contract.ts` (every side imports it; a
+  silent change breaks other modules), `supabase/migrations/` (ordering conflicts), `package.json`
   and the lock file (all dependencies were installed in the skeleton), `src/platform/`.
-- **Do not edit** without the Proof owner: `spec/targets.json` (targets are declared before
+- **Do not edit** without Evals review: `spec/targets.json` (targets are declared before
   runs; loosening one to pass is forbidden), `eval/reference/**/test/` (held-out data),
   `eval/rules.md` (append-only).
 - **Never edit or commit:** `.env*` files other than `.env.example`, generated types, `eval/runs/`.
@@ -114,7 +114,7 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
 
 ## Git workflow: every change goes through a pull request
 - **Never commit or push to `main`.** Not even a one-line doc fix. `main` must always run;
-  pull requests are how teammates see and check each other's work.
+  pull requests are how contributors see and check each other's work.
 - **Start from fresh `main`:** `git switch main && git pull`, then a branch named
   `<area>/<short-topic>`, e.g. `plan-shop/swap-meal`, `receipts/review-page`, `fridge/cook-now`,
   `recipes-cook/assistant`, `data/seed-recipes`, `platform/billing`.
@@ -125,7 +125,7 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
   Supabase running). Paste its last line in the PR.
 - **Open the PR with `gh pr create --base main`** and fill in `.github/pull_request_template.md`.
   Review requests go to the owners in `.github/CODEOWNERS`.
-- **Never** force-push to `main`, merge your own PR without a teammate's approval, delete or
+- **Never** force-push to `main`, merge your own PR without a reviewer's approval, delete or
   rewrite someone else's branch, or commit `.env*` files (only the `.example` ones).
 - **Schema changes** (`supabase/migrations/`) need a PR approved by Platform; only Platform runs
   `npx supabase db push` on the live database.
@@ -133,7 +133,7 @@ contract you must satisfy. Do not relax, reinterpret or "improve" these requirem
   instead.
 
 ## Definition of done
-Run in order; all must pass. Inspection is not verification. "Done" means a teammate other
+Run in order; all must pass. Inspection is not verification. "Done" means a reviewer other
 than the builder ran the checks and saw them pass.
 ```bash
 npm run check            # 0: lint, typecheck, secret scan, live-key and SDK-import checks

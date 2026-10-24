@@ -1,6 +1,6 @@
 ---
 name: cooky-module
-description: Use when building or changing a Cooky feature (planning, receipts, fridge, recipes, cook, preferences, billing, account) — implementing a module function, a page, an AI unit, or a test for one. Walks the Cooky way of building a feature so it plugs into the skeleton without breaking teammates.
+description: Use when building or changing a Cooky feature (planning, receipts, fridge, recipes, cook, preferences, billing, account) — implementing a module function, a page, an AI unit, or a test for one. Walks the Cooky way of building a feature so it plugs into the app without breaking other modules.
 ---
 
 # Building a Cooky feature
@@ -10,7 +10,7 @@ The skeleton already has every route, table and function signature; your job is 
 `notImplemented(...)` with real behaviour.
 
 ## 1. Find your work
-1. Read `docs/SPEC.md` §0. Only rows marked **v1** are built before demo day.
+1. Read `docs/SPEC.md` §0. Only rows marked **v1** are in scope.
 2. Find your requirement IDs (e.g. `RCT4`) in SPEC §5 and the routes for them in `spec/routes.ts`.
 3. Open `src/modules/<your module>/index.ts`. Each exported stub names the route that calls it.
    The route file is already wired; do not edit route files or `spec/contract.ts`.
@@ -47,7 +47,7 @@ npm run eval -- <your set>                       # once your runner exists
 npm run gate -- --upto 2 --base-url http://localhost:3000
 ```
 Then click through your page as a fresh user. Ask the `contract-reviewer` agent to review your
-diff, and a teammate to run the checks before you call it done.
+diff, and a reviewer to run the checks before you call it done.
 
 ## Stop and ask when
 - you need a field, route, table or dependency that does not exist (Platform owns those);
